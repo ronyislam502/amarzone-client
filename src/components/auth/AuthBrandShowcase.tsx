@@ -3,7 +3,7 @@ import { ShoppingBag, ShieldCheck, Truck, Sparkles, Award } from 'lucide-react';
 
 export const AuthBrandShowcase: React.FC = () => {
     return (
-        <div className="relative hidden lg:flex flex-col justify-between p-8 lg:p-12 overflow-hidden bg-neutral text-neutral-content rounded-none lg:w-1/2 min-h-[640px]">
+        <div className="relative hidden lg:flex flex-col justify-between p-8 lg:p-12 overflow-hidden bg-slate-900/80 border-r border-white/10 text-slate-100 rounded-none lg:w-1/2 min-h-[640px]">
             {/* Ambient Background Blur Glows */}
             <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/20 rounded-full blur-3xl pointer-events-none animate-pulse" />
             <div className="absolute top-1/2 -right-20 w-80 h-80 bg-warning/20 rounded-full blur-3xl pointer-events-none" />

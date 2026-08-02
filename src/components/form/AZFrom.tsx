@@ -14,7 +14,7 @@ interface IProps extends formConfig {
     methods?: any;
 }
 
-const SZForm = ({ children, onSubmit, defaultValues, resolver, methods: externalMethods }: IProps) => {
+const AZForm = ({ children, onSubmit, defaultValues, resolver, methods: externalMethods }: IProps) => {
     const formConfig: formConfig = {};
 
     if (defaultValues) {
@@ -37,4 +37,4 @@ const SZForm = ({ children, onSubmit, defaultValues, resolver, methods: external
     );
 };
 
-export default SZForm;
+export default AZForm;
