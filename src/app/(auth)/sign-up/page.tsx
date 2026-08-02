@@ -15,11 +15,12 @@ const SignUpPage = () => {
         <AuthBackground>
             {/* Mobile Header Logo */}
             <div className="absolute top-6 left-6 lg:hidden flex items-center gap-2 z-20">
-                <Link href="/" className="flex items-center gap-2">
-                    <div className="badge badge-warning p-3 text-slate-950 font-black">
-                        <ShoppingBag className="w-5 h-5" />
-                    </div>
-                    <span className="text-lg font-extrabold tracking-tight text-white">Amarzone</span>
+                <Link href="/">
+                    <img
+                        src="https://res.cloudinary.com/dkk9lvbtf/image/upload/v1785693062/amarzone_fnnw8s.png"
+                        alt="Amarzone Logo"
+                        className="h-8 w-auto object-contain"
+                    />
                 </Link>
             </div>
 

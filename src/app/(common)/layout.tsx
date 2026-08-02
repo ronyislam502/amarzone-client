@@ -1,14 +1,15 @@
 import React from "react";
-import AmazonNavbar from "@/components/navbar/AmazonNavbar";
+import Navbar from "@/components/shared/Navbar";
+import Footer from "@/components/shared/Footer";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <AmazonNavbar />
+      <Navbar />
       <main className="flex-1">{children}</main>
+      <Footer />
     </div>
   );
 };
 
 export default layout;
-

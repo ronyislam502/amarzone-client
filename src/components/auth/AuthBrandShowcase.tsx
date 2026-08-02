@@ -11,11 +11,12 @@ export const AuthBrandShowcase: React.FC = () => {
 
             {/* Top Brand Header */}
             <div className="relative z-10">
-                <div className="badge badge-warning badge-outline gap-2.5 p-3.5 mb-6 bg-base-100/10 backdrop-blur">
-                    <div className="bg-warning text-slate-950 p-1 rounded-full font-black">
-                        <ShoppingBag className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-xs font-bold tracking-wider uppercase text-warning">Amarzone Store</span>
+                <div className="inline-flex items-center gap-2.5 p-2 px-3 mb-6 bg-slate-800/60 rounded-full border border-amber-400/30 backdrop-blur">
+                    <img
+                        src="https://res.cloudinary.com/dkk9lvbtf/image/upload/v1785693062/amarzone_fnnw8s.png"
+                        alt="Amarzone Logo"
+                        className="h-5 w-auto object-contain"
+                    />
                     <span className="badge badge-success badge-xs animate-ping ml-1" />
                 </div>
 

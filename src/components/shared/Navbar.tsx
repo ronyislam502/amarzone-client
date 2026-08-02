@@ -56,25 +56,25 @@ export default function AmazonNavbar() {
   ];
 
   const subNavItems = [
-    { label: "Health AI", hasDropdown: false },
-    { label: "Amazon Haul", hasDropdown: false },
-    { label: "Medical Care", hasDropdown: true },
-    { label: "Amazon Basics", hasDropdown: false },
-    { label: "Best Sellers", hasDropdown: false },
-    { label: "Prime", hasDropdown: true },
-    { label: "New Releases", hasDropdown: false },
-    { label: "Today's Deals", hasDropdown: false },
-    { label: "Books", hasDropdown: false },
-    { label: "Groceries", hasDropdown: true },
-    { label: "Whole Foods", hasDropdown: false },
-    { label: "Gift Cards", hasDropdown: true },
-    { label: "Fashion", hasDropdown: false },
-    { label: "Sell", hasDropdown: false },
-    { label: "Registry", hasDropdown: false },
-    { label: "Music", hasDropdown: false },
-    { label: "Amazon Home", hasDropdown: true },
-    { label: "Automotive", hasDropdown: false },
-    { label: "Toys & Games", hasDropdown: true },
+    { label: "Health AI", href: "#", hasDropdown: false },
+    { label: "Amazon Haul", href: "#", hasDropdown: false },
+    { label: "Medical Care", href: "#", hasDropdown: true },
+    { label: "Amazon Basics", href: "#", hasDropdown: false },
+    { label: "Best Sellers", href: "#", hasDropdown: false },
+    { label: "Prime", href: "#", hasDropdown: true },
+    { label: "New Releases", href: "/new-releases", hasDropdown: false },
+    { label: "Today's Deals", href: "#", hasDropdown: false },
+    { label: "Books", href: "#", hasDropdown: false },
+    { label: "Groceries", href: "#", hasDropdown: true },
+    { label: "Whole Foods", href: "#", hasDropdown: false },
+    { label: "Gift Cards", href: "#", hasDropdown: true },
+    { label: "Fashion", href: "#", hasDropdown: false },
+    { label: "Sell", href: "#", hasDropdown: false },
+    { label: "Registry", href: "#", hasDropdown: false },
+    { label: "Music", href: "#", hasDropdown: false },
+    { label: "Amazon Home", href: "#", hasDropdown: true },
+    { label: "Automotive", href: "#", hasDropdown: false },
+    { label: "Toys & Games", href: "#", hasDropdown: true },
   ];
 
   return (
@@ -92,29 +92,14 @@ export default function AmazonNavbar() {
       <div className="bg-[#131921] px-2 py-1 flex items-center justify-between gap-2 border-b border-gray-800">
         {/* 1. Amazon Logo */}
         <a
-          href="#"
+          href="/"
           className="flex items-center px-2 py-1 rounded border border-transparent hover:border-white transition-all"
         >
-          <div className="flex flex-col items-start leading-none">
-            <div className="flex items-baseline">
-              <span className="text-xl sm:text-2xl font-extrabold tracking-tight text-white">
-                amarzon
-              </span>
-              <span className="text-xs text-[#febd69] font-bold ml-0.5">.com</span>
-            </div>
-            {/* Curved Smile Arrow */}
-            <svg
-              className="w-16 h-2.5 text-[#ff9900] -mt-1"
-              viewBox="0 0 100 20"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="4"
-              strokeLinecap="round"
-            >
-              <path d="M 5 5 Q 50 22 95 5" />
-              <path d="M 85 10 L 95 5 L 90 0" fill="currentColor" />
-            </svg>
-          </div>
+          <img
+            src="https://res.cloudinary.com/dkk9lvbtf/image/upload/v1785693062/amarzone_fnnw8s.png"
+            alt="Amarzone Logo"
+            className="h-16 w-auto object-contain"
+          />
         </a>
 
         {/* 2. Deliver To Location Picker */}
@@ -316,7 +301,7 @@ export default function AmazonNavbar() {
           {subNavItems.map((item, idx) => (
             <a
               key={idx}
-              href="#"
+              href={item.href}
               className="flex items-center gap-0.5 px-2 py-1 rounded border border-transparent hover:border-white whitespace-nowrap transition-all text-gray-100 hover:text-white"
             >
               <span>{item.label}</span>
