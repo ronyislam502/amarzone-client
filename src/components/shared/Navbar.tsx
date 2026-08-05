@@ -14,52 +14,27 @@ import {
   Heart,
   HelpCircle,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import { setDrawerOpen, setSelectedCategory } from "@/redux/features/ui/uiSlice";
+import { useAppSelector } from "@/redux/hooks";
+import { useAllDepartmentsQuery } from "@/redux/features/department/departmentApi";
+import { TDepartment } from "@/types/department";
+
+import AZInput from "../form/AZInput";
 
 export default function AmazonNavbar() {
-  const dispatch = useAppDispatch();
-  const drawerOpen = useAppSelector((state) => state.ui.drawerOpen);
-  const selectedCategory = useAppSelector((state) => state.ui.selectedCategory);
-  const cartCount = useAppSelector((state) => state.cart.totalQuantity);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
   const user = useAppSelector((state) => state.auth.user);
+  const cartCount = 0;
 
+  // Fetch Department data from Redux RTK Query
+  const { data: departmentResponse, isLoading: isDepartmentsLoading } = useAllDepartmentsQuery({});
+  const departments: TDepartment[] = departmentResponse?.data || [];
 
-  const categories = [
-    "All Categories",
-    "Alexa Skills",
-    "Amazon Devices",
-    "Amazon Pharmacy",
-    "Arts, Crafts & Sewing",
-    "Automotive",
-    "Baby",
-    "Beauty & Personal Care",
-    "Books",
-    "Boys' Fashion",
-    "Computers",
-    "Deals",
-    "Digital Music",
-    "Electronics",
-    "Girls' Fashion",
-    "Health & Household",
-    "Home & Kitchen",
-    "Industrial & Scientific",
-    "Kindle Store",
-    "Luggage",
-    "Men's Fashion",
-    "Movies & TV",
-    "Music, CDs & Vinyl",
-    "Pet Supplies",
-    "Prime Video",
-    "Software",
-    "Sports & Outdoors",
-    "Tools & Home Improvement",
-    "Toys & Games",
-    "Video Games",
-    "Women's Fashion",
-  ];
+  console.log("department", departments)
 
   const subNavItems = [
     { label: "Health AI", href: "#", hasDropdown: false },
@@ -91,7 +66,7 @@ export default function AmazonNavbar() {
         type="checkbox"
         className="drawer-toggle"
         checked={drawerOpen}
-        onChange={(e) => dispatch(setDrawerOpen(e.target.checked))}
+        onChange={(e) => setDrawerOpen(e.target.checked)}
       />
 
       {/* TOP NAVBAR (Dark Navy: #131921) */}
@@ -122,25 +97,30 @@ export default function AmazonNavbar() {
         {/* 3. Search Bar Group using DaisyUI Join */}
         <div className="flex-1 max-w-4xl mx-1 sm:mx-2">
           <div className="join w-full rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-[#ff9900]">
-            {/* Category Dropdown */}
+            {/* Dynamic Department / Category Dropdown */}
             <select
               value={selectedCategory}
-              onChange={(e) => dispatch(setSelectedCategory(e.target.value))}
-              className="join-item select select-sm sm:select-md bg-gray-200 hover:bg-gray-300 text-gray-800 border-none font-normal text-xs px-2 focus:outline-none cursor-pointer h-10 min-h-0 rounded-l-md rounded-r-none max-w-[50px] sm:max-w-[75px] md:max-w-none"
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="join-item select select-sm sm:select-md bg-gray-200 hover:bg-gray-300 text-gray-800 border-none font-normal text-xs px-2 focus:outline-none cursor-pointer h-10 min-h-0 rounded-l-md rounded-r-none max-w-[75px] sm:max-w-[120px] md:max-w-[150px]"
             >
-              <option value="All">All</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
+              <option value="All">All Departments</option>
+              {isDepartmentsLoading ? (
+                <option value="" disabled>Loading...</option>
+              ) : (
+                departments.map((dept) => (
+                  <option key={dept._id} value={dept._id}>
+                    {dept.name}
+                  </option>
+                ))
+              )}
             </select>
 
-            {/* Search Text Input */}
-            <input
+            {/* Reusable Search Text Input */}
+            <AZInput
+              name="searchTerm"
               type="text"
-              placeholder="Search Amazon"
-              className="join-item input input-sm sm:input-md w-full bg-white text-gray-900 border-none focus:outline-none placeholder-gray-500 text-sm h-10 min-h-0 rounded-none px-3"
+              placeholder="Search Amarzone"
+              inputClassName="join-item input input-sm sm:input-md w-full bg-white text-gray-900 border-none focus:outline-none placeholder-gray-500 text-sm h-10 min-h-0 rounded-none px-3"
             />
 
             {/* Search Submit Button */}
@@ -216,7 +196,7 @@ export default function AmazonNavbar() {
             className="flex flex-col text-left px-2 py-1 rounded border border-transparent hover:border-white cursor-pointer transition-all leading-tight"
           >
             <span className="text-[11px] text-gray-300 font-normal">
-              Hello, sign in
+              {user ? `Hello, ${user.name || 'User'}` : 'Hello, sign in'}
             </span>
             <span className="text-xs font-bold text-white flex items-center gap-0.5">
               Account & Lists
@@ -229,12 +209,12 @@ export default function AmazonNavbar() {
             className="dropdown-content p-4 shadow-xl bg-white text-gray-900 rounded-md w-72 sm:w-80 z-50 border border-gray-200 mt-1"
           >
             <div className="flex flex-col items-center pb-3 border-b border-gray-200">
-              <button className="btn btn-sm bg-[#ffd814] hover:bg-[#f7ca00] text-gray-900 border border-[#fcd200] w-48 shadow-xs normal-case font-medium">
+              <a href="/login" className="btn btn-sm bg-[#ffd814] hover:bg-[#f7ca00] text-gray-900 border border-[#fcd200] w-48 shadow-xs normal-case font-medium flex items-center justify-center">
                 Sign in
-              </button>
+              </a>
               <span className="text-[11px] text-gray-600 mt-2">
                 New customer?{" "}
-                <a href="#" className="text-blue-600 hover:underline hover:text-orange-700">
+                <a href="/register" className="text-blue-600 hover:underline hover:text-orange-700">
                   Start here.
                 </a>
               </span>
@@ -246,7 +226,6 @@ export default function AmazonNavbar() {
                 <ul className="space-y-1.5 text-gray-700">
                   <li className="hover:text-orange-600 hover:underline cursor-pointer">Create a List</li>
                   <li className="hover:text-orange-600 hover:underline cursor-pointer">Find a List or Registry</li>
-                  <li className="hover:text-orange-600 hover:underline cursor-pointer">AmazonSmile Charity Lists</li>
                 </ul>
               </div>
               <div className="border-l border-gray-200 pl-4">
@@ -255,8 +234,6 @@ export default function AmazonNavbar() {
                   <li className="hover:text-orange-600 hover:underline cursor-pointer">Account</li>
                   <li className="hover:text-orange-600 hover:underline cursor-pointer">Orders</li>
                   <li className="hover:text-orange-600 hover:underline cursor-pointer">Recommendations</li>
-                  <li className="hover:text-orange-600 hover:underline cursor-pointer">Browsing History</li>
-                  <li className="hover:text-orange-600 hover:underline cursor-pointer">Watchlist</li>
                 </ul>
               </div>
             </div>
@@ -326,7 +303,9 @@ export default function AmazonNavbar() {
           {/* Drawer Header */}
           <div className="bg-[#232f3e] text-white p-4 flex items-center gap-3">
             <User className="w-7 h-7 bg-gray-600 rounded-full p-1 text-white" />
-            <span className="font-bold text-lg">Hello, sign in</span>
+            <span className="font-bold text-lg">
+              {user ? `Hello, ${user.name}` : "Hello, sign in"}
+            </span>
           </div>
 
           {/* Drawer Links */}
@@ -351,25 +330,28 @@ export default function AmazonNavbar() {
 
             <hr className="border-gray-200" />
 
+            {/* Dynamic Shop by Department */}
             <div>
               <h3 className="font-bold text-gray-900 text-base mb-2">Shop by Department</h3>
               <ul className="space-y-2">
-                <li className="flex justify-between items-center py-1 hover:text-orange-600 cursor-pointer">
-                  <span>Electronics</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </li>
-                <li className="flex justify-between items-center py-1 hover:text-orange-600 cursor-pointer">
-                  <span>Computers</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </li>
-                <li className="flex justify-between items-center py-1 hover:text-orange-600 cursor-pointer">
-                  <span>Smart Home</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </li>
-                <li className="flex justify-between items-center py-1 hover:text-orange-600 cursor-pointer">
-                  <span>Arts & Crafts</span>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
-                </li>
+                {isDepartmentsLoading ? (
+                  <div className="flex items-center gap-2 py-2 text-xs text-gray-500 animate-pulse">
+                    <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                    <span>Loading departments...</span>
+                  </div>
+                ) : departments.length > 0 ? (
+                  departments.map((dept) => (
+                    <li
+                      key={dept._id}
+                      className="flex justify-between items-center py-1 hover:text-orange-600 cursor-pointer transition-colors"
+                    >
+                      <span>{dept.name}</span>
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-xs text-gray-500 py-1">No departments available</li>
+                )}
               </ul>
             </div>
 
@@ -390,3 +372,4 @@ export default function AmazonNavbar() {
     </header>
   );
 }
+

@@ -10,7 +10,7 @@ import { logout, setUser } from "../features/auth/authSlice";
 import { RootState } from "../store";
 import { toast } from "react-toastify";
 
-export const url = "https://snackzilla.onrender.com";
+export const url = "http://localhost:9000";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${url}/api/v1`,

@@ -12,7 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useAppDispatch } from '@/redux/hooks';
 import { setUser } from '@/redux/features/auth/authSlice';
-import { useLoginMutation } from '@/redux/features/auth/authApi';
+import { useLogInMutation } from '@/redux/features/auth/authApi';
 
 type RoleType = 'customer' | 'vendor' | 'admin';
 
@@ -40,7 +40,7 @@ const DEMO_CREDENTIALS: Record<RoleType, { email: string; pass: string; label: s
 
 const LoginForm: React.FC = () => {
     const dispatch = useAppDispatch();
-    const [loginApi, { isLoading: isLoggingIn }] = useLoginMutation();
+    const [loginApi, { isLoading: isLoggingIn }] = useLogInMutation();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
