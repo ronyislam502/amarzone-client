@@ -10,6 +10,10 @@ import { loginValidationSchema } from '@/Schema/Auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 
+import { useAppDispatch } from '@/redux/hooks';
+import { setUser } from '@/redux/features/auth/authSlice';
+import { useLoginMutation } from '@/redux/features/auth/authApi';
+
 type RoleType = 'customer' | 'vendor' | 'admin';
 
 const DEMO_CREDENTIALS: Record<RoleType, { email: string; pass: string; label: string; icon: React.ReactNode }> = {
@@ -35,11 +39,13 @@ const DEMO_CREDENTIALS: Record<RoleType, { email: string; pass: string; label: s
 
 
 const LoginForm: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const [loginApi, { isLoading: isLoggingIn }] = useLoginMutation();
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
     const [activeRole, setActiveRole] = useState<RoleType | null>(null);
     const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -53,7 +59,21 @@ const LoginForm: React.FC = () => {
         });
     };
 
-    const onSubmit = () => { }
+    const onSubmit = async (data?: any) => {
+        try {
+            const loginData = data || { email, password };
+            const res = await loginApi(loginData).unwrap();
+            if (res?.data?.accessToken) {
+                dispatch(setUser({
+                    user: res.data.user || { email: loginData.email, role: activeRole || 'customer' },
+                    token: res.data.accessToken
+                }));
+                setStatusMessage({ type: 'success', text: 'Login successful!' });
+            }
+        } catch (err: any) {
+            setStatusMessage({ type: 'error', text: err?.data?.message || 'Login failed. Please check credentials.' });
+        }
+    };
 
     return (
         <div className="w-full max-w-md mx-auto">

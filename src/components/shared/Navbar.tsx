@@ -16,10 +16,16 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { setDrawerOpen, setSelectedCategory } from "@/redux/features/ui/uiSlice";
+
 export default function AmazonNavbar() {
-  const [cartCount, setCartCount] = useState(0);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const dispatch = useAppDispatch();
+  const drawerOpen = useAppSelector((state) => state.ui.drawerOpen);
+  const selectedCategory = useAppSelector((state) => state.ui.selectedCategory);
+  const cartCount = useAppSelector((state) => state.cart.totalQuantity);
+  const user = useAppSelector((state) => state.auth.user);
+
 
   const categories = [
     "All Categories",
@@ -85,7 +91,7 @@ export default function AmazonNavbar() {
         type="checkbox"
         className="drawer-toggle"
         checked={drawerOpen}
-        onChange={(e) => setDrawerOpen(e.target.checked)}
+        onChange={(e) => dispatch(setDrawerOpen(e.target.checked))}
       />
 
       {/* TOP NAVBAR (Dark Navy: #131921) */}
@@ -119,7 +125,7 @@ export default function AmazonNavbar() {
             {/* Category Dropdown */}
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => dispatch(setSelectedCategory(e.target.value))}
               className="join-item select select-sm sm:select-md bg-gray-200 hover:bg-gray-300 text-gray-800 border-none font-normal text-xs px-2 focus:outline-none cursor-pointer h-10 min-h-0 rounded-l-md rounded-r-none max-w-[50px] sm:max-w-[75px] md:max-w-none"
             >
               <option value="All">All</option>

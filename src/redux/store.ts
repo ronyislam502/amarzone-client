@@ -1,4 +1,6 @@
 import { configureStore } from "@reduxjs/toolkit";
+import { baseApi } from "./api/baseApi";
+import authReducer from "./features/auth/authSlice";
 import {
   persistStore,
   persistReducer,
@@ -9,16 +11,14 @@ import {
   PURGE,
   REGISTER,
 } from "redux-persist";
-import storage from "./storage";
-import authReducer from "./features/auth/authSlice";
-import { baseApi } from "./api/baseApi";
+import storage from "redux-persist/lib/storage";
 
-const persistAuthConfig = {
+const persistConfig = {
   key: "auth",
   storage,
 };
 
-const persistedAuthReducer = persistReducer(persistAuthConfig, authReducer);
+const persistedAuthReducer = persistReducer(persistConfig, authReducer);
 
 export const store = configureStore({
   reducer: {
@@ -34,6 +34,6 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
-
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
+export type AppStore = typeof store;
