@@ -15,6 +15,7 @@ import {
     Check
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const Footer: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -81,13 +82,15 @@ export const Footer: React.FC = () => {
 
             {/* 2. MAIN FOOTER DIRECTORY & NEWSLETTER (6 COLUMNS IN 1 ROW) */}
             <div className="py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 lg:grid-cols-[2.5fr_1.5fr_1.8fr_1.7fr_1.5fr_3fr] gap-6">
+                <div className="max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-8">
                     {/* Col 1: Brand & Socials */}
                     <div className="space-y-4">
                         <Link href="/" className="inline-flex items-center gap-2.5 group">
-                            <img
+                            <Image
                                 src="https://res.cloudinary.com/dkk9lvbtf/image/upload/v1785693062/amarzone_fnnw8s.png"
                                 alt="Amarzone Logo"
+                                width={100}
+                                height={100}
                                 className="h-20 w-auto object-contain"
                             />
                         </Link>
