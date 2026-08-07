@@ -2,76 +2,38 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Mail, Lock, Eye, EyeOff, ArrowRight, CheckCircle2, User, Store, Shield, Sparkles } from 'lucide-react';
-import Image from 'next/image';
+import { Eye, EyeOff, CheckCircle2, Sparkles } from 'lucide-react';
 import AZForm from '../form/AZFrom';
 import AZInput from '../form/AZInput';
 import { loginValidationSchema } from '@/Schema/Auth';
 import { zodResolver } from '@hookform/resolvers/zod';
-
-
 import { useAppDispatch } from '@/redux/hooks';
 import { setUser } from '@/redux/features/auth/authSlice';
 import { useLogInMutation } from '@/redux/features/auth/authApi';
-
-type RoleType = 'customer' | 'vendor' | 'admin';
-
-const DEMO_CREDENTIALS: Record<RoleType, { email: string; pass: string; label: string; icon: React.ReactNode }> = {
-    customer: {
-        email: 'alex.shopper@amarzone.com',
-        pass: 'CustomerPass123!',
-        label: 'Customer',
-        icon: <User className="w-3.5 h-3.5" />
-    },
-    vendor: {
-        email: 'store.seller@amarzone.com',
-        pass: 'VendorPass123!',
-        label: 'Vendor / Seller',
-        icon: <Store className="w-3.5 h-3.5" />
-    },
-    admin: {
-        email: 'system.admin@amarzone.com',
-        pass: 'AdminPass123!',
-        label: 'Administrator',
-        icon: <Shield className="w-3.5 h-3.5" />
-    }
-};
-
+import { toast } from 'react-toastify';
 
 const LoginForm: React.FC = () => {
     const dispatch = useAppDispatch();
     const [loginApi, { isLoading: isLoggingIn }] = useLogInMutation();
-
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [rememberMe, setRememberMe] = useState(true);
-    const [activeRole, setActiveRole] = useState<RoleType | null>(null);
     const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    const handleDemoSelect = (role: RoleType) => {
-        setActiveRole(role);
-        setEmail(DEMO_CREDENTIALS[role].email);
-        setPassword(DEMO_CREDENTIALS[role].pass);
-        setStatusMessage({
-            type: 'success',
-            text: `Autofilled with ${DEMO_CREDENTIALS[role].label} demo credentials!`
-        });
-    };
-
-    const onSubmit = async (data?: any) => {
+    const onSubmit = async (data: any) => {
         try {
-            const loginData = data || { email, password };
-            const res = await loginApi(loginData).unwrap();
+            const res = await loginApi(data).unwrap();
             if (res?.data?.accessToken) {
                 dispatch(setUser({
-                    user: res.data.user || { email: loginData.email, role: activeRole || 'customer' },
+                    user: res.data.user || { email: data.email, role: 'customer' },
                     token: res.data.accessToken
                 }));
-                setStatusMessage({ type: 'success', text: 'Login successful!' });
+                const msg = res?.message || 'Login successful!';
+                setStatusMessage({ type: 'success', text: msg });
+                toast.success(msg);
             }
         } catch (err: any) {
-            setStatusMessage({ type: 'error', text: err?.data?.message || 'Login failed. Please check credentials.' });
+            const errMsg = err?.data?.message || 'Login failed. Please check credentials.';
+            setStatusMessage({ type: 'error', text: errMsg });
+            toast.error(errMsg);
         }
     };
 
@@ -98,11 +60,6 @@ const LoginForm: React.FC = () => {
                     <span>{statusMessage.text}</span>
                 </div>
             )}
-
-            {/* Divider */}
-            <div className="divider text-xs text-base-content/60 my-5 uppercase font-medium tracking-widest">
-                Or with email
-            </div>
 
             {/* Form */}
             <AZForm
@@ -132,20 +89,22 @@ const LoginForm: React.FC = () => {
                 </div>
 
                 <div className="mt-4 text-right">
-                    <Link href="/recover" className="text-[10px] font-black text-gray-500 hover:text-success uppercase tracking-widest italic transition-colors">
-                        Recover Lost Key?
+                    <Link href="/reset-pass" className="text-[10px] font-black text-gray-500 hover:text-warning uppercase tracking-widest italic transition-colors">
+                        Forgot Password?
                     </Link>
                 </div>
 
                 <div className="mt-8 space-y-4">
                     <button
-                        className="w-full group flex items-center justify-center gap-3 bg-success hover:bg-success/90 text-black py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.25em] italic transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(34,197,94,0.3)]"
+                        className="w-full group flex items-center justify-center gap-3 bg-success hover:bg-success/90 text-black py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] italic transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(34,197,94,0.3)] disabled:opacity-50"
                         type="submit"
+                        disabled={isLoggingIn}
                     >
-                        Login
+                        {isLoggingIn ? 'Logging in...' : 'Login'}
                     </button>
                 </div>
             </AZForm>
+
             {/* Footer Sign-up Callout */}
             <div className="mt-6 text-center text-xs text-base-content/70">
                 Don&apos;t have an Amarzone account yet?{' '}
@@ -159,6 +118,5 @@ const LoginForm: React.FC = () => {
         </div>
     );
 };
-
 
 export default LoginForm;

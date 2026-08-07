@@ -17,6 +17,7 @@ import {
     Check,
     AlertCircle
 } from 'lucide-react';
+import { useCreateCustomerMutation, useCreateVendorMutation } from '@/redux/features/auth/authApi';
 
 type RoleType = 'customer' | 'vendor';
 
@@ -28,25 +29,6 @@ interface FormState {
     confirmPassword: string;
     agreeToTerms: boolean;
 }
-
-const DEMO_PREFILLS: Record<RoleType, FormState> = {
-    customer: {
-        name: 'Samantha Vance',
-        email: 'samantha.vance@example.com',
-        shopName: '',
-        password: 'PassWord123!',
-        confirmPassword: 'PassWord123!',
-        agreeToTerms: true
-    },
-    vendor: {
-        name: 'Robert Sterling',
-        email: 'robert.sterling@example.com',
-        shopName: 'Apex Electronics Hub',
-        password: 'VendorPass123!',
-        confirmPassword: 'VendorPass123!',
-        agreeToTerms: true
-    }
-};
 
 const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
     if (!password) return { score: 0, label: 'Empty', color: 'progress-error' };
@@ -62,7 +44,12 @@ const getPasswordStrength = (password: string): { score: number; label: string; 
     return { score, label: 'Strong', color: 'progress-success' };
 };
 
+import { toast } from 'react-toastify';
+
 export const SignUpForm: React.FC = () => {
+    const [createCustomer, { isLoading: isCreatingCustomer }] = useCreateCustomerMutation();
+    const [createVendor, { isLoading: isCreatingVendor }] = useCreateVendorMutation();
+
     const [role, setRole] = useState<RoleType>('customer');
     const [formData, setFormData] = useState<FormState>({
         name: '',
@@ -74,53 +61,82 @@ export const SignUpForm: React.FC = () => {
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
     const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    const isLoading = isCreatingCustomer || isCreatingVendor;
 
     const handleInputChange = (field: keyof FormState, value: string | boolean) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
         if (statusMessage) setStatusMessage(null);
     };
 
-    const handleDemoSelect = (selectedRole: RoleType) => {
-        setRole(selectedRole);
-        setFormData(DEMO_PREFILLS[selectedRole]);
-        setStatusMessage({
-            type: 'success',
-            text: `Autofilled with ${selectedRole === 'customer' ? 'Customer' : 'Vendor'} demo details!`
-        });
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (formData.password !== formData.confirmPassword) {
-            setStatusMessage({
-                type: 'error',
-                text: 'Passwords do not match! Please check your entries.'
-            });
+            const errMsg = 'Passwords do not match! Please check your entries.';
+            setStatusMessage({ type: 'error', text: errMsg });
+            toast.error(errMsg);
             return;
         }
 
         if (!formData.agreeToTerms) {
-            setStatusMessage({
-                type: 'error',
-                text: 'Please accept the Terms of Service and Privacy Policy to register.'
-            });
+            const errMsg = 'Please accept the Terms of Service and Privacy Policy to register.';
+            setStatusMessage({ type: 'error', text: errMsg });
+            toast.error(errMsg);
             return;
         }
 
-        setIsLoading(true);
         setStatusMessage(null);
 
-        // Simulate API call registration delay
-        setTimeout(() => {
-            setIsLoading(false);
-            setStatusMessage({
-                type: 'success',
-                text: `Welcome aboard, ${formData.name}! Your ${role} account was created successfully.`
-            });
-        }, 1200);
+        try {
+            if (role === 'customer') {
+                const customerData = {
+                    password: formData.password,
+                    customer: {
+                        name: formData.name,
+                        email: formData.email,
+                        phone: '01700000000',
+                        address: {
+                            street: 'Default St',
+                            city: 'Dhaka',
+                            state: 'Dhaka',
+                            postalCode: '1200',
+                            country: 'Bangladesh'
+                        }
+                    }
+                };
+                const res = await createCustomer(customerData).unwrap();
+                const successMsg = res?.message || `Welcome aboard, ${formData.name}! Your Customer account was created successfully.`;
+                setStatusMessage({ type: 'success', text: successMsg });
+                toast.success(successMsg);
+            } else {
+                const vendorData = {
+                    password: formData.password,
+                    vendor: {
+                        name: formData.name,
+                        email: formData.email,
+                        shopName: formData.shopName || `${formData.name}'s Store`,
+                        phone: '01700000000',
+                        address: {
+                            street: 'Default St',
+                            city: 'Dhaka',
+                            state: 'Dhaka',
+                            postalCode: '1200',
+                            country: 'Bangladesh'
+                        }
+                    }
+                };
+                const res = await createVendor(vendorData).unwrap();
+                const successMsg = res?.message || `Welcome aboard, ${formData.name}! Your Vendor store account was created successfully.`;
+                setStatusMessage({ type: 'success', text: successMsg });
+                toast.success(successMsg);
+            }
+        } catch (err: any) {
+            const errMsg = err?.data?.message || 'Registration failed. Please try again with valid details.';
+            setStatusMessage({ type: 'error', text: errMsg });
+            toast.error(errMsg);
+        }
     };
 
     const passwordStrength = getPasswordStrength(formData.password);
@@ -134,29 +150,6 @@ export const SignUpForm: React.FC = () => {
                     <div className="badge badge-warning gap-1.5 px-3 py-2 text-xs font-semibold">
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>Join Amarzone</span>
-                    </div>
-
-                    {/* Quick Demo Autofill Pills */}
-                    <div className="dropdown dropdown-end">
-                        <div tabIndex={0} role="button" className="btn btn-ghost btn-xs text-xs gap-1 text-warning">
-                            <Sparkles className="w-3 h-3" />
-                            <span>Demo Autofill</span>
-                        </div>
-                        <ul tabIndex={0} className="dropdown-content menu bg-base-100 rounded-box z-[1] w-48 p-2 shadow border border-base-300">
-                            <li className="menu-title text-[10px]">Select Profile</li>
-                            <li>
-                                <button type="button" onClick={() => handleDemoSelect('customer')} className="flex items-center gap-2 text-xs">
-                                    <User className="w-3.5 h-3.5 text-warning" />
-                                    <span>As Customer</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" onClick={() => handleDemoSelect('vendor')} className="flex items-center gap-2 text-xs">
-                                    <Store className="w-3.5 h-3.5 text-info" />
-                                    <span>As Vendor</span>
-                                </button>
-                            </li>
-                        </ul>
                     </div>
                 </div>
 

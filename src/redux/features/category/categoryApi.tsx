@@ -2,9 +2,9 @@ import { TResponseRedux } from "@/types/global";
 import { baseApi } from "../../api/baseApi";
 import { TDepartment } from "@/types/department";
 
-const departmentApi = baseApi.injectEndpoints({
+const categoryApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
-        allDepartments: builder.query({
+        allCategories: builder.query({
             query: ({ search, sort, page, limit, category, minPrice, maxPrice }) => {
                 const params = new URLSearchParams();
 
@@ -31,12 +31,12 @@ const departmentApi = baseApi.injectEndpoints({
                 }
 
                 return {
-                    url: "/departments",
+                    url: "/categories",
                     method: "GET",
                     params: params,
                 };
             },
-            providesTags: ["department"],
+            providesTags: ["category"],
             transformResponse: (response: TResponseRedux<TDepartment[]>) => {
                 return {
                     data: response?.data,
@@ -44,27 +44,27 @@ const departmentApi = baseApi.injectEndpoints({
                 };
             },
         }),
-        createDepartment: builder.mutation({
-            query: (departmentInfo) => ({
-                url: "/departments/create-department",
+        createCategory: builder.mutation({
+            query: (categoryInfo) => ({
+                url: "/categories/create-category",
                 method: "POST",
-                body: departmentInfo,
+                body: categoryInfo,
             }),
-            invalidatesTags: ["department"],
+            invalidatesTags: ["category"],
         }),
-        updateDepartment: builder.mutation({
+        updateCategory: builder.mutation({
             query: (args) => ({
-                url: `/departments/update/${args?.id}`,
+                url: `/categories/update/${args?.id}`,
                 method: "PATCH",
                 body: args.data,
             }),
-            invalidatesTags: ["department"],
+            invalidatesTags: ["category"],
         }),
     }),
 });
 
 export const {
-    useAllDepartmentsQuery,
-    useCreateDepartmentMutation,
-    useUpdateDepartmentMutation
-} = departmentApi;
+    useAllCategoriesQuery,
+    useCreateCategoryMutation,
+    useUpdateCategoryMutation
+} = categoryApi;

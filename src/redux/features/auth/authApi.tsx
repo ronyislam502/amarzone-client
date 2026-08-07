@@ -18,14 +18,33 @@ const authApi = baseApi.injectEndpoints({
     }),
     forgotPassword: builder.mutation({
       query: (data) => ({
-        url: "/auth/forgot-password",
+        url: "/auth/forget-password",
         method: "POST",
         body: data,
       }),
     }),
     resetPassword: builder.mutation({
+      query: (args: { data?: any; email?: string; newPassword?: string; token?: string } | any) => {
+        const body = args.data ? args.data : { email: args.email, newPassword: args.newPassword };
+        const token = args.token;
+        return {
+          url: "/auth/reset-password",
+          method: "POST",
+          body,
+          headers: token ? { authorization: token } : undefined,
+        };
+      },
+    }),
+    createCustomer: builder.mutation({
       query: (data) => ({
-        url: "/auth/reset-password",
+        url: "/user/create-customer",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    createVendor: builder.mutation({
+      query: (data) => ({
+        url: "/user/create-vendor",
         method: "POST",
         body: data,
       }),
@@ -38,4 +57,7 @@ export const {
   useChangePasswordMutation,
   useForgotPasswordMutation,
   useResetPasswordMutation,
+  useCreateCustomerMutation,
+  useCreateVendorMutation,
 } = authApi;
+

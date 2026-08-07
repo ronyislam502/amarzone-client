@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# git remote add origin https://github.com/ronyislam502/amarzone-client.git
