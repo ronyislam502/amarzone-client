@@ -21,10 +21,6 @@ export const resetPasswordValidationSchema = z
         newPassword: z
             .string()
             .trim()
-            .min(6, "Password must be at least 6 characters long"),
+            .min(4, "Password must be at least 6 characters long"),
         confirmPassword: z.string().trim().min(1, "Please confirm your password"),
     })
-    .refine((data) => data.newPassword === data.confirmPassword, {
-        message: "Passwords do not match",
-        path: ["confirmPassword"],
-    });

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import Link from 'next/link';
 import {
     KeyRound,
@@ -13,14 +13,62 @@ import {
 } from 'lucide-react';
 import AZForm from '../form/AZFrom';
 import AZInput from '../form/AZInput';
+import { useSearchParams } from 'next/navigation';
+import { useResetPasswordMutation } from '@/redux/features/auth/authApi';
+import { useDispatch } from 'react-redux';
+import { setToken } from '@/redux/features/auth/authSlice';
+import { FieldValues } from 'react-hook-form';
+import { toast } from 'react-toastify';
+import { useRouter } from "next/navigation";
+import { TError } from '@/types/global';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { resetPasswordValidationSchema } from '@/Schema/Auth';
 
 const ResetPassContent: React.FC = () => {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-    const handleDummySubmit = (e?: any) => {
-        if (e && e.preventDefault) {
-            e.preventDefault();
+    const searchParams = useSearchParams();
+    const email = searchParams.get("email");
+    const token = searchParams.get("token");
+    const router = useRouter();
+    const [resetPassword] = useResetPasswordMutation();
+    // console.log("searc", { email, token });
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if (token) {
+            dispatch(setToken(token));
+        }
+    }, [token, dispatch]);
+
+    useEffect(() => {
+        if (!token) return;
+        localStorage.setItem("accessToken", token);
+    }, [token]);
+
+    const onSubmit = async (data: FieldValues) => {
+        if (!email || !token) {
+            toast.error("Invalid reset link. Please request a new one.");
+            return;
+        }
+
+        try {
+            const resetData = {
+                email,
+                newPassword: data.newPassword,
+            };
+
+            const res = await resetPassword(resetData).unwrap();
+
+            if (res?.success) {
+                toast.success(res?.message || "Password reset successfully!");
+                dispatch(setToken(null));
+                router.push("/login");
+            }
+        } catch (error) {
+            const err = error as TError;
+            toast.error(err?.data?.message || "Failed to reset password");
         }
     };
 
@@ -41,67 +89,23 @@ const ResetPassContent: React.FC = () => {
             </div>
 
             {/* Pure Design Form Presentation */}
-            <AZForm onSubmit={handleDummySubmit}>
-                <div className="space-y-4">
+            <AZForm resolver={zodResolver(resetPasswordValidationSchema)}
+                onSubmit={onSubmit}>
+
+                {/* New Password */}
+                <div className="relative">
                     <AZInput
-                        label="Account Email"
-                        name="email"
-                        type="email"
-                        placeholder="Enter your account email"
-                        icon={<Mail className="w-4 h-4" />}
+                        label="New Password"
+                        name="newPassword"
+                        type={showNewPassword ? 'text' : 'password'}
+                        placeholder="Min. 4 characters"
+                        icon={<Lock className="w-4 h-4" />}
                     />
-
-                    {/* Reset Token Field */}
-                    <div className="form-control w-full">
-                        <label className="label mb-1 flex justify-between items-center">
-                            <span className="text-md font-black text-warning uppercase tracking-widest italic">
-                                Reset Security Token
-                            </span>
-                        </label>
-                        <div className="relative group">
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-success">
-                                <KeyRound className="w-4 h-4" />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Paste token from email link"
-                                className="w-full bg-warning/5 border border-warning/50 rounded-2xl py-4 pl-12 pr-4 text-xs font-mono font-bold text-slate-100 placeholder:text-gray-500 outline-none hover:border-blue-500/40 focus:border-blue-500/60 transition-all"
-                            />
-                        </div>
-                    </div>
-
-                    {/* New Password */}
-                    <div className="relative">
-                        <AZInput
-                            label="New Password"
-                            name="newPassword"
-                            type={showNewPassword ? 'text' : 'password'}
-                            placeholder="Min. 6 characters"
-                            icon={<Lock className="w-4 h-4" />}
-                        />
-                        <div
-                            className="absolute right-4 top-10 cursor-pointer text-gray-400 hover:text-white transition-colors"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                        >
-                            {showNewPassword ? <Eye size={18} /> : <EyeOff size={18} />}
-                        </div>
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div className="relative">
-                        <AZInput
-                            label="Confirm New Password"
-                            name="confirmPassword"
-                            type={showConfirmPassword ? 'text' : 'password'}
-                            placeholder="Re-enter new password"
-                            icon={<Lock className="w-4 h-4" />}
-                        />
-                        <div
-                            className="absolute right-4 top-10 cursor-pointer text-gray-400 hover:text-white transition-colors"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        >
-                            {showConfirmPassword ? <Eye size={18} /> : <EyeOff size={18} />}
-                        </div>
+                    <div
+                        className="absolute right-4 top-10 cursor-pointer text-gray-400 hover:text-white transition-colors"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                        {showNewPassword ? <Eye size={18} /> : <EyeOff size={18} />}
                     </div>
                 </div>
 

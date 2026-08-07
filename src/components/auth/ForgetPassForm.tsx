@@ -11,11 +11,29 @@ import {
 } from 'lucide-react';
 import AZForm from '../form/AZFrom';
 import AZInput from '../form/AZInput';
+import { useForgotPasswordMutation } from '@/redux/features/auth/authApi';
+import { FieldValues } from 'react-hook-form';
+import { toast } from 'react-toastify';
+import { TError } from '@/types/global';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { forgotPasswordValidationSchema } from '@/Schema/Auth';
 
 export const ForgetPassForm: React.FC = () => {
-    const handleDummySubmit = (e?: any) => {
-        if (e && e.preventDefault) {
-            e.preventDefault();
+    const [forgotPassword, { isSuccess }] = useForgotPasswordMutation();
+    const onSubmit = async (data: FieldValues) => {
+        try {
+            const forgotData = {
+                email: data?.email,
+            };
+            const res = await forgotPassword(forgotData).unwrap();
+
+            if (res?.success) {
+                toast.success(res?.message);
+                // router.push("/reset-pass");
+            }
+        } catch (error) {
+            const err = error as TError;
+            toast.error(err?.data?.message);
         }
     };
 
@@ -36,7 +54,8 @@ export const ForgetPassForm: React.FC = () => {
             </div>
 
             {/* Pure Design Form Presentation */}
-            <AZForm onSubmit={handleDummySubmit}>
+            <AZForm resolver={zodResolver(forgotPasswordValidationSchema)}
+                onSubmit={onSubmit}>
                 <div className="space-y-4">
                     <AZInput
                         label="Registered Email Address"
