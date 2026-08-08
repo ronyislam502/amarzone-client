@@ -15,7 +15,8 @@ import {
     Settings,
     LogOut,
     Activity,
-    ShieldCheck
+    ShieldCheck,
+    User
 } from 'lucide-react';
 
 export const AdminSidebar: React.FC = () => {
@@ -70,6 +71,19 @@ export const AdminSidebar: React.FC = () => {
                         <Link href="/admin" className={pathname === '/admin' ? 'active font-bold' : ''}>
                             <LayoutDashboard className="w-4 h-4 text-primary" />
                             <span>Admin Dashboard</span>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="/vendor" className={pathname === '/vendor' ? 'active font-bold' : ''}>
+                            <Store className="w-4 h-4 text-warning" />
+                            <span>Vendor Dashboard</span>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href="/user" className={pathname === '/user' ? 'active font-bold' : ''}>
+                            <User className="w-4 h-4 text-info" />
+                            <span>User Dashboard</span>
+                            <span className="badge badge-info badge-sm ml-auto font-bold">New</span>
                         </Link>
                     </li>
                     <li>
