@@ -8,32 +8,43 @@ import AZInput from '../form/AZInput';
 import { loginValidationSchema } from '@/Schema/Auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useAppDispatch } from '@/redux/hooks';
-import { setUser } from '@/redux/features/auth/authSlice';
+import { setUser, TUser } from '@/redux/features/auth/authSlice';
 import { useLogInMutation } from '@/redux/features/auth/authApi';
 import { toast } from 'react-toastify';
+import { FieldValues } from 'react-hook-form';
+import { verifyToken } from '../utilities/verifyToken';
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+
 
 const LoginForm: React.FC = () => {
     const dispatch = useAppDispatch();
     const [loginApi, { isLoading: isLoggingIn }] = useLogInMutation();
     const [showPassword, setShowPassword] = useState(false);
-    const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const router = useRouter();
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: FieldValues) => {
+
+        const authData = {
+            email: data.email,
+            password: data.password
+        }
         try {
-            const res = await loginApi(data).unwrap();
-            if (res?.data?.accessToken) {
-                dispatch(setUser({
-                    user: res.data.user || { email: data.email, role: 'customer' },
-                    token: res.data.accessToken
-                }));
-                const msg = res?.message || 'Login successful!';
-                setStatusMessage({ type: 'success', text: msg });
-                toast.success(msg);
+            const res = await loginApi(authData).unwrap();
+            const user = verifyToken(res.data.accessToken) as TUser;
+            dispatch(setUser({ user: user, token: res.data.accessToken }));
+
+            if (res?.success) {
+                Cookies.set("accessToken", res?.data?.accessToken);
+                Cookies.set("refreshToken", res?.data?.refreshToken);
+                toast.success(res?.message, {
+                    autoClose: 1000,
+                });
+                router.push("/");
             }
+
         } catch (err: any) {
-            const errMsg = err?.data?.message || 'Login failed. Please check credentials.';
-            setStatusMessage({ type: 'error', text: errMsg });
-            toast.error(errMsg);
+
         }
     };
 
@@ -53,14 +64,7 @@ const LoginForm: React.FC = () => {
                 </p>
             </div>
 
-            {/* Notification Banner */}
-            {statusMessage && (
-                <div className={`alert ${statusMessage.type === 'success' ? 'alert-success' : 'alert-error'} mb-5 shadow-sm p-3 text-xs`}>
-                    <CheckCircle2 className="w-4 h-4 shrink-0" />
-                    <span>{statusMessage.text}</span>
-                </div>
-            )}
-
+      
             {/* Form */}
             <AZForm
                 resolver={zodResolver(loginValidationSchema)}
