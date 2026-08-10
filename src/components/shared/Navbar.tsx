@@ -5,6 +5,9 @@ import { MapPin, Search, ShoppingCart, ChevronDown, User } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import AZSelect from "../form/AZSelect";
+import { useAppSelector } from "@/redux/hooks";
+import { selectCurrentUser } from "@/redux/features/auth/authSlice";
+import { useMyProfileQuery } from "@/redux/features/user/userApi";
 
 const categoryOptions = [
   { key: "All", label: "All" },
@@ -21,6 +24,13 @@ const categoryOptions = [
 ];
 
 export default function Navbar() {
+  const user = useAppSelector(selectCurrentUser);
+  const { data: userData } = useMyProfileQuery({}, { skip: !user });
+  const profile = userData?.data;
+
+  console.log("role", profile?.user?.role)
+
+
   return (
     <div className=" bg-[#0b131f] text-white select-none px-3 py-1.5 flex items-center justify-between gap-2 text-xs font-sans">
       {/* 1. Amarzone Logo */}
@@ -65,32 +75,71 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* 5. Account Icon */}
-      <Link
-        href="/login"
-        className="flex items-center p-1.5 border border-transparent hover:border-white rounded-xs cursor-pointer shrink-0 transition-all"
-        aria-label="Account"
-        title="Account"
-      >
-        <User className="w-7 h-7 text-white stroke-[1.75]" />
-      </Link>
-
+      {/* 5. Account / User Avatar Section */}
+      {user ? (
+        <Link
+          href={`/${profile?.user?.role?.toLowerCase()}`}
+          className="flex items-center gap-2 p-1 border border-transparent hover:border-white rounded cursor-pointer shrink-0 transition-all group"
+          title={profile?.name || profile?.email}
+        >
+          <div className="avatar">
+            <div className="w-8 h-8 rounded-full ring-2 ring-[#febd69] overflow-hidden bg-gradient-to-r from-amber-500 to-orange-600 flex items-center justify-center text-white font-black text-sm shadow-md">
+              {profile ? (
+                <Image
+                  src={profile?.avatar || ""}
+                  alt={profile?.name || "User Avatar"}
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span>
+                  {profile?.name}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="hidden md:flex flex-col text-left leading-tight">
+            <span className="text-[10px] text-gray-300">Hello, {profile?.name?.split(" ")[0]}</span>
+            <span className="text-[12px] font-bold text-white -mt-0.5 flex items-center gap-0.5">
+              Account & Dashboard
+              <ChevronDown className="w-3 h-3 text-gray-400" />
+            </span>
+          </div>
+        </Link>
+      ) : (
+        <Link
+          href="/login"
+          className="flex items-center p-1.5 border border-transparent hover:border-white rounded cursor-pointer shrink-0 transition-all gap-1.5"
+          aria-label="Account Login"
+          title="Sign In"
+        >
+          <User className="w-7 h-7 text-white stroke-[1.75]" />
+          <div className="hidden md:flex flex-col text-left leading-tight">
+            <span className="text-[10px] text-gray-300">Hello, sign in</span>
+            <span className="text-[12px] font-bold text-white -mt-0.5 flex items-center gap-0.5">
+              Account & Lists
+              <ChevronDown className="w-3 h-3 text-gray-400" />
+            </span>
+          </div>
+        </Link>
+      )}
 
       {/* 6. Returns & Orders */}
-      <a
-        href="#"
-        className="hidden sm:flex flex-col text-left p-1 border border-transparent hover:border-white rounded-xs cursor-pointer leading-tight shrink-0"
+      <Link
+        href={user ? `${profile?.role?.toLowerCase()}/orders` : "/login"}
+        className="hidden sm:flex flex-col text-left p-1 border border-transparent hover:border-white rounded cursor-pointer leading-tight shrink-0"
       >
         <span className="text-[12px] text-gray-300">Returns</span>
         <span className="text-[14px] font-bold text-white -mt-0.5">
           & Orders
         </span>
-      </a>
+      </Link>
 
       {/* 7. Cart */}
       <a
         href="#"
-        className="flex items-center p-1 border border-transparent hover:border-white rounded-xs cursor-pointer relative shrink-0"
+        className="flex items-center p-1 border border-transparent hover:border-white rounded cursor-pointer relative shrink-0"
       >
         <div className="relative flex items-center">
           <span className="absolute -top-1 left-3 text-[#f08804] font-bold text-[14px]">
@@ -102,10 +151,6 @@ export default function Navbar() {
           Cart
         </span>
       </a>
-    </div>
+    </div >
   );
 }
-
-
-
-

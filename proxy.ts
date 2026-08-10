@@ -18,6 +18,8 @@ export function proxy(request: NextRequest) {
 
   const accessToken = request.cookies.get("accessToken")?.value;
 
+  console.log("token", accessToken)
+
   let user: TUser | null = null;
 
   if (accessToken) {
@@ -56,7 +58,7 @@ export function proxy(request: NextRequest) {
   /**
    * Role based authorization
    */
-  const role = user.role as Role;
+  const role = user?.role as Role;
 
   const allowedRoutes = ROLE_BASED_ROUTES[role];
 
@@ -87,7 +89,6 @@ export const config = {
   matcher: [
     "/login",
     "/sign-up",
-
     "/super-admin/:path*",
     "/admin/:path*",
     "/vendor/:path*",

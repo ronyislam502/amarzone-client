@@ -21,7 +21,6 @@ import {
     BarChart3,
     Check,
 } from 'lucide-react';
-import { ROLE_DETAILS, TUserRole } from '@/components/utilities/constant';
 
 interface RBACPermission {
     feature: string;
@@ -168,7 +167,7 @@ export default function SuperAdminDashboard() {
                     <UserCheck className="w-5 h-5 text-secondary" /> System Roles Overview
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {(Object.keys(ROLE_DETAILS) as TUserRole[]).map((rKey) => {
+                    {/* {(Object.keys(ROLE_DETAILS) as TUserRole[]).map((rKey) => {
                         const r = ROLE_DETAILS[rKey];
                         return (
                             <div key={rKey} className="card bg-base-100 border border-base-300 p-5 shadow-md relative overflow-hidden">
@@ -189,7 +188,7 @@ export default function SuperAdminDashboard() {
                                 </div>
                             </div>
                         );
-                    })}
+                    })} */}
                 </div>
             </div>
 

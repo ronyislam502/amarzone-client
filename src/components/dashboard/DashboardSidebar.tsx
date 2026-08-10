@@ -1,19 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-    ShieldCheck,
-    LogOut,
-    Menu,
-    ChevronDown,
-    Check,
-} from 'lucide-react';
-import { useAppSelector } from '@/redux/hooks';
-import { selectCurrentUser, TUser } from '@/redux/features/auth/authSlice';
-
+import { LogOut, Menu } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { logout, selectCurrentUser } from '@/redux/features/auth/authSlice';
+import { superAdminSidebarItems } from '@/components/utilities/superAdminSidebar';
+import { adminSidebarItems } from '@/components/utilities/adminSidebar';
+import { vendorSidebarItems } from '@/components/utilities/vendorSidebar';
+import { customerSidebarItems } from '@/components/utilities/customerSidebar';
 
 interface DynamicSidebarProps {
     children: React.ReactNode;
@@ -21,10 +18,33 @@ interface DynamicSidebarProps {
 
 export const DashboardSidebar: React.FC<DynamicSidebarProps> = ({ children }) => {
     const pathname = usePathname();
+    const router = useRouter();
+    const dispatch = useAppDispatch();
     const user = useAppSelector(selectCurrentUser);
 
+    const handleSignOut = () => {
+        dispatch(logout());
+        router.push('/login');
+    };
 
+    const role = user?.role?.toUpperCase();
 
+    let sidebarItems;
+    switch (role) {
+        case 'SUPER_ADMIN':
+            sidebarItems = superAdminSidebarItems;
+            break;
+        case 'ADMIN':
+            sidebarItems = adminSidebarItems;
+            break;
+        case 'VENDOR':
+            sidebarItems = vendorSidebarItems;
+            break;
+        case 'CUSTOMER':
+        default:
+            sidebarItems = customerSidebarItems;
+            break;
+    }
 
     return (
         /* DaisyUI Component Drawer Implementation */
@@ -77,20 +97,20 @@ export const DashboardSidebar: React.FC<DynamicSidebarProps> = ({ children }) =>
 
                         {/* Dynamic Navigation Menu Items */}
                         <div className="mt-2 space-y-4 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
-                            {filteredSections.map((section, sIdx) => (
+                            {sidebarItems.map((section, sIdx) => (
                                 <div key={sIdx}>
                                     <div className="menu-title text-[10px] font-black uppercase text-base-content/60 tracking-wider px-2 py-1">
                                         {section.title}
                                     </div>
                                     <ul className="menu menu-sm bg-base-100 rounded-box shadow-sm p-1.5 gap-0.5 border border-base-300">
-                                        {section.items.map((item) => {
+                                        {section.items.map((item, iIdx) => {
                                             const Icon = item.icon;
-                                            const isActive = item.exact
+                                            const isActive = ('exact' in item && item.exact)
                                                 ? pathname === item.href
                                                 : pathname.startsWith(item.href);
 
                                             return (
-                                                <li key={item.id}>
+                                                <li key={item.href || iIdx}>
                                                     <Link
                                                         href={item.href}
                                                         className={`flex items-center justify-between text-xs py-2 px-3 rounded-lg font-bold transition-all ${isActive
@@ -122,18 +142,18 @@ export const DashboardSidebar: React.FC<DynamicSidebarProps> = ({ children }) =>
                     <div className="pt-4 border-t border-base-300 mt-4 space-y-2">
                         <div className="flex items-center justify-between px-2 text-xs">
                             <span className="text-base-content/60 font-semibold text-[10px] uppercase">Logged user</span>
-                            {/* <span className="font-extrabold text-primary text-[11px]">
-                                {currentUser?.name || currentUser?.email || 'User'}
-                            </span> */}
+                            <span className="font-extrabold text-primary text-[11px]">
+                                {user?.name || user?.email || 'User'}
+                            </span>
                         </div>
-                        {/* <button
+                        <button
                             type="button"
                             onClick={handleSignOut}
                             className="btn btn-error btn-outline btn-block btn-sm gap-2 text-xs font-bold"
                         >
                             <LogOut className="w-4 h-4" />
                             <span>Sign Out</span>
-                        </button> */}
+                        </button>
                     </div>
                 </aside>
             </div>
