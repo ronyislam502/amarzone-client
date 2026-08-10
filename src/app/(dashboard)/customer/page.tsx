@@ -33,6 +33,8 @@ import {
     Tag,
     Gift
 } from 'lucide-react';
+import Image from 'next/image';
+import { useMyProfileQuery } from '@/redux/features/user/userApi';
 
 interface Order {
     id: string;
@@ -173,6 +175,8 @@ interface SupportChatMessage {
 }
 
 export default function UserDashboardPage() {
+    const { data: userData } = useMyProfileQuery({});
+    const user = userData?.data;
     const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'wishlist' | 'wallet' | 'support' | 'profile'>('overview');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(USER_ORDERS[0]);
     const [orderFilter, setOrderFilter] = useState<string>('ALL');
@@ -325,20 +329,22 @@ export default function UserDashboardPage() {
                         <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
                             <div className="avatar online">
                                 <div className="w-20 sm:w-24 rounded-2xl ring ring-primary ring-offset-base-100 ring-offset-2 shadow-xl">
-                                    <img
+                                    <Image
                                         src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80"
+                                        width={100}
+                                        height={100}
                                         alt="Alex Morgan"
                                     />
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                                    <h2 className="text-2xl font-extrabold tracking-tight">Alex Morgan</h2>
+                                    <h2 className="text-2xl font-extrabold tracking-tight">{user?.name}</h2>
                                     <span className="badge badge-warning gap-1 font-black text-xs">
                                         <Sparkles className="w-3 h-3" /> GOLD VIP
                                     </span>
                                 </div>
-                                <p className="text-xs text-base-content/70">alex.morgan@example.com • Member since Jan 2024</p>
+                                <p className="text-xs text-base-content/70">{user?.email}• Member since Jan 2024</p>
                                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-2">
                                     <span className="badge badge-outline badge-sm gap-1 text-[11px]">
                                         <MapPin className="w-3 h-3 text-error" /> New York, USA
@@ -440,18 +446,16 @@ export default function UserDashboardPage() {
                 <button
                     type="button"
                     onClick={() => setActiveTab('overview')}
-                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${
-                        activeTab === 'overview' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
-                    }`}
+                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${activeTab === 'overview' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
+                        }`}
                 >
                     <Sparkles className="w-4 h-4" /> Overview
                 </button>
                 <button
                     type="button"
                     onClick={() => setActiveTab('orders')}
-                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${
-                        activeTab === 'orders' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
-                    }`}
+                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${activeTab === 'orders' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
+                        }`}
                 >
                     <Package className="w-4 h-4" /> My Orders
                     <span className="badge badge-sm badge-warning font-black">5</span>
@@ -459,9 +463,8 @@ export default function UserDashboardPage() {
                 <button
                     type="button"
                     onClick={() => setActiveTab('wishlist')}
-                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${
-                        activeTab === 'wishlist' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
-                    }`}
+                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${activeTab === 'wishlist' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
+                        }`}
                 >
                     <Heart className="w-4 h-4" /> Wishlist
                     <span className="badge badge-sm badge-secondary font-black">4</span>
@@ -469,27 +472,24 @@ export default function UserDashboardPage() {
                 <button
                     type="button"
                     onClick={() => setActiveTab('wallet')}
-                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${
-                        activeTab === 'wallet' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
-                    }`}
+                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${activeTab === 'wallet' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
+                        }`}
                 >
                     <Wallet className="w-4 h-4" /> Wallet & Coupons
                 </button>
                 <button
                     type="button"
                     onClick={() => setActiveTab('support')}
-                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${
-                        activeTab === 'support' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
-                    }`}
+                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${activeTab === 'support' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
+                        }`}
                 >
                     <MessageSquare className="w-4 h-4" /> Support & Chat
                 </button>
                 <button
                     type="button"
                     onClick={() => setActiveTab('profile')}
-                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${
-                        activeTab === 'profile' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
-                    }`}
+                    className={`tab gap-2 font-bold text-xs sm:text-sm py-3 rounded-xl transition-all ${activeTab === 'profile' ? 'tab-active btn-primary text-primary-content shadow-md' : ''
+                        }`}
                 >
                     <User className="w-4 h-4" /> Profile & Settings
                 </button>
@@ -745,9 +745,8 @@ export default function UserDashboardPage() {
                                     key={status}
                                     type="button"
                                     onClick={() => setOrderFilter(status)}
-                                    className={`join-item btn btn-xs sm:btn-sm font-bold ${
-                                        orderFilter === status ? 'btn-primary' : 'btn-ghost bg-base-200/50'
-                                    }`}
+                                    className={`join-item btn btn-xs sm:btn-sm font-bold ${orderFilter === status ? 'btn-primary' : 'btn-ghost bg-base-200/50'
+                                        }`}
                                 >
                                     {status.replace('_', ' ')}
                                 </button>
@@ -775,9 +774,8 @@ export default function UserDashboardPage() {
                                             {filteredOrders.map((order) => (
                                                 <tr
                                                     key={order.id}
-                                                    className={`hover cursor-pointer ${
-                                                        selectedOrder?.id === order.id ? 'bg-primary/10' : ''
-                                                    }`}
+                                                    className={`hover cursor-pointer ${selectedOrder?.id === order.id ? 'bg-primary/10' : ''
+                                                        }`}
                                                     onClick={() => setSelectedOrder(order)}
                                                 >
                                                     <td>
@@ -954,9 +952,8 @@ export default function UserDashboardPage() {
                                         <button
                                             type="button"
                                             disabled={!item.inStock}
-                                            className={`btn btn-sm w-full gap-2 font-bold ${
-                                                item.inStock ? 'btn-primary' : 'btn-disabled'
-                                            }`}
+                                            className={`btn btn-sm w-full gap-2 font-bold ${item.inStock ? 'btn-primary' : 'btn-disabled'
+                                                }`}
                                         >
                                             <ShoppingBag className="w-4 h-4" />
                                             {item.inStock ? 'Add to Cart' : 'Out of Stock'}
@@ -1133,9 +1130,8 @@ export default function UserDashboardPage() {
                                             {msg.senderName} <time className="ml-1">{msg.time}</time>
                                         </div>
                                         <div
-                                            className={`chat-bubble text-xs ${
-                                                msg.sender === 'user' ? 'chat-bubble-primary font-medium' : 'chat-bubble-neutral'
-                                            }`}
+                                            className={`chat-bubble text-xs ${msg.sender === 'user' ? 'chat-bubble-primary font-medium' : 'chat-bubble-neutral'
+                                                }`}
                                         >
                                             {msg.message}
                                         </div>

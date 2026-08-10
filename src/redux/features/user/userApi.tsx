@@ -23,6 +23,13 @@ const userApi = baseApi.injectEndpoints({
         body: data,
       }),
     }),
+    myProfile: builder.query({
+      query: () => ({
+        url: "/users/me",
+        method: "GET",
+      }),
+      providesTags: ["user"],
+    })
   }),
 });
 
@@ -30,4 +37,5 @@ export const {
   useCreateCustomerMutation,
   useCreateVendorMutation,
   useCreateAdminMutation,
+  useMyProfileQuery
 } = userApi;

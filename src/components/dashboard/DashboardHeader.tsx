@@ -47,7 +47,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                     </div>
 
                     <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-100">
-                        Marketplace <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-amber-200 to-orange-400">Dashboard</span>
+                        Marketplace <span className="text-transparent bg-clip-text from-amber-400 via-amber-200 to-orange-400">Dashboard</span>
                     </h1>
                     <p className="text-slate-400 text-xs sm:text-sm max-w-xl">
                         Comprehensive real-time telemetry, revenue analytics, store health, and order fulfillment.

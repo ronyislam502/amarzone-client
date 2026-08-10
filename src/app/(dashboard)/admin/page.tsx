@@ -15,9 +15,6 @@ import {
     Download,
     UserCheck,
     TrendingUp,
-    Star,
-    Truck,
-    AlertTriangle,
     ExternalLink
 } from 'lucide-react';
 
