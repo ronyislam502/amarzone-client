@@ -1,11 +1,11 @@
 import { TResponseRedux } from "@/types/global";
 import { baseApi } from "../../api/baseApi";
-import { TDepartment } from "@/types/department";
+import { TCategory } from "@/types/category";
 
 const categoryApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         allCategories: builder.query({
-            query: ({ search, sort, page, limit, category, minPrice, maxPrice }) => {
+            query: ({ search, sort, page, limit, category, minPrice, maxPrice }: Record<string, any> = {}) => {
                 const params = new URLSearchParams();
 
                 if (search) {
@@ -37,7 +37,20 @@ const categoryApi = baseApi.injectEndpoints({
                 };
             },
             providesTags: ["category"],
-            transformResponse: (response: TResponseRedux<TDepartment[]>) => {
+            transformResponse: (response: TResponseRedux<TCategory[]>) => {
+                return {
+                    data: response?.data,
+                    meta: response?.meta,
+                };
+            },
+        }),
+        categoriesByDepartment: builder.query({
+            query: (departmentId: string) => ({
+                url: `/categories/department/${departmentId}`,
+                method: "GET",
+            }),
+            providesTags: ["category"],
+            transformResponse: (response: TResponseRedux<TCategory[]>) => {
                 return {
                     data: response?.data,
                     meta: response?.meta,
@@ -65,6 +78,8 @@ const categoryApi = baseApi.injectEndpoints({
 
 export const {
     useAllCategoriesQuery,
+    useCategoriesByDepartmentQuery,
     useCreateCategoryMutation,
     useUpdateCategoryMutation
 } = categoryApi;
+

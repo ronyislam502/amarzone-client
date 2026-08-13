@@ -5,3 +5,4 @@ export type TDepartment = {
     updatedAt: string
     __v: number
 }
+

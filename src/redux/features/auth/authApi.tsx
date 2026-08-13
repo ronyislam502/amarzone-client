@@ -37,17 +37,19 @@ const authApi = baseApi.injectEndpoints({
     }),
     createCustomer: builder.mutation({
       query: (data) => ({
-        url: "/user/create-customer",
+        url: "/users/create-customer",
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ["user", "customer"],
     }),
     createVendor: builder.mutation({
       query: (data) => ({
-        url: "/user/create-vendor",
+        url: "/users/create-vendor",
         method: "POST",
         body: data,
       }),
+      invalidatesTags: ["user", "vendor"],
     }),
   }),
 });

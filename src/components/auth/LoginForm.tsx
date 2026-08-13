@@ -29,22 +29,18 @@ const LoginForm: React.FC = () => {
             email: data.email,
             password: data.password
         }
-        try {
-            const res = await loginApi(authData).unwrap();
-            const user = verifyToken(res.data.accessToken) as TUser;
-            dispatch(setUser({ user: user, token: res.data.accessToken }));
 
-            if (res?.success) {
-                Cookies.set("accessToken", res?.data?.accessToken);
-                Cookies.set("refreshToken", res?.data?.refreshToken);
-                toast.success(res?.message, {
-                    autoClose: 1000,
-                });
-                router.push("/");
-            }
+        const res = await loginApi(authData).unwrap();
+        const user = verifyToken(res.data.accessToken) as TUser;
+        dispatch(setUser({ user: user, token: res.data.accessToken }));
 
-        } catch (err: any) {
-
+        if (res?.success) {
+            Cookies.set("accessToken", res?.data?.accessToken);
+            Cookies.set("refreshToken", res?.data?.refreshToken);
+            toast.success(res?.message, {
+                autoClose: 1000,
+            });
+            router.push("/");
         }
     };
 
@@ -64,7 +60,7 @@ const LoginForm: React.FC = () => {
                 </p>
             </div>
 
-      
+
             {/* Form */}
             <AZForm
                 resolver={zodResolver(loginValidationSchema)}

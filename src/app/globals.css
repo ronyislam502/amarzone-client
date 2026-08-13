@@ -105,4 +105,37 @@ body {
   animation: shimmer 1.8s infinite linear;
 }
 
+/* Walmart Custom Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Walmart Spark Spin Animation */
+@keyframes spark-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.hover-spark-spin:hover {
+  animation: spark-spin 2s linear infinite;
+}
+
+/* Custom Scrollbar for Department/Category Menu matching screenshot */
+.custom-dept-scrollbar::-webkit-scrollbar {
+  width: 7px;
+}
+.custom-dept-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+}
+.custom-dept-scrollbar::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 4px;
+}
+.custom-dept-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
 

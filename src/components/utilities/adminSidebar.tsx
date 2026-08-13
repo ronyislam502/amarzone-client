@@ -32,7 +32,7 @@ export const adminSidebarItems = [
             },
             {
                 label: "User Dashboard",
-                href: "/user",
+                href: "/customer",
                 icon: User,
                 iconClass: "text-info",
                 exact: true,

@@ -1,7 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useDashboardStatsQuery } from '@/redux/features/dashboard/dashboardApi';
+import VendorDataSection from '@/components/dashboard/admin/VendorDataSection';
+import ProductDataSection from '@/components/dashboard/admin/ProductDataSection';
+import TableSkeleton from '@/components/shared/TableSkeleton';
 import {
     DollarSign,
     ShoppingBag,
@@ -467,49 +470,15 @@ const AdminDashboardPage = () => {
                 </div>
             </div>
 
-            {/* DAISYUI CARDS: PENDING VENDOR APPLICATIONS */}
-            <div className="card bg-base-100 shadow-xl border border-base-200">
-                <div className="card-body">
-                    <div className="flex items-center justify-between pb-3 border-b border-base-200">
-                        <div>
-                            <h2 className="card-title text-base font-extrabold flex items-center gap-2">
-                                <UserCheck className="w-5 h-5 text-warning" />
-                                Pending Vendor Applications
-                            </h2>
-                            <p className="text-xs text-base-content/70">Audit store registrations and business credentials</p>
-                        </div>
-                        <span className="badge badge-warning font-bold">3 Pending</span>
-                    </div>
+            {/* DYNAMIC VENDOR DATA SECTION WITH REACT SUSPENSE LOADING */}
+            <Suspense fallback={<TableSkeleton columns={6} rows={5} showAvatar={true} showActions={true} />}>
+                <VendorDataSection />
+            </Suspense>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3">
-                        {PENDING_VENDORS.map((vendor) => (
-                            <div key={vendor.id} className="card bg-base-200 shadow-md p-4 space-y-3 border border-base-300">
-                                <div className="flex items-center gap-3">
-                                    <div className="avatar">
-                                        <div className="w-10 rounded-xl">
-                                            <img src={vendor.avatar} alt={vendor.ownerName} />
-                                        </div>
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className="font-extrabold text-xs truncate">{vendor.storeName}</h3>
-                                        <span className="text-[11px] text-base-content/70 block truncate">{vendor.ownerName}</span>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between text-[10px]">
-                                    <span className="badge badge-neutral badge-xs font-semibold">{vendor.category}</span>
-                                    <span className="text-base-content/60">{vendor.submittedDate}</span>
-                                </div>
-
-                                <div className="card-actions justify-end gap-2 pt-2">
-                                    <button type="button" className="btn btn-outline btn-xs">Review</button>
-                                    <button type="button" className="btn btn-success btn-xs font-bold">Approve</button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+            {/* DYNAMIC PRODUCT DATA SECTION WITH REACT SUSPENSE LOADING */}
+            <Suspense fallback={<TableSkeleton columns={6} rows={5} showAvatar={true} title="Product Inventory Catalog" />}>
+                <ProductDataSection />
+            </Suspense>
         </div>
     );
 };

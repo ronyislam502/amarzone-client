@@ -330,10 +330,10 @@ export default function UserDashboardPage() {
                             <div className="avatar online">
                                 <div className="w-20 sm:w-24 rounded-2xl ring ring-primary ring-offset-base-100 ring-offset-2 shadow-xl">
                                     <Image
-                                        src={user?.avatar}
+                                        src={user?.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80"}
                                         width={100}
                                         height={100}
-                                        alt="Alex Morgan"
+                                        alt={user?.name || "Customer Avatar"}
                                     />
                                 </div>
                             </div>
