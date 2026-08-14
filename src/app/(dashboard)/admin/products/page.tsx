@@ -57,6 +57,14 @@ const AdminProductsPage = () => {
 
           {/* DaisyUI Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/admin/products/create"
+              className="btn btn-primary btn-sm gap-2 font-bold shadow-md"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Add New Product</span>
+            </Link>
+
             <button type="button" className="btn btn-outline btn-sm gap-2">
               <Download className="w-4 h-4" />
               <span>Export CSV</span>
