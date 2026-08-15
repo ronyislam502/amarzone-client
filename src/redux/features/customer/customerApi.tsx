@@ -1,33 +1,24 @@
 import { TResponseRedux } from "@/types/global";
 import { baseApi } from "../../api/baseApi";
-import { TDepartment } from "@/types/department";
+import { TCustomer } from "@/types/user";
 
 const customerApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         allCustomers: builder.query({
-            query: ({ search, sort, page, limit, category, minPrice, maxPrice }) => {
+            query: (args?: { search?: string; sort?: string; page?: number; limit?: number }) => {
                 const params = new URLSearchParams();
 
-                if (search) {
-                    params.append("searchTerm", search);
+                if (args?.search) {
+                    params.append("searchTerm", args.search);
                 }
-                if (category) {
-                    params.append("category", category);
+                if (args?.sort) {
+                    params.append("sort", args.sort);
                 }
-                if (minPrice) {
-                    params.append("minPrice", String(minPrice));
+                if (args?.page) {
+                    params.append("page", String(args.page));
                 }
-                if (maxPrice) {
-                    params.append("maxPrice", String(maxPrice));
-                }
-                if (sort) {
-                    params.append("sort", sort);
-                }
-                if (page) {
-                    params.append("page", page);
-                }
-                if (limit) {
-                    params.append("limit", limit);
+                if (args?.limit) {
+                    params.append("limit", String(args.limit));
                 }
 
                 return {
@@ -37,18 +28,25 @@ const customerApi = baseApi.injectEndpoints({
                 };
             },
             providesTags: ["customer"],
-            transformResponse: (response: TResponseRedux<TDepartment[]>) => {
+            transformResponse: (response: TResponseRedux<TCustomer[]>) => {
                 return {
                     data: response?.data,
                     meta: response?.meta,
                 };
             },
         }),
+        deleteCustomer: builder.mutation({
+            query: (id: string) => ({
+                url: `/customers/delete/${id}`,
+                method: "DELETE",
+            }),
+            invalidatesTags: ["customer"],
+        }),
         createCustomer: builder.mutation({
-            query: (categoryInfo) => ({
+            query: (customerInfo) => ({
                 url: "/customers/create-customer",
                 method: "POST",
-                body: categoryInfo,
+                body: customerInfo,
             }),
             invalidatesTags: ["customer"],
         }),
@@ -65,6 +63,8 @@ const customerApi = baseApi.injectEndpoints({
 
 export const {
     useAllCustomersQuery,
+    useDeleteCustomerMutation,
     useCreateCustomerMutation,
     useUpdateCustomerMutation,
 } = customerApi;
+

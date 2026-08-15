@@ -3,6 +3,7 @@
 import React, { useState, Suspense } from 'react';
 import { useDashboardStatsQuery } from '@/redux/features/dashboard/dashboardApi';
 import AdminDataSection from '@/components/dashboard/admin/AdminDataSection';
+import CustomerDataSection from '@/components/dashboard/admin/CustomerDataSection';
 import VendorDataSection from '@/components/dashboard/admin/VendorDataSection';
 import ProductDataSection from '@/components/dashboard/admin/ProductDataSection';
 import TableSkeleton from '@/components/shared/TableSkeleton';
@@ -474,6 +475,11 @@ const AdminDashboardPage = () => {
             {/* DYNAMIC ADMIN DATA SECTION WITH REACT SUSPENSE LOADING */}
             <Suspense fallback={<TableSkeleton columns={6} rows={5} showAvatar={true} title="Administrator Directory" />}>
                 <AdminDataSection />
+            </Suspense>
+
+            {/* DYNAMIC CUSTOMER DATA SECTION WITH REACT SUSPENSE LOADING */}
+            <Suspense fallback={<TableSkeleton columns={6} rows={5} showAvatar={true} title="Customer Directory" />}>
+                <CustomerDataSection />
             </Suspense>
 
             {/* DYNAMIC VENDOR DATA SECTION WITH REACT SUSPENSE LOADING */}
