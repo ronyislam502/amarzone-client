@@ -10,6 +10,7 @@ import {
     Settings,
     Activity,
     User,
+    UserCheck,
 } from "lucide-react";
 
 export const adminSidebarItems = [
@@ -65,6 +66,16 @@ export const adminSidebarItems = [
     {
         title: "Management",
         items: [
+            {
+                label: "Admins & Staff",
+                href: "/admin/admins",
+                icon: UserCheck,
+                iconClass: "text-secondary",
+                badge: {
+                    text: "Staff",
+                    className: "badge-secondary",
+                },
+            },
             {
                 label: "Vendors",
                 href: "/admin/vendors",
