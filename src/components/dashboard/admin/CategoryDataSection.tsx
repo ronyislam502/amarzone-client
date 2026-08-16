@@ -3,9 +3,7 @@
 import React, { useState } from "react";
 import {
   useAllCategoriesQuery,
-  useCreateCategoryMutation,
 } from "@/redux/features/category/categoryApi";
-import { useAllDepartmentsQuery } from "@/redux/features/department/departmentApi";
 import DataTable, { Column } from "@/components/shared/DataTable";
 import Modal from "@/components/shared/Modal";
 import {
@@ -16,15 +14,14 @@ import {
   Calendar,
   Edit2
 } from "lucide-react";
-import { toast } from "react-toastify";
+
+import CreateCategoryForm from "./CreateCategoryForm";
 
 export const CategoryDataSection: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [categoryName, setCategoryName] = useState("");
-  const [selectedDepartment, setSelectedDepartment] = useState("");
 
   // Queries & Mutations
   const {
@@ -36,39 +33,8 @@ export const CategoryDataSection: React.FC = () => {
     isFetching,
   } = useAllCategoriesQuery({ search: searchTerm, page: String(page), limit: String(limit) });
 
-  const { data: departmentResponse } = useAllDepartmentsQuery({});
-  const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
-
   const categories: any[] = responseData?.data || [];
   const meta = responseData?.meta;
-  const departments: any[] = departmentResponse?.data || [];
-
-  const handleCreateCategory = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!categoryName.trim()) {
-      toast.error("Please enter a category name");
-      return;
-    }
-    if (!selectedDepartment) {
-      toast.error("Please select a department");
-      return;
-    }
-
-    try {
-      await createCategory({
-        name: categoryName.trim(),
-        department: selectedDepartment,
-      }).unwrap();
-
-      toast.success("Category created successfully!");
-      setCategoryName("");
-      setSelectedDepartment("");
-      setIsModalOpen(false);
-      refetch();
-    } catch (err: any) {
-      toast.error(err?.data?.message || "Failed to create category");
-    }
-  };
 
   // Reusable Column Definitions
   const columns: Column<any>[] = [
@@ -213,70 +179,14 @@ export const CategoryDataSection: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={
-          <span className="flex items-center gap-2">
-            <FolderTree className="w-5 h-5 text-primary" />
-            Create New Category
-          </span>
-        }
         size="md"
-        footer={
-          <div className="flex items-center justify-end gap-2 w-full">
-            <button
-              type="button"
-              onClick={() => setIsModalOpen(false)}
-              className="btn btn-ghost btn-sm text-xs font-bold"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              form="create-category-form"
-              disabled={isCreating}
-              className="btn btn-primary btn-sm text-xs font-bold gap-2"
-            >
-              {isCreating ? (
-                <span className="loading loading-spinner loading-xs" />
-              ) : (
-                <PlusCircle className="w-4 h-4" />
-              )}
-              <span>Create Category</span>
-            </button>
-          </div>
-        }
       >
-        <form id="create-category-form" onSubmit={handleCreateCategory} className="space-y-4 text-xs">
-          <div>
-            <label className="label font-bold text-xs">Category Name</label>
-            <input
-              type="text"
-              value={categoryName}
-              onChange={(e) => setCategoryName(e.target.value)}
-              placeholder="e.g. Laptops & Accessories"
-              className="input input-sm input-bordered w-full text-xs focus:outline-none focus:border-primary"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="label font-bold text-xs">Target Department</label>
-            <select
-              value={selectedDepartment}
-              onChange={(e) => setSelectedDepartment(e.target.value)}
-              className="select select-sm select-bordered w-full text-xs focus:outline-none focus:border-primary font-medium"
-              required
-            >
-              <option value="" disabled>
-                Select a Department
-              </option>
-              {departments.map((dept: any) => (
-                <option key={dept._id} value={dept._id}>
-                  {dept.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </form>
+        <CreateCategoryForm
+          onSuccess={() => {
+            setIsModalOpen(false);
+            refetch();
+          }}
+        />
       </Modal>
     </>
   );
