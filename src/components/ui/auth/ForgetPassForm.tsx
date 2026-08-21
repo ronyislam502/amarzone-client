@@ -77,7 +77,7 @@ export const ForgetPassForm = () => {
                 </Link>
 
                 <Link
-                    href="/reset-pass"
+                    href="/reset"
                     className="inline-flex items-center gap-1.5 font-bold text-amber-400 hover:text-amber-300 transition-colors"
                 >
                     <ShieldCheck className="w-4 h-4" />

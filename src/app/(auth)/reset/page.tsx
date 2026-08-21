@@ -1,7 +1,7 @@
 import AuthBrandShowcase from "@/src/components/ui/auth/Branding";
-import ForgetPassForm from "@/src/components/ui/auth/ForgetPassForm";
+import ResetPassForm from "@/src/components/ui/auth/ResetPassForm";
 
-const ForgetPassword = () => {
+const ResetPassword = () => {
 
     return (
         <div className="w-full max-w-5xl z-10 my-auto">
@@ -12,13 +12,13 @@ const ForgetPassword = () => {
                 {/* Left Side: Brand Showcase (Desktop) */}
                 <AuthBrandShowcase />
 
-                {/* Right Side: Interactive Forget Password Form Container */}
+                {/* Right Side: Interactive Reset Form Container */}
                 <div className="card-body p-6 sm:p-10 lg:w-1/2 flex flex-col justify-center bg-slate-950/40">
-                    <ForgetPassForm />
+                    <ResetPassForm />
                 </div>
             </div>
         </div>
     )
 }
 
-export default ForgetPassword;
+export default ResetPassword;
