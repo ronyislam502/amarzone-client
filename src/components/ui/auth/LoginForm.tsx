@@ -80,6 +80,7 @@ const LoginForm: React.FC = () => {
                         className="w-full group flex items-center justify-center gap-3 bg-success hover:bg-success/90 text-black py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] italic transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(34,197,94,0.3)] disabled:opacity-50"
                         type="submit"
                     >
+                        Login
                     </button>
                 </div>
             </AZForm>
@@ -88,7 +89,7 @@ const LoginForm: React.FC = () => {
             <div className="mt-6 text-center text-xs text-base-content/70">
                 Don&apos;t have an Amarzone account yet?{' '}
                 <Link
-                    href="/sign-up"
+                    href="/signup"
                     className="link link-hover link-warning font-bold inline-flex items-center gap-1 ml-0.5"
                 >
                     Create an account

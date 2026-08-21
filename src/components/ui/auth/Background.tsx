@@ -4,7 +4,7 @@ interface AuthBackgroundProps {
 
 export const AuthBackground = ({ children }: AuthBackgroundProps) => {
     return (
-        <div data-theme="dark" className="relative min-h-screen w-full bg-[#090d16] text-slate-100 overflow-hidden flex items-center justify-center font-sans antialiased">
+        <div data-theme="dark" className="relative h-screen w-full bg-[#090d16] text-slate-100 overflow-hidden flex items-center justify-center font-sans antialiased">
             {/* Base Radial Mesh Background Gradient */}
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.15),rgba(255,255,255,0))]" />
 
