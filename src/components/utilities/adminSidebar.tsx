@@ -1,5 +1,6 @@
 import {
     LayoutDashboard,
+    Bell,
     Store,
     Users,
     ShoppingBag,
@@ -23,6 +24,12 @@ export const adminSidebarItems = [
                 icon: LayoutDashboard,
                 iconClass: "text-primary",
                 exact: true,
+            },
+            {
+                label: "Notifications",
+                href: "/admin#notifications-section",
+                icon: Bell,
+                iconClass: "text-warning",
             },
             {
                 label: "Analytics",

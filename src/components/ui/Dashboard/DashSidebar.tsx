@@ -9,7 +9,11 @@ import { superAdminSidebarItems } from '../../utilities/superAdminSidebar';
 import { adminSidebarItems } from '../../utilities/adminSidebar';
 import { vendorSidebarItems } from '../../utilities/vendorSidebar';
 import { customerSidebarItems } from '../../utilities/customerSidebar';
+import { NotificationBell } from '../notification/NotificationBell';
 
+
+import { useAppSelector } from '@/src/redux/hooks';
+import { selectCurrentUser } from '@/src/redux/features/auth/authSlice';
 
 type TDynamicSidebarProps = {
     children: React.ReactNode;
@@ -23,23 +27,30 @@ type TUser = {
     role: TRole;
 };
 
-const fakeUser: TUser = {
-    name: "John Doe",
-    email: "john@example.com",
-    role: "CUSTOMER",
-};
-
 export const DashboardSidebar = ({ children }: TDynamicSidebarProps) => {
     const pathname = usePathname();
     const router = useRouter();
+    const reduxUser = useAppSelector(selectCurrentUser);
 
-    const user = fakeUser;
+    // Automatically resolve role based on current user or active URL route
+    let role: TRole = "CUSTOMER";
+    if (reduxUser?.role) {
+        role = reduxUser.role.toUpperCase() as TRole;
+    } else if (pathname.startsWith("/admin")) {
+        role = "ADMIN";
+    } else if (pathname.startsWith("/vendor")) {
+        role = "VENDOR";
+    }
+
+    const user: TUser = {
+        name: reduxUser?.name || (role === "ADMIN" ? "Admin Administrator" : role === "VENDOR" ? "Store Partner" : "John Doe"),
+        email: reduxUser?.email || (role === "ADMIN" ? "admin@amarzone.com" : role === "VENDOR" ? "vendor@amarzone.com" : "customer@amarzone.com"),
+        role,
+    };
 
     const handleSignOut = () => {
         router.push("/login");
     };
-
-    const role = user.role;
 
     let sidebarItems;
     switch (role) {
@@ -65,21 +76,24 @@ export const DashboardSidebar = ({ children }: TDynamicSidebarProps) => {
 
             {/* Main Content Page Wrapper */}
             <div className="drawer-content flex flex-col min-w-0">
-                {/* Mobile Drawer Navigation Header Bar */}
-                <div className="w-full navbar bg-base-100 border-b border-base-200 lg:hidden px-4 justify-between">
+                {/* Top Navigation Header Bar */}
+                <div className="w-full navbar bg-base-100 border-b border-base-200 px-4 sm:px-6 justify-between sticky top-0 z-30 shadow-sm">
                     <div className="flex items-center gap-2">
-                        <label htmlFor="dashboard-drawer" aria-label="open sidebar" className="btn btn-square btn-ghost">
+                        <label htmlFor="dashboard-drawer" aria-label="open sidebar" className="btn btn-square btn-ghost lg:hidden">
                             <Menu className="w-5 h-5 text-primary" />
                         </label>
-                        <Link href="/" className="inline-flex items-center">
-                            <Image
-                                src="https://res.cloudinary.com/dkk9lvbtf/image/upload/v1785693062/amarzone_fnnw8s.png"
-                                alt="Amarzone Logo"
-                                width={180}
-                                height={60}
-                                className="object-contain"
-                            />
-                        </Link>
+                        <div className="flex flex-col">
+                            <span className="text-[11px] font-bold text-base-content/50 uppercase tracking-wider">Dashboard</span>
+                            <span className="text-sm font-extrabold text-base-content capitalize">{role.toLowerCase().replace('_', ' ')} Portal</span>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <NotificationBell />
+                        <div className="hidden md:flex flex-col text-right">
+                            <span className="text-xs font-extrabold text-base-content">{user?.name}</span>
+                            <span className="text-[10px] text-base-content/60">{user?.email}</span>
+                        </div>
                     </div>
                 </div>
 

@@ -9,9 +9,8 @@ export const loginSchema = z.object({
         .min(6, "Password needs to be at least 6 characters"),
 });
 
-export const registerSchema = z
+export const customerRegisterSchema = z
     .object({
-        role: z.enum(["customer", "vendor"]).optional(),
         name: z.string().min(1, "Full name is required"),
         email: z.string().email("Invalid email address"),
         phone: z.string().min(4, "Phone number is required"),
@@ -29,6 +28,28 @@ export const registerSchema = z
         message: "Passwords do not match",
         path: ["confirmPassword"],
     });
+
+export const vendorRegisterSchema = z
+    .object({
+        name: z.string().min(1, "Store owner name is required"),
+        email: z.string().email("Invalid email address"),
+        phone: z.string().min(6, "Phone number must be at least 6 digits"),
+        street: z.string().min(1, "Street address is required"),
+        state: z.string().min(1, "State or city is required"),
+        postalCode: z.string().min(1, "Postal code is required"),
+        country: z.string().min(1, "Country is required"),
+        password: z
+            .string()
+            .trim()
+            .min(6, "Password must be at least 6 characters long"),
+        confirmPassword: z.string().trim().min(1, "Please confirm your password"),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords do not match",
+        path: ["confirmPassword"],
+    });
+
+export const registerSchema = vendorRegisterSchema;
 
 export const forgotPasswordSchema = z.object({
     email: z

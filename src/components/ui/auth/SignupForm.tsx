@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { ChangeEvent, useState } from 'react';
 import Link from 'next/link';
 import {
     Eye,
@@ -22,12 +22,41 @@ import { FieldValues } from 'react-hook-form';
 import AZForm from '../../form/AZFrom';
 import { registerSchema } from '@/src/schema/Auth';
 import AZInput from '../../form/AZInput';
+import Image from 'next/image';
 
 
 export const SignUpForm = () => {
     const [role, setRole] = useState<'customer' | 'vendor'>('customer');
     const [showPassword, setShowPassword] = useState(false);
     const [showAddressFields, setShowAddressFields] = useState(false);
+    const [logo, setLogo] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string>('');
+    const [banner, setBanner] = useState<File | null>(null);
+    const [bannerPreview, setBannerPreview] = useState<string>('');
+    const [image, setImage] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string>('');
+
+    const handleImageChange = (
+        e: ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = e.target.files?.[0];
+        const type = e.target.name as 'logo' | 'banner' | 'image';
+
+        if (!file) return;
+
+        const preview = URL.createObjectURL(file);
+
+        if (type === 'logo') {
+            setLogo(file);
+            setLogoPreview(preview);
+        } else if (type === 'banner') {
+            setBanner(file);
+            setBannerPreview(preview);
+        } else if (type === 'image') {
+            setImage(file);
+            setImagePreview(preview);
+        }
+    };
 
 
     const onSubmit = async (data: FieldValues) => {
@@ -96,31 +125,48 @@ export const SignUpForm = () => {
                 onSubmit={onSubmit}
             >
                 <div className="space-y-4">
-                    {/* Full Name */}
-                    <AZInput
-                        label="Full Name"
-                        name="name"
-                        type="text"
-                        placeholder="enter your name"
-                        icon={<User size={18} />}
-                    />
-
-                    {/* Email & Phone side-by-side or stacked */}
+                    {/* Name & Email side-by-side on sm screens */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <AZInput
+                            label="Full Name"
+                            name="name"
+                            type="text"
+                            placeholder="your name"
+                            icon={<User size={18} />}
+                        />
                         <AZInput
                             label="Email"
                             name="email"
                             type="email"
-                            placeholder="enter your email"
+                            placeholder="your email"
                             icon={<Mail size={18} />}
                         />
+                    </div>
+
+                    {/* Phone & Password side-by-side on sm screens */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <AZInput
                             label="Phone"
                             name="phone"
                             type="text"
-                            placeholder="enter your phone number"
+                            placeholder="your phone number"
                             icon={<Phone size={18} />}
                         />
+                        <div className="relative">
+                            <AZInput
+                                label="Password"
+                                name="password"
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="password"
+                                icon={<Lock size={18} />}
+                            />
+                            <div
+                                className="absolute right-4 top-10 cursor-pointer text-gray-400 hover:text-white transition-colors z-10"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Toggleable Address Section */}
@@ -140,22 +186,22 @@ export const SignUpForm = () => {
                                     label="Street"
                                     name="street"
                                     type="text"
-                                    placeholder="enter your street addess"
+                                    placeholder="your street"
                                     icon={<MapPin size={16} />}
                                 />
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-3 gap-1">
                                     <AZInput
-                                        label="State / City"
+                                        label="State"
                                         name="state"
                                         type="text"
                                         placeholder="State"
                                         icon={<Building size={14} />}
                                     />
                                     <AZInput
-                                        label="Postal Code"
+                                        label="PO"
                                         name="postalCode"
                                         type="text"
-                                        placeholder="1200"
+                                        placeholder="postal"
                                     />
                                     <AZInput
                                         label="Country"
@@ -168,23 +214,116 @@ export const SignUpForm = () => {
                             </div>
                         )}
                     </div>
+                    {/* Customer Image & Preview Grid */}
+                    {role === 'customer' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="form-control w-full">
+                                <label className="label mb-1">
+                                    <span className="text-md font-black text-warning uppercase tracking-widest italic">
+                                        Image
+                                    </span>
+                                </label>
+                                <input
+                                    type="file"
+                                    name="image"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="file-input file-input-warning w-full h-12 rounded-2xl border border-warning/40 text-xs"
+                                />
+                            </div>
 
-                    {/* Password */}
-                    <div className="relative">
-                        <AZInput
-                            label="Password"
-                            name="password"
-                            type={showPassword ? 'text' : 'password'}
-                            placeholder="Min. 6 characters"
-                            icon={<Lock size={18} />}
-                        />
-                        <div
-                            className="absolute right-4 top-10 cursor-pointer text-gray-400 hover:text-white transition-colors z-10"
-                            onClick={() => setShowPassword(!showPassword)}
-                        >
-                            {showPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                            <div className="form-control w-full">
+                                <label className="label mb-1">
+                                    <span className="text-md font-black text-warning uppercase tracking-widest italic">
+                                        Preview
+                                    </span>
+                                </label>
+                                <div className="w-full h-12 rounded-2xl overflow-hidden">
+                                    {imagePreview ? (
+                                        <div className="flex items-center gap-3 w-full h-full px-3 bg-slate-900/60 rounded-2xl border border-warning/40">
+                                            <Image
+                                                src={imagePreview}
+                                                alt="Profile preview"
+                                                height={36}
+                                                width={36}
+                                                className="w-9 h-9 object-cover rounded-xl border border-warning/50 shrink-0"
+                                            />
+                                            <span className="text-xs text-gray-300 truncate font-medium">
+                                                {image?.name}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center w-full h-full px-3 bg-slate-900/30 rounded-2xl border border-dashed border-white/10 text-gray-500 text-xs">
+                                            No image chosen
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Vendor Logo & Banner */}
+                    {role === 'vendor' && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="form-control w-full">
+                                <label className="label mb-1">
+                                    <span className="text-md font-black text-warning uppercase tracking-widest italic">
+                                        Logo
+                                    </span>
+                                </label>
+                                <input
+                                    type="file"
+                                    name="logo"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="file-input file-input-warning w-full"
+                                />
+                                {logoPreview && (
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <Image
+                                            src={logoPreview}
+                                            alt="Logo preview"
+                                            width={48}
+                                            height={48}
+                                            className="w-12 h-12 object-cover rounded-xl border border-warning/40"
+                                        />
+                                        <span className="text-[11px] text-gray-400 truncate max-w-[120px]">
+                                            {logo?.name}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="form-control w-full">
+                                <label className="label mb-1">
+                                    <span className="text-md font-black text-warning uppercase tracking-widest italic">
+                                        Banner
+                                    </span>
+                                </label>
+                                <input
+                                    type="file"
+                                    name="banner"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    className="file-input file-input-warning w-full"
+                                />
+                                {bannerPreview && (
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <Image
+                                            src={bannerPreview}
+                                            alt="Banner preview"
+                                            width={64}
+                                            height={48}
+                                            className="w-16 h-12 object-cover rounded-xl border border-warning/40"
+                                        />
+                                        <span className="text-[11px] text-gray-400 truncate max-w-[120px]">
+                                            {banner?.name}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Features & Terms Note */}

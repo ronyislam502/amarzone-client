@@ -1,4 +1,4 @@
-// import { BaseQueryApi } from "@reduxjs/toolkit/query";
+import { BaseQueryApi } from "@reduxjs/toolkit/query";
 
 export type TInput = {
     variant?: "flat" | "bordered" | "faded" | "underlined";
@@ -36,7 +36,7 @@ export type TResponse<T> = {
     message: string;
 };
 
-// export type TResponseRedux<T> = TResponse<T> & BaseQueryApi;
+export type TResponseRedux<T> = TResponse<T> & BaseQueryApi;
 
 export type TQueryParam = {
     name: string;

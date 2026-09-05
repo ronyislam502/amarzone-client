@@ -4,6 +4,7 @@ import Departments from "../ui/navbar/Departments";
 import Search from "../ui/navbar/Search";
 import Services from "../ui/navbar/Services";
 import Logo from "../ui/navbar/Logo";
+import { NotificationBell } from "../ui/notification/NotificationBell";
 
 const Navbar = () => {
   return (
@@ -47,8 +48,11 @@ const Navbar = () => {
         <div className="navbar-center hidden lg:flex absolute left-1/2 -translate-x-1/2 w-full max-w-4xl px-4">
           <Search />
         </div>
-        {/* RIGHT: Login + Cart */}
+        {/* RIGHT: Login + Notifications + Cart */}
         <div className="navbar-end gap-1 lg:gap-2">
+          {/* Notifications */}
+          <NotificationBell />
+
           {/* Login */}
           <Link
             href="/login"

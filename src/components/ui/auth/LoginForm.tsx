@@ -11,7 +11,7 @@ import { loginSchema } from '@/src/schema/Auth';
 
 
 
-const LoginForm: React.FC = () => {
+const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
 
 
@@ -21,6 +21,8 @@ const LoginForm: React.FC = () => {
             email: data.email,
             password: data.password
         }
+
+        console.log("data", authData)
 
 
     };
