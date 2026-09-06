@@ -5,6 +5,7 @@ import Search from "../ui/navbar/Search";
 import Services from "../ui/navbar/Services";
 import Logo from "../ui/navbar/Logo";
 import { NotificationBell } from "../ui/notification/NotificationBell";
+import NavAvatar from "../ui/navbar/NavAvatar";
 
 const Navbar = () => {
   return (
@@ -54,7 +55,7 @@ const Navbar = () => {
           <NotificationBell />
 
           {/* Login */}
-          <Link
+          {/* <Link
             href="/login"
             className="btn btn-ghost text-white hover:bg-white/10"
           >
@@ -62,7 +63,8 @@ const Navbar = () => {
             <span className="hidden sm:inline">
               Login
             </span>
-          </Link>
+          </Link> */}
+          <NavAvatar />
 
           {/* Cart */}
           <Link

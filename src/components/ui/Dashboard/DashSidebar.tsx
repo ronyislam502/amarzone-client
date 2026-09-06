@@ -10,10 +10,10 @@ import { adminSidebarItems } from '../../utilities/adminSidebar';
 import { vendorSidebarItems } from '../../utilities/vendorSidebar';
 import { customerSidebarItems } from '../../utilities/customerSidebar';
 import { NotificationBell } from '../notification/NotificationBell';
-
-
+import Cookies from "js-cookie";
 import { useAppSelector } from '@/src/redux/hooks';
-import { selectCurrentUser } from '@/src/redux/features/auth/authSlice';
+import { logout, selectCurrentUser } from '@/src/redux/features/auth/authSlice';
+import { useDispatch } from 'react-redux';
 
 type TDynamicSidebarProps = {
     children: React.ReactNode;
@@ -31,6 +31,7 @@ export const DashboardSidebar = ({ children }: TDynamicSidebarProps) => {
     const pathname = usePathname();
     const router = useRouter();
     const reduxUser = useAppSelector(selectCurrentUser);
+    const dispatch = useDispatch();
 
     // Automatically resolve role based on current user or active URL route
     let role: TRole = "CUSTOMER";
@@ -49,6 +50,8 @@ export const DashboardSidebar = ({ children }: TDynamicSidebarProps) => {
     };
 
     const handleSignOut = () => {
+        dispatch(logout());
+        Cookies.remove("refreshToken");
         router.push("/login");
     };
 
@@ -117,6 +120,8 @@ export const DashboardSidebar = ({ children }: TDynamicSidebarProps) => {
                                     width={180}
                                     height={60}
                                     className="object-contain group-hover:scale-105 transition-transform"
+                                    style={{ width: "auto", height: "auto" }}
+                                    priority
                                 />
                             </Link>
                         </div>

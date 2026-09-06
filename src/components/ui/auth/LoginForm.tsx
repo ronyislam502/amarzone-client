@@ -6,23 +6,63 @@ import { Eye, EyeOff, Sparkles } from 'lucide-react';
 import { FieldValues } from 'react-hook-form';
 import AZForm from '../../form/AZFrom';
 import AZInput from '../../form/AZInput';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '@/src/schema/Auth';
+import { toast } from 'react-toastify';
+import { useAppDispatch } from '@/src/redux/hooks';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { TAuthUser } from '@/src/types/user';
+import { verifyToken } from '../../utilities/verifyToken';
+import { setUser } from '@/src/redux/features/auth/authSlice';
+import { useLogInMutation } from '@/src/redux/features/auth/authApi';
+import { useRouter } from 'next/navigation';
+import Cookies from "js-cookie";
 
 
 
 const LoginForm = () => {
+    const dispatch = useAppDispatch();
+    const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
+
+    const [signIn, { isLoading: isLoginLoading }] = useLogInMutation();
+
 
 
     const onSubmit = async (data: FieldValues) => {
 
-        const authData = {
-            email: data.email,
-            password: data.password
-        }
+        try {
+            const authData = {
+                email: data.email,
+                password: data.password
+            };
 
-        console.log("data", authData)
+            const res = await signIn(authData).unwrap();
+
+            console.log("res", res)
+
+            const user = verifyToken(res.data.accessToken) as TAuthUser;
+            dispatch(setUser({ user: user, token: res.data.accessToken }));
+
+            if (res?.success) {
+                Cookies.set("accessToken", res.data.accessToken);
+
+                // refreshToken is usually handled by http-only cookies from server
+                toast.success(res?.message);
+                // loginMethods.reset();
+
+                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') {
+                    router.push("/admin");
+                } else if (user?.role === 'VENDOR') {
+                    router.push("/vendor");
+                } else if (user?.role === 'CUSTOMER') {
+                    router.push("/customer");
+                } else {
+                    router.push("/");
+                }
+            }
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Login failed. Please check your credentials.");
+        }
 
 
     };
