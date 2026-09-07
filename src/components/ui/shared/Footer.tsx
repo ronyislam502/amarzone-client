@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from 'react';
-import Copyright from '../ui/footer/Copyright';
-import ValueProps from '../ui/footer/ValueProps';
-import FooterLinks from '../ui/footer/FooterLinks';
-import LegalLinks from '../ui/footer/LegalLinks';
-import TopBanner from '../ui/footer/TopBanner';
-import FooterFeedbackModal from '../ui/footer/FooterModal';
+import { useState } from "react";
+import TopBanner from "./footer/TopBanner";
+import ValueProps from "./footer/ValueProps";
+import FooterLinks from "./footer/FooterLinks";
+import LegalLinks from "./footer/LegalLinks";
+import Copyright from "./footer/Copyright";
+import FooterFeedbackModal from "./footer/FooterModal";
+
+
 
 const Footer = () => {
 

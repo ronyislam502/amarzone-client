@@ -1,5 +1,5 @@
 import { ShieldCheck, Truck, Sparkles, Award } from 'lucide-react';
-import Logo from '../navbar/Logo';
+import Logo from '../shared/navbar/Logo';
 
 const AuthBrandShowcase = () => {
     return (

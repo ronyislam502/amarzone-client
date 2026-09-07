@@ -16,8 +16,8 @@ import { useSearchParams } from 'next/navigation';
 import { FieldValues } from 'react-hook-form';
 import { useRouter } from "next/navigation";
 import { zodResolver } from '@hookform/resolvers/zod';
-import AZForm from '../../form/AZFrom';
-import AZInput from '../../form/AZInput';
+import AZForm from '../shared/form/AZFrom';
+import AZInput from '../shared/form/AZInput';
 import { resetPasswordSchema } from '@/src/schema/Auth';
 
 

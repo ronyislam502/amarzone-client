@@ -12,7 +12,7 @@ const ReduxProvider = ({ children }: { children: ReactNode }) => {
         <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
                 {children}
-                <ToastContainer position="top-right" autoClose={3000} theme="dark" />
+                <ToastContainer position="top-center" autoClose={3000} theme="dark" />
             </PersistGate>
         </Provider>
     );

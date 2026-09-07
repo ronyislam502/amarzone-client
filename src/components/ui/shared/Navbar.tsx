@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { Menu, LogIn, ShoppingCart } from "lucide-react";
-import Departments from "../ui/navbar/Departments";
-import Search from "../ui/navbar/Search";
-import Services from "../ui/navbar/Services";
-import Logo from "../ui/navbar/Logo";
-import { NotificationBell } from "../ui/notification/NotificationBell";
-import NavAvatar from "../ui/navbar/NavAvatar";
+import Departments from "./navbar/Departments";
+import Search from "./navbar/Search";
+import Services from "./navbar/Services";
+import Logo from "./navbar/Logo";
+import { NotificationBell } from "../notification/NotificationBell";
+import NavAvatar from "./navbar/NavAvatar";
 
 const Navbar = () => {
   return (

@@ -1,5 +1,5 @@
-import Footer from "@/src/components/shared/Footer";
-import Navbar from "@/src/components/shared/Navbar";
+import Footer from "@/src/components/ui/shared/Footer";
+import Navbar from "@/src/components/ui/shared/Navbar";
 
 
 const layout = ({ children }: { children: React.ReactNode }) => {

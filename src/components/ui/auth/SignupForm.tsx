@@ -19,9 +19,9 @@ import {
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldValues } from 'react-hook-form';
-import AZForm from '../../form/AZFrom';
+import AZForm from '../shared/form/AZFrom';
 import { registerSchema } from '@/src/schema/Auth';
-import AZInput from '../../form/AZInput';
+import AZInput from '../shared/form/AZInput';
 import Image from 'next/image';
 
 

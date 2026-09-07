@@ -11,8 +11,8 @@ import {
 } from 'lucide-react';
 import { FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import AZForm from '../../form/AZFrom';
-import AZInput from '../../form/AZInput';
+import AZForm from '../shared/form/AZFrom';
+import AZInput from '../shared/form/AZInput';
 import { forgotPasswordSchema } from '@/src/schema/Auth';
 
 
