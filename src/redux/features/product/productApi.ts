@@ -107,6 +107,15 @@ export const productApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (result, error, { id }) => ["product", { type: "product", id }],
     }),
+
+    createVariant: builder.mutation({
+      query: (data) => ({
+        url: "/variants/create-variant",
+        method: "POST",
+        body: data,
+      }),
+      invalidatesTags: ["product"],
+    }),
   }),
 });
 
@@ -118,4 +127,6 @@ export const {
   useProductsByCategoryQuery,
   useCreateProductMutation,
   useUpdateProductMutation,
+  useCreateVariantMutation,
 } = productApi;
+

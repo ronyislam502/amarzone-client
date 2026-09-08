@@ -9,6 +9,7 @@ import {
 import { logout, setUser } from "../features/auth/authSlice";
 import { RootState } from "../store";
 import { toast } from "react-toastify";
+import Cookies from "js-cookie";
 
 export const url = "http://localhost:9000";
 
@@ -41,7 +42,8 @@ const baseQueryWithRefreshToken: BaseQueryFn<
   }
 
   if (result?.error?.status === 401) {
-
+    //* Send Refresh
+    // console.log("Sending refresh token");
 
     const res = await fetch(`${url}/api/v1/auth/refresh-token`, {
       method: "POST",

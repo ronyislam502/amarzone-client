@@ -26,7 +26,30 @@ const vendorApi = baseApi.injectEndpoints({
       }),
       providesTags: ["vendor"],
     }),
+
+    updateVendor: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/vendors/update/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: ["vendor"],
+    }),
+
+    deleteVendor: builder.mutation({
+      query: (id: string) => ({
+        url: `/vendors/delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["vendor"],
+    }),
   }),
 });
 
-export const { useAllVendorsQuery, useSingleVendorQuery } = vendorApi;
+export const {
+  useAllVendorsQuery,
+  useSingleVendorQuery,
+  useUpdateVendorMutation,
+  useDeleteVendorMutation,
+} = vendorApi;
+
