@@ -12,6 +12,7 @@ import {
     Activity,
     User,
     UserCheck,
+    Building2,
 } from "lucide-react";
 
 export const adminSidebarItems = [
@@ -80,6 +81,12 @@ export const adminSidebarItems = [
                 href: "/admin/customers",
                 icon: Users,
                 iconClass: "text-info",
+            },
+            {
+                label: "Departments",
+                href: "/admin/departments",
+                icon: Building2,
+                iconClass: "text-warning",
             },
             {
                 label: "Categories",

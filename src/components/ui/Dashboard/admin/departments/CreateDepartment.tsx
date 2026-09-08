@@ -1,59 +1,43 @@
 'use client';
 
-import { FolderTree, Sparkles } from 'lucide-react';
+import { Building2, Sparkles } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useCreateCategoryMutation } from '@/redux/features/category/categoryApi';
-import { useAllDepartmentsQuery } from '@/redux/features/department/departmentApi';
+import { useCreateDepartmentMutation } from '@/redux/features/department/departmentApi';
 import { toast } from 'react-toastify';
 import { FieldValues } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import AZForm from '../../../shared/form/AZFrom';
 import AZInput from '../../../shared/form/AZInput';
-import AZSelect from '../../../shared/form/AZSelect';
-import { categorySchema } from '@/src/schema/Category';
-import { TDepartment } from '@/src/types/department';
+import { departmentSchema } from '@/src/schema/Department';
 
-interface CreateCategoryFormProps {
+interface CreateDepartmentProps {
     onSuccess?: () => void;
 }
 
-const CreateCategory = ({ onSuccess }: CreateCategoryFormProps) => {
-    const [createCategory, { isLoading: isCreating }] = useCreateCategoryMutation();
-    const { data: departmentsData, isLoading: isDeptLoading } = useAllDepartmentsQuery({});
+const CreateDepartment = ({ onSuccess }: CreateDepartmentProps) => {
+    const [createDepartment, { isLoading: isCreating }] = useCreateDepartmentMutation();
     const router = useRouter();
 
-    let departmentOptions: { key: string; label: string }[] = [];
-
-    if (departmentsData?.data && !isDeptLoading) {
-        departmentOptions = departmentsData?.data?.map(
-            (dept: TDepartment) => ({
-                key: dept?._id,
-                label: `${dept?.name}`,
-            })
-        );
-    }
-
     const onSubmit = async (data: FieldValues) => {
-        const categoryData = {
+        const departmentData = {
             name: data.name,
-            department: data.department,
         };
 
         try {
-            const res = await createCategory(categoryData).unwrap();
+            const res = await createDepartment(departmentData).unwrap();
 
             if (res?.success) {
-                toast.success(res?.message || 'Category created successfully!', {
+                toast.success(res?.message || 'Department created successfully!', {
                     autoClose: 1000,
                 });
                 if (onSuccess) {
                     onSuccess();
                 } else {
-                    router.push('/admin');
+                    router.push('/admin/departments');
                 }
             }
         } catch (err: any) {
-            toast.error(err?.data?.message || 'Failed to create category');
+            toast.error(err?.data?.message || 'Failed to create department');
         }
     };
 
@@ -63,35 +47,28 @@ const CreateCategory = ({ onSuccess }: CreateCategoryFormProps) => {
             <div className="text-center sm:text-left mb-6">
                 <div className="badge badge-warning gap-1.5 px-3 py-2 text-xs font-semibold mb-3">
                     <Sparkles className="w-3.5 h-3.5" />
-                    <span>Catalog Management</span>
+                    <span>Organization Management</span>
                 </div>
                 <h2 className="text-3xl font-extrabold tracking-tight text-base-content flex items-center gap-2">
-                    <FolderTree className="w-7 h-7 text-warning" />
-                    Create Category
+                    <Building2 className="w-7 h-7 text-warning" />
+                    Create Department
                 </h2>
                 <p className="text-base-content/70 text-sm mt-1.5">
-                    Add a new category under a department to organize your catalog
+                    Add a new top-level department to structure your product catalog
                 </p>
             </div>
 
             {/* Form */}
             <AZForm
-                resolver={zodResolver(categorySchema)}
+                resolver={zodResolver(departmentSchema)}
                 onSubmit={onSubmit}
             >
                 <div className="space-y-5">
-                    <AZSelect
-                        label="Department"
-                        name="department"
-                        options={departmentOptions}
-                        placeholder="Select a department"
-                        disabled={isDeptLoading}
-                    />
                     <AZInput
-                        label="Category Name"
+                        label="Department Name"
                         name="name"
                         type="text"
-                        placeholder="Enter category name"
+                        placeholder="Enter department name"
                     />
                 </div>
 
@@ -101,7 +78,7 @@ const CreateCategory = ({ onSuccess }: CreateCategoryFormProps) => {
                         type="submit"
                         disabled={isCreating}
                     >
-                        {isCreating ? 'Creating Category...' : 'Create Category'}
+                        {isCreating ? 'Creating Department...' : 'Create Department'}
                     </button>
                 </div>
             </AZForm>
@@ -109,4 +86,4 @@ const CreateCategory = ({ onSuccess }: CreateCategoryFormProps) => {
     );
 };
 
-export default CreateCategory;
+export default CreateDepartment;

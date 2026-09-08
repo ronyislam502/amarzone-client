@@ -4,4 +4,5 @@ export type TDepartment = {
     createdAt: string
     updatedAt: string
     __v: number
+    isDeleted?: boolean
 }
