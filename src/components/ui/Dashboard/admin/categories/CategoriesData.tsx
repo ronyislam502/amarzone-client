@@ -15,6 +15,9 @@ import {
 import { TColumn } from "@/src/types/table";
 import AZTable from "../../../shared/AZTable";
 import { TCategory } from "@/src/types/category";
+import Modal from "../../../shared/Modal";
+import CreateCategoryForm from "./CreateCategory";
+import UpdateCategoryForm from "./UpdateCategory";
 
 
 const CategoriesData: React.FC = () => {
@@ -22,6 +25,8 @@ const CategoriesData: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<TCategory | null>(null);
 
   // Queries & Mutations
   const {
@@ -105,11 +110,15 @@ const CategoriesData: React.FC = () => {
     {
       header: "Actions",
       align: "right",
-      accessor: () => (
+      accessor: (cat) => (
         <div className="flex items-center justify-end gap-1.5">
           <button
             type="button"
-            className="btn btn-ghost btn-xs font-bold text-primary gap-1"
+            onClick={() => {
+              setSelectedCategory(cat);
+              setIsEditModalOpen(true);
+            }}
+            className="btn btn-ghost btn-xs font-bold text-primary gap-1 hover:bg-primary/10"
           >
             <Edit2 className="w-3 h-3" />
             <span>Edit</span>
@@ -176,6 +185,39 @@ const CategoriesData: React.FC = () => {
       />
 
       {/* REUSABLE DAISYUI CREATE CATEGORY MODAL */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        size="md"
+      >
+        <CreateCategoryForm
+          onSuccess={() => {
+            setIsModalOpen(false);
+            refetch();
+          }}
+        />
+      </Modal>
+
+      {/* REUSABLE DAISYUI UPDATE CATEGORY MODAL */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        size="md"
+      >
+        {selectedCategory && (
+          <UpdateCategoryForm
+            category={selectedCategory}
+            onSuccess={() => {
+              setIsEditModalOpen(false);
+              setSelectedCategory(null);
+              refetch();
+            }}
+          />
+        )}
+      </Modal>
     </>
   );
 };

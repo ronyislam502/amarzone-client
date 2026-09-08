@@ -37,10 +37,12 @@ const departmentApi = baseApi.injectEndpoints({
                 };
             },
             providesTags: ["department"],
-            transformResponse: (response: TResponseRedux<TDepartment[]>) => {
+            transformResponse: (response: any) => {
                 return {
-                    data: response?.data,
-                    meta: response?.meta,
+                    data: (Array.isArray(response?.data)
+                        ? response?.data
+                        : response?.data?.data || []) as TDepartment[],
+                    meta: response?.data?.meta || response?.meta,
                 };
             },
         }),

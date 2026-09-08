@@ -38,13 +38,11 @@ const LoginForm = () => {
 
             const res = await signIn(authData).unwrap();
 
-            console.log("res", res)
-
-            const user = verifyToken(res.data.accessToken) as TAuthUser;
-            dispatch(setUser({ user: user, token: res.data.accessToken }));
+            const user = verifyToken(res?.data?.accessToken) as TAuthUser;
+            dispatch(setUser({ user: user, token: res?.data?.accessToken }));
 
             if (res?.success) {
-                Cookies.set("accessToken", res.data.accessToken);
+                Cookies.set("accessToken", res?.data?.accessToken);
 
                 // refreshToken is usually handled by http-only cookies from server
                 toast.success(res?.message);

@@ -1,4 +1,4 @@
-import React, { Suspense } from "react";
+import { Suspense } from "react";
 import TableSkeleton from "../../../shared/skeleton/TableSkeleton";
 import Categories from "@/src/app/(dashboard)/admin/categories/page";
 
