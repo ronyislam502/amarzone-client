@@ -41,8 +41,12 @@ const CreateProductModal = ({
   onSuccess,
 }: CreateProductModalProps) => {
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
-  const { data: deptData, isLoading: isDeptLoading } = useAllDepartmentsQuery({});
-  const { data: catData, isLoading: isCatLoading } = useAllCategoriesQuery({});
+  const { data: deptData, isLoading: isDeptLoading } = useAllDepartmentsQuery({
+    limit: 0,
+  });
+  const { data: catData, isLoading: isCatLoading } = useAllCategoriesQuery({
+    limit: 0,
+  });
 
   const departments: TDepartment[] = deptData?.data || [];
   const allCategories: TCategory[] = catData?.data || [];

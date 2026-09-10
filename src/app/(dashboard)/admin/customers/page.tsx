@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import CustomersBread from "@/src/components/ui/Dashboard/admin/customers/CustomersBread";
 import CustomersHeader from "@/src/components/ui/Dashboard/admin/customers/CustomersHeader";
 import CustomersStats from "@/src/components/ui/Dashboard/admin/customers/CustomersStats";
@@ -29,8 +29,25 @@ const CustomersPage = () => {
     }, 600);
   };
 
+  const handleStatsChange = useCallback((newStats: CustomersStatsData) => {
+    setStats((prev) => {
+      if (
+        prev.totalCustomers === newStats.totalCustomers &&
+        prev.activeCustomers === newStats.activeCustomers &&
+        prev.verifiedProfiles === newStats.verifiedProfiles
+      ) {
+        return prev;
+      }
+      return newStats;
+    });
+  }, []);
+
+  const handleRegisterExport = useCallback((handler: () => void) => {
+    exportCsvRef.current = handler;
+  }, []);
+
   return (
-    <div className="space-y-6 max-w-8xl mx-auto pb-10">
+    <div className="space-y-6 w-full pb-10">
       {/* Breadcrumb Navigation */}
       <CustomersBread />
 
@@ -50,10 +67,8 @@ const CustomersPage = () => {
 
       {/* Interactive Customers Data Table with Filters & Modals */}
       <CustomersData
-        onStatsChange={setStats}
-        registerExportHandler={(handler) => {
-          exportCsvRef.current = handler;
-        }}
+        onStatsChange={handleStatsChange}
+        registerExportHandler={handleRegisterExport}
       />
     </div>
   );

@@ -6,7 +6,7 @@ import CategoriesStats from "@/src/components/ui/Dashboard/admin/categories/Cate
 const Categories = () => {
 
     return (
-        <div className="space-y-6 max-w-8xl mx-auto">
+        <div className="space-y-6 w-full pb-10">
             <CategoriesBread />
             <CategoriesHeader />
             <CategoriesStats />

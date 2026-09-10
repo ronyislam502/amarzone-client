@@ -14,67 +14,95 @@ const VendorsStats = ({
   complianceRate = "99.8%",
 }: VendorsStatsProps) => {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Stat 1: Total Vendors */}
-      <div className="stats bg-base-100 shadow-lg border border-base-200">
-        <div className="stat">
-          <div className="stat-figure text-warning">
-            <div className="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center border border-warning/20">
-              <Store className="w-6 h-6 text-warning" />
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-5">
+        {/* Top glowing accent border line */}
+        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
+        {/* Ambient background glow */}
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-amber-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
+        {/* High-tech dot matrix overlay */}
+        <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)] pointer-events-none" />
+
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">Total Vendors</span>
+            <div className="text-3xl font-black text-amber-400 tracking-tight">{totalVendors}</div>
+            <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+              <span className="text-emerald-400">↗︎</span> Registered merchant stores
             </div>
           </div>
-          <div className="stat-title text-xs font-extrabold uppercase">Total Vendors</div>
-          <div className="stat-value text-2xl text-warning">{totalVendors}</div>
-          <div className="stat-desc font-bold text-success flex items-center gap-1 mt-1">
-            ↗︎ Registered merchant stores
+          <div className="w-12 h-12 rounded-xl bg-amber-400/10 flex items-center justify-center border border-amber-400/20 text-amber-400 shadow-sm shrink-0">
+            <Store className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Stat 2: Active Storefronts */}
-      <div className="stats bg-base-100 shadow-lg border border-base-200">
-        <div className="stat">
-          <div className="stat-figure text-success">
-            <div className="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center border border-success/20">
-              <CheckCircle2 className="w-6 h-6 text-success" />
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-5">
+        {/* Top glowing accent border line */}
+        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent pointer-events-none z-20" />
+        {/* Ambient background glow */}
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
+        {/* High-tech dot matrix overlay */}
+        <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)] pointer-events-none" />
+
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">Active Stores</span>
+            <div className="text-3xl font-black text-emerald-400 tracking-tight">{activeVendors}</div>
+            <div className="text-[11px] font-bold text-emerald-400/90 flex items-center gap-1">
+              <span>●</span> Operating storefronts
             </div>
           </div>
-          <div className="stat-title text-xs font-extrabold uppercase">Active Stores</div>
-          <div className="stat-value text-2xl text-success">{activeVendors}</div>
-          <div className="stat-desc font-bold text-success flex items-center gap-1 mt-1">
-            Operating storefronts
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400 shadow-sm shrink-0">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Stat 3: Newly Registered */}
-      <div className="stats bg-base-100 shadow-lg border border-base-200">
-        <div className="stat">
-          <div className="stat-figure text-info">
-            <div className="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center border border-info/20">
-              <Users className="w-6 h-6 text-info" />
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-5">
+        {/* Top glowing accent border line */}
+        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-sky-400/60 to-transparent pointer-events-none z-20" />
+        {/* Ambient background glow */}
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-sky-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
+        {/* High-tech dot matrix overlay */}
+        <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)] pointer-events-none" />
+
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">New Partners</span>
+            <div className="text-3xl font-black text-sky-400 tracking-tight">{newVendorsCount}</div>
+            <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+              <span className="text-sky-400">✓</span> Onboarded this month
             </div>
           </div>
-          <div className="stat-title text-xs font-extrabold uppercase">New Partners</div>
-          <div className="stat-value text-2xl text-info">{newVendorsCount}</div>
-          <div className="stat-desc font-bold text-info flex items-center gap-1 mt-1">
-            Onboarded this month
+          <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center border border-sky-500/20 text-sky-400 shadow-sm shrink-0">
+            <Users className="w-6 h-6" />
           </div>
         </div>
       </div>
 
       {/* Stat 4: Compliance & Health */}
-      <div className="stats bg-base-100 shadow-lg border border-base-200">
-        <div className="stat">
-          <div className="stat-figure text-secondary">
-            <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center border border-secondary/20">
-              <ShieldCheck className="w-6 h-6 text-secondary" />
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-5">
+        {/* Top glowing accent border line */}
+        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-purple-400/60 to-transparent pointer-events-none z-20" />
+        {/* Ambient background glow */}
+        <div className="absolute -top-10 -left-10 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-transparent rounded-full blur-2xl pointer-events-none" />
+        {/* High-tech dot matrix overlay */}
+        <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)] pointer-events-none" />
+
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="space-y-1">
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">Compliance Rate</span>
+            <div className="text-3xl font-black text-purple-300 tracking-tight">{complianceRate}</div>
+            <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
+              <span>★</span> Enterprise SLA compliance
             </div>
           </div>
-          <div className="stat-title text-xs font-extrabold uppercase">Compliance Rate</div>
-          <div className="stat-value text-2xl text-secondary">{complianceRate}</div>
-          <div className="stat-desc font-bold text-success flex items-center gap-1 mt-1">
-            Enterprise SLA compliance
+          <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 text-purple-300 shadow-sm shrink-0">
+            <ShieldCheck className="w-6 h-6" />
           </div>
         </div>
       </div>

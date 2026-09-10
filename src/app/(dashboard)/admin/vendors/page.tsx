@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import VendorsBread from "@/src/components/ui/Dashboard/admin/vendors/VendorsBread";
 import VendorsHeader from "@/src/components/ui/Dashboard/admin/vendors/VendorsHeader";
 import VendorsStats from "@/src/components/ui/Dashboard/admin/vendors/VendorsStats";
@@ -29,8 +29,25 @@ const VendorsPage = () => {
     }, 600);
   };
 
+  const handleStatsChange = useCallback((newStats: VendorsStatsData) => {
+    setStats((prev) => {
+      if (
+        prev.totalVendors === newStats.totalVendors &&
+        prev.activeVendors === newStats.activeVendors &&
+        prev.newVendorsCount === newStats.newVendorsCount
+      ) {
+        return prev;
+      }
+      return newStats;
+    });
+  }, []);
+
+  const handleRegisterExport = useCallback((handler: () => void) => {
+    exportCsvRef.current = handler;
+  }, []);
+
   return (
-    <div className="space-y-6 max-w-8xl mx-auto pb-10">
+    <div className="space-y-6 w-full pb-10">
       {/* Breadcrumb Navigation */}
       <VendorsBread />
 
@@ -50,10 +67,8 @@ const VendorsPage = () => {
 
       {/* Interactive Vendors Data Table with Filters & Modals */}
       <VendorsData
-        onStatsChange={setStats}
-        registerExportHandler={(handler) => {
-          exportCsvRef.current = handler;
-        }}
+        onStatsChange={handleStatsChange}
+        registerExportHandler={handleRegisterExport}
       />
     </div>
   );

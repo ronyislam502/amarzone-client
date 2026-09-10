@@ -21,7 +21,9 @@ interface UpdateCategoryProps {
 
 const UpdateCategory = ({ category, onSuccess }: UpdateCategoryProps) => {
     const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
-    const { data: departmentsData, isLoading: isDeptLoading } = useAllDepartmentsQuery({});
+    const { data: departmentsData, isLoading: isDeptLoading } = useAllDepartmentsQuery({
+        limit: 0,
+    });
     const router = useRouter();
 
 
@@ -70,18 +72,20 @@ const UpdateCategory = ({ category, onSuccess }: UpdateCategoryProps) => {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto text-slate-100">
             {/* Header */}
             <div className="text-center sm:text-left mb-6">
-                <div className="badge badge-warning gap-1.5 px-3 py-2 text-xs font-semibold mb-3">
+                <div className="badge badge-warning gap-1.5 px-3 py-1.5 text-xs font-black shadow mb-3 text-slate-950">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Catalog Management</span>
                 </div>
-                <h2 className="text-3xl font-extrabold tracking-tight text-base-content flex items-center gap-2">
-                    <FolderTree className="w-7 h-7 text-warning" />
-                    Update Category
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-400">
+                        <FolderTree className="w-6 h-6" />
+                    </div>
+                    <span>Update Category</span>
                 </h2>
-                <p className="text-base-content/70 text-sm mt-1.5">
+                <p className="text-slate-400 text-xs mt-1.5">
                     Modify category details and department assignment
                 </p>
             </div>
@@ -95,25 +99,29 @@ const UpdateCategory = ({ category, onSuccess }: UpdateCategoryProps) => {
                 resolver={zodResolver(categorySchema)}
                 onSubmit={onSubmit}
             >
-                <div className="space-y-5">
+                <div className="space-y-4">
                     <AZSelect
                         label="Department"
                         name="department"
+                        size="sm"
                         options={departmentOptions}
                         placeholder="Select a department"
                         disabled={isDeptLoading}
+                        selectClassName="bg-[#120824] border-white/15 text-slate-200 focus:border-amber-400 rounded-xl text-xs"
                     />
                     <AZInput
-                        label="Name"
+                        label="Category Name"
                         name="name"
                         type="text"
+                        size="sm"
                         placeholder="Enter category name"
+                        inputClassName="bg-[#120824] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                     />
                 </div>
 
                 <div className="mt-8 space-y-4">
                     <button
-                        className="w-full group flex items-center justify-center gap-3 bg-warning hover:bg-warning/90 text-black py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] italic transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)] disabled:opacity-50"
+                        className="w-full group flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
                         type="submit"
                         disabled={isUpdating}
                     >

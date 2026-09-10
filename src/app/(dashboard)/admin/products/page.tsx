@@ -23,7 +23,7 @@ const ProductsPage = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-8xl mx-auto pb-10">
+    <div className="space-y-6 w-full pb-10">
       {/* Breadcrumb Navigation */}
       <ProductsBread />
 

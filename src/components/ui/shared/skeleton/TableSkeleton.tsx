@@ -23,8 +23,12 @@ const TableSkeleton = ({
   const colCount = Math.max(1, columns);
 
   return (
-    <div className={`card bg-base-100 shadow-xl border border-base-200 animate-pulse ${className}`}>
-      <div className="card-body">
+    <div
+      className={`card relative overflow-hidden bg-[#170d2f] shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl animate-pulse [&_.bg-base-200]:!bg-white/5 [&_.bg-base-300]:!bg-white/10 [&_.text-base-content\/80]:!text-slate-200 [&_.border-base-200]:!border-white/10 ${className}`}
+    >
+      {/* Top glowing accent border line */}
+      <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
+      <div className="card-body relative z-10">
         {/* Header Skeleton */}
         {showHeader && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-base-200 gap-4">

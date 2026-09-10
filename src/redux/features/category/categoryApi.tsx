@@ -26,8 +26,8 @@ const categoryApi = baseApi.injectEndpoints({
                 if (page) {
                     params.append("page", page);
                 }
-                if (limit) {
-                    params.append("limit", limit);
+                if (limit !== undefined && limit !== null) {
+                    params.append("limit", String(limit));
                 }
 
                 return {

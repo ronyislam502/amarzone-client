@@ -1,39 +1,89 @@
+"use client";
 
-import { TInput } from "@/src/types/global";
+import { ChangeEvent, ReactNode } from "react";
 import { useFormContext } from "react-hook-form";
+import { TInput } from "@/src/types/global";
 
-type IProps = TInput;
+export type TAZTextareaProps = Partial<TInput> & {
+  name: string;
+  label?: ReactNode;
+  placeholder?: string;
+  value?: string;
+  onChange?: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  onValueChange?: (value: string) => void;
+  disabled?: boolean;
+  rows?: number;
+  className?: string;
+  textareaClassName?: string;
+  containerClassName?: string;
+  error?: string;
+};
 
-const AZTextarea = ({ name, label, placeholder = "" }: IProps) => {
-    const {
-        register,
-        formState: { errors },
-    } = useFormContext();
+const AZTextarea = ({
+  name,
+  label,
+  placeholder = "",
+  value,
+  onChange,
+  onValueChange,
+  disabled = false,
+  rows,
+  className = "",
+  textareaClassName = "",
+  containerClassName = "",
+  error,
+}: TAZTextareaProps) => {
+  let formContext: any = null;
+  try {
+    formContext = useFormContext();
+  } catch {
+    formContext = null;
+  }
 
-    return (
-        <div className="form-control w-full">
-            <label className="label mb-1">
-                <span className="text-[9px] font-black text-success uppercase tracking-widest italic">
-                    {label}
-                </span>
-            </label>
-            <textarea
-                placeholder={placeholder}
-                {...register(name)}
-                className="w-full bg-success/5 border border-success/30 rounded-2xl p-6
-          text-white font-bold placeholder:text-gray-500 outline-none
-          hover:border-blue-500/40 hover:bg-blue-500/5
-          focus:border-blue-500/60 focus:bg-blue-500/8
-          transition-all duration-300
-          min-h-[120px] resize-none"
-            />
-            {errors[name] && (
-                <p className="text-error text-[10px] font-bold mt-2 uppercase tracking-wide">
-                    {errors[name]?.message as string}
-                </p>
-            )}
-        </div>
-    );
+  const isRHF = Boolean(formContext && name && value === undefined);
+  const rhfError = isRHF && name ? formContext?.formState?.errors?.[name]?.message : undefined;
+  const activeError = error || (typeof rhfError === "string" ? rhfError : undefined);
+
+  const handleChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    if (onChange) {
+      onChange(e);
+    }
+    if (onValueChange) {
+      onValueChange(e.target.value);
+    }
+  };
+
+  const registerProps = isRHF && name ? formContext.register(name) : {};
+
+  return (
+    <div className={`form-control w-full ${containerClassName}`}>
+      {label && (
+        <label className="label py-1">
+          <span className="text-[16px] font-bold text-warning flex items-center gap-1.5">
+            {label}
+          </span>
+        </label>
+      )}
+      <textarea
+        {...registerProps}
+        placeholder={placeholder}
+        disabled={disabled}
+        value={value}
+        onChange={handleChange}
+        rows={rows}
+        className={`textarea textarea-bordered w-full rounded-xl p-4 font-medium transition-all duration-200 focus:outline-none min-h-[120px] ${
+          activeError
+            ? "textarea-error"
+            : "border-warning hover:border-primary focus:border-primary"
+        } ${textareaClassName} ${className}`}
+      />
+      {activeError && (
+        <p className="text-error text-[10px] font-bold mt-1 tracking-wide">
+          {activeError}
+        </p>
+      )}
+    </div>
+  );
 };
 
 export default AZTextarea;

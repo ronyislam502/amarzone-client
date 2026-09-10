@@ -52,49 +52,51 @@ const UpdateDepartment = ({ department, onSuccess }: UpdateDepartmentProps) => {
     };
 
     return (
-        <div className="w-full max-w-md mx-auto">
+        <div className="w-full max-w-md mx-auto text-slate-100">
             {/* Header */}
             <div className="text-center sm:text-left mb-6">
-                <div className="badge badge-warning gap-1.5 px-3 py-2 text-xs font-semibold mb-3">
+                <div className="badge badge-warning gap-1.5 px-3 py-1.5 text-xs font-semibold mb-3 bg-amber-400/20 border-amber-400/30 text-amber-300">
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Organization Management</span>
                 </div>
-                <h2 className="text-3xl font-extrabold tracking-tight text-base-content flex items-center gap-2">
-                    <Building2 className="w-7 h-7 text-warning" />
+                <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                    <Building2 className="w-7 h-7 text-amber-400" />
                     Update Department
                 </h2>
-                <p className="text-base-content/70 text-sm mt-1.5">
+                <p className="text-slate-300/80 text-xs sm:text-sm mt-1.5">
                     Modify department name and catalog properties
                 </p>
             </div>
 
             {/* Form */}
-            <AZForm
-                defaultValues={{
-                    name: department?.name,
-                }}
-                resolver={zodResolver(departmentSchema)}
-                onSubmit={onSubmit}
-            >
-                <div className="space-y-5">
-                    <AZInput
-                        label="Name"
-                        name="name"
-                        type="text"
-                        placeholder="Enter department name"
-                    />
-                </div>
+            <div className="[&_.input]:bg-[#120824] [&_.input]:border-white/15 [&_.input]:text-slate-200 [&_.input]:placeholder:text-slate-500 [&_.input:focus]:border-amber-400 [&_.label-text]:text-slate-300">
+                <AZForm
+                    defaultValues={{
+                        name: department?.name,
+                    }}
+                    resolver={zodResolver(departmentSchema)}
+                    onSubmit={onSubmit}
+                >
+                    <div className="space-y-5">
+                        <AZInput
+                            label="Name"
+                            name="name"
+                            type="text"
+                            placeholder="Enter department name"
+                        />
+                    </div>
 
-                <div className="mt-8 space-y-4">
-                    <button
-                        className="w-full group flex items-center justify-center gap-3 bg-warning hover:bg-warning/90 text-black py-4 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] italic transition-all active:scale-95 shadow-[0_20px_40px_-10px_rgba(234,179,8,0.3)] disabled:opacity-50"
-                        type="submit"
-                        disabled={isUpdating}
-                    >
-                        {isUpdating ? 'Updating Department...' : 'Update Department'}
-                    </button>
-                </div>
-            </AZForm>
+                    <div className="mt-8 space-y-4">
+                        <button
+                            className="w-full group flex items-center justify-center gap-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 py-3.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 shadow-lg shadow-amber-500/20 disabled:opacity-50 cursor-pointer"
+                            type="submit"
+                            disabled={isUpdating}
+                        >
+                            {isUpdating ? 'Updating Department...' : 'Update Department'}
+                        </button>
+                    </div>
+                </AZForm>
+            </div>
         </div>
     );
 };

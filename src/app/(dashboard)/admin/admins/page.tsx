@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import AdminsBread from "@/src/components/ui/Dashboard/admin/admins/AdminsBread";
 import AdminsHeader from "@/src/components/ui/Dashboard/admin/admins/AdminsHeader";
 import AdminsStats from "@/src/components/ui/Dashboard/admin/admins/AdminsStats";
@@ -36,8 +36,29 @@ const AdminsPage = () => {
     }, 600);
   };
 
+  const handleStatsChange = useCallback((newStats: AdminsStatsData) => {
+    setStats((prev) => {
+      if (
+        prev.totalAdmins === newStats.totalAdmins &&
+        prev.activeAdmins === newStats.activeAdmins &&
+        prev.superAdmins === newStats.superAdmins
+      ) {
+        return prev;
+      }
+      return newStats;
+    });
+  }, []);
+
+  const handleRegisterExport = useCallback((handler: () => void) => {
+    exportCsvRef.current = handler;
+  }, []);
+
+  const handleRegisterCreate = useCallback((handler: () => void) => {
+    openCreateModalRef.current = handler;
+  }, []);
+
   return (
-    <div className="space-y-6 max-w-8xl mx-auto pb-10">
+    <div className="space-y-6 w-full pb-10">
       {/* Breadcrumb Navigation */}
       <AdminsBread />
 
@@ -59,13 +80,9 @@ const AdminsPage = () => {
 
       {/* Interactive Admins Data Table with Filters & Modals */}
       <AdminsData
-        onStatsChange={setStats}
-        registerExportHandler={(handler) => {
-          exportCsvRef.current = handler;
-        }}
-        registerCreateHandler={(handler) => {
-          openCreateModalRef.current = handler;
-        }}
+        onStatsChange={handleStatsChange}
+        registerExportHandler={handleRegisterExport}
+        registerCreateHandler={handleRegisterCreate}
       />
     </div>
   );

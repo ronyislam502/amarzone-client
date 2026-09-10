@@ -5,7 +5,7 @@ import DepartmentsStats from "@/src/components/ui/Dashboard/admin/departments/De
 
 const Departments = () => {
     return (
-        <div className="space-y-6 max-w-8xl mx-auto">
+        <div className="space-y-6 w-full pb-10">
             <DepartmentsBread />
             <DepartmentsHeader />
             <DepartmentsStats />

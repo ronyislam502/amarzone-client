@@ -56,36 +56,41 @@ const UpdateCustomerModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-base-100 border border-base-200 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col relative">
-        <div className="h-1.5 w-full bg-gradient-to-r from-info via-primary to-accent" />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md animate-fadeIn">
+      <div className="bg-[#170d2f] border border-white/10 w-full max-w-lg max-h-[90vh] rounded-3xl shadow-[0_25px_80px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col relative text-slate-100">
+        {/* Top glowing accent border ray */}
+        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
+
+        {/* Ambient background glow orbs */}
+        <div className="absolute -top-16 -left-16 w-56 h-56 bg-gradient-to-br from-amber-500/15 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -right-16 w-56 h-56 bg-gradient-to-tl from-indigo-600/20 to-transparent rounded-full blur-3xl pointer-events-none" />
 
         {/* Close Button */}
         <button
           type="button"
           onClick={onClose}
-          className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 z-10"
+          className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4 z-20 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 hover:text-white shadow"
         >
           <X className="w-4 h-4" />
         </button>
 
         {/* Header */}
-        <div className="p-6 pb-2 border-b border-base-200/80 bg-base-200/20">
-          <div className="badge badge-info gap-1.5 px-3 py-1.5 text-xs font-semibold mb-2 text-white">
+        <div className="relative z-10 p-6 pb-4 border-b border-white/10 bg-white/[0.02]">
+          <div className="badge badge-warning gap-1.5 px-3 py-1.5 text-xs font-semibold mb-2 bg-amber-400/20 border-amber-400/30 text-amber-300">
             <Sparkles className="w-3.5 h-3.5" />
             <span>Account Governance</span>
           </div>
-          <h2 className="text-2xl font-extrabold tracking-tight text-base-content flex items-center gap-2">
-            <Users className="w-6 h-6 text-info" />
+          <h2 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+            <Users className="w-6 h-6 text-amber-400" />
             Update Customer Profile
           </h2>
-          <p className="text-base-content/70 text-xs mt-1">
+          <p className="text-slate-300/80 text-xs mt-1">
             Modify consumer personal name, contact phone, and registered shipping address.
           </p>
         </div>
 
         {/* Form Body */}
-        <div className="overflow-y-auto p-6 flex-1 text-xs">
+        <div className="relative z-10 overflow-y-auto p-6 flex-1 text-xs [&_.input]:bg-[#120824] [&_.input]:border-white/15 [&_.input]:text-slate-200 [&_.input]:placeholder:text-slate-500 [&_.input:focus]:border-amber-400 [&_.label-text]:text-slate-300 [&_.label-text]:font-bold [&_.label-text]:text-xs">
           <AZForm
             key={customer._id}
             defaultValues={{
@@ -113,9 +118,9 @@ const UpdateCustomerModal = ({
                 placeholder="+8801712345679"
               />
 
-              <div className="pt-2 border-t border-base-200 space-y-3">
-                <div className="text-[11px] font-black uppercase tracking-wider text-base-content/70 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-success" />
+              <div className="pt-3 border-t border-white/10 space-y-3">
+                <div className="text-[11px] font-black uppercase tracking-wider text-slate-300 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Default Shipping Address</span>
                 </div>
 
@@ -150,11 +155,11 @@ const UpdateCustomerModal = ({
               </div>
 
               {/* Footer Actions */}
-              <div className="mt-8 flex items-center justify-end gap-3 border-t border-base-200 pt-4">
+              <div className="mt-8 flex items-center justify-end gap-3 border-t border-white/10 pt-4">
                 <button
                   type="button"
                   onClick={onClose}
-                  className="btn btn-sm btn-ghost font-bold text-base-content/70"
+                  className="btn btn-sm btn-ghost font-bold text-slate-300 hover:bg-white/10 rounded-xl"
                   disabled={isUpdating}
                 >
                   Cancel
@@ -162,7 +167,7 @@ const UpdateCustomerModal = ({
                 <button
                   type="submit"
                   disabled={isUpdating}
-                  className="btn btn-sm btn-info text-white font-bold shadow-md px-6"
+                  className="btn btn-sm bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black shadow-lg shadow-amber-500/20 px-6 rounded-xl border-none transition-all active:scale-95 cursor-pointer"
                 >
                   {isUpdating ? "Saving..." : "Save Changes"}
                 </button>
