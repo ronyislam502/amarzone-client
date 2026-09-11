@@ -75,7 +75,7 @@ const CategoriesStats = ({
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">Linked Products</span>
             <div className="text-3xl font-black text-indigo-400 tracking-tight">{linkedProducts}</div>
             <div className="text-[11px] font-bold text-slate-400 flex items-center gap-1">
-              <span className="text-indigo-400">✓</span> Active catalog inventory
+              <span className="text-indigo-400">✓</span> Active catalog listings
             </div>
           </div>
           <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400 shadow-sm shrink-0">

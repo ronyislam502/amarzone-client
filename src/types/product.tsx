@@ -10,22 +10,23 @@ export type TProduct = {
     department: TDepartment
     category: TCategory
     title: string
-    description: string
+    description?: string
     features: string[]
+    thumbnail?: string
     brand: string
     variants: TVariant[]
     tags: string[]
     isDeleted: boolean
-    isBestSeller: boolean
-    __v: number
-    createdAt: string
-    updatedAt: string
-    inventory: TInventory[]
-    reviews: TReview[]
-    minPrice: number
-    averageRating: number
-    reviewCount: number
-    inStock: boolean
+    isBestSeller?: boolean
+    __v?: number
+    createdAt?: string
+    updatedAt?: string
+    inventory?: TInventory[]
+    reviews?: TReview[]
+    minPrice?: number
+    averageRating?: number
+    reviewCount?: number
+    inStock?: boolean
 }
 
 export type TAuthor = {

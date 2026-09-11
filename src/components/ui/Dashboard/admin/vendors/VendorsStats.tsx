@@ -49,10 +49,10 @@ const VendorsStats = ({
 
         <div className="relative z-10 flex items-center justify-between">
           <div className="space-y-1">
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">Active Stores</span>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">Active Merchants</span>
             <div className="text-3xl font-black text-emerald-400 tracking-tight">{activeVendors}</div>
             <div className="text-[11px] font-bold text-emerald-400/90 flex items-center gap-1">
-              <span>●</span> Operating storefronts
+              <span>●</span> Authorized merchant accounts
             </div>
           </div>
           <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400 shadow-sm shrink-0">

@@ -5,16 +5,13 @@ export const productApi = baseApi.injectEndpoints({
     allProducts: builder.query({
       query: (params) => {
         const queryParams = new URLSearchParams();
-        if (params?.search) queryParams.append("searchTerm", params.search);
+        if (params?.searchTerm) queryParams.append("searchTerm", params.searchTerm);
+        else if (params?.search) queryParams.append("searchTerm", params.search);
         if (params?.page) queryParams.append("page", String(params.page));
         if (params?.limit) queryParams.append("limit", String(params.limit));
         if (params?.category && params.category !== "all") queryParams.append("category", params.category);
         if (params?.department) queryParams.append("department", params.department);
-        if (params?.brands && params.brands.length > 0) queryParams.append("brands", params.brands.join(","));
-        if (params?.minRating) queryParams.append("minRating", params.minRating);
-        if (params?.inStock) queryParams.append("inStock", "true");
-        if (params?.minPrice) queryParams.append("minPrice", params.minPrice);
-        if (params?.maxPrice) queryParams.append("maxPrice", params.maxPrice);
+        if (params?.brand) queryParams.append("brand", params.brand);
         if (params?.sort) queryParams.append("sort", params.sort);
 
         return {
