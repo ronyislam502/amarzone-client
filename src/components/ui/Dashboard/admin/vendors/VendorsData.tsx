@@ -100,10 +100,29 @@ const VendorsData = ({
     }
 
     if (filters.country) {
-      result = result.filter(
-        (v) =>
-          v.address?.country?.toLowerCase() === filters.country.toLowerCase()
-      );
+      const fCountry = filters.country.toLowerCase();
+      const euCountries = [
+        "germany", "france", "italy", "spain", "netherlands", "sweden",
+        "poland", "belgium", "austria", "ireland", "denmark", "portugal",
+        "finland", "czech republic", "greece", "romania", "hungary", "luxembourg"
+      ];
+
+      result = result.filter((v) => {
+        const vCountry = (v.address?.country || "").toLowerCase();
+        if (fCountry === "european union" || fCountry === "eu") {
+          return euCountries.includes(vCountry);
+        }
+        if (fCountry === "bd" || fCountry === "bangladesh") {
+          return vCountry === "bd" || vCountry === "bangladesh";
+        }
+        if (fCountry === "usa" || fCountry === "united states") {
+          return vCountry === "usa" || vCountry === "united states";
+        }
+        if (fCountry === "ca" || fCountry === "canada") {
+          return vCountry === "ca" || vCountry === "canada";
+        }
+        return vCountry === fCountry;
+      });
     }
 
     if (filters.sort === "name_asc") {

@@ -33,10 +33,10 @@ const statusOptions = [
 ];
 
 const countryOptions = [
+  { value: "Bangladesh", label: "Bangladesh" },
   { value: "USA", label: "United States (USA)" },
-  { value: "UK", label: "United Kingdom (UK)" },
-  { value: "BD", label: "Bangladesh" },
-  { value: "CA", label: "Canada" },
+  { value: "Canada", label: "Canada" },
+  { value: "European Union", label: "European Union (EU)" },
 ];
 
 const sortOptions = [

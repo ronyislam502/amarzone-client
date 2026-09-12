@@ -91,10 +91,10 @@ const VendorsFilterBar = ({
               className="select select-sm w-full font-medium bg-[#120824] border border-white/15 text-slate-200 focus:border-amber-400 focus:outline-none rounded-xl transition-all"
             >
               <option value="" className="bg-[#170d2f] text-slate-200">All Regions</option>
+              <option value="Bangladesh" className="bg-[#170d2f] text-slate-200">Bangladesh</option>
               <option value="USA" className="bg-[#170d2f] text-slate-200">United States (USA)</option>
-              <option value="UK" className="bg-[#170d2f] text-slate-200">United Kingdom (UK)</option>
-              <option value="BD" className="bg-[#170d2f] text-slate-200">Bangladesh</option>
-              <option value="CA" className="bg-[#170d2f] text-slate-200">Canada</option>
+              <option value="Canada" className="bg-[#170d2f] text-slate-200">Canada</option>
+              <option value="European Union" className="bg-[#170d2f] text-slate-200">European Union (EU)</option>
             </select>
           </div>
 

@@ -101,10 +101,30 @@ const CustomersData = ({
     }
 
     if (filters.country) {
-      result = result.filter(
-        (c) =>
-          c.address?.country?.toLowerCase() === filters.country.toLowerCase()
-      );
+      const fCountry = filters.country.toLowerCase();
+      const euCountries = [
+        "germany", "france", "italy", "spain", "netherlands", "sweden",
+        "poland", "belgium", "austria", "ireland", "denmark", "portugal",
+        "finland", "czech republic", "greece", "romania", "hungary", "luxembourg",
+        "slovakia", "croatia", "estonia", "latvia", "lithuania", "slovenia", "cyprus"
+      ];
+
+      result = result.filter((c) => {
+        const cCountry = (c.address?.country || "").toLowerCase();
+        if (fCountry === "european union" || fCountry === "eu") {
+          return euCountries.includes(cCountry);
+        }
+        if (fCountry === "bd" || fCountry === "bangladesh") {
+          return cCountry === "bd" || cCountry === "bangladesh";
+        }
+        if (fCountry === "usa" || fCountry === "united states") {
+          return cCountry === "usa" || cCountry === "united states";
+        }
+        if (fCountry === "ca" || fCountry === "canada") {
+          return cCountry === "ca" || cCountry === "canada";
+        }
+        return cCountry === fCountry;
+      });
     }
 
     if (filters.sort === "name_asc") {
