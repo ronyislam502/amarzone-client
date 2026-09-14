@@ -9,7 +9,7 @@ const LEGAL_LINKS = [
   { label: 'Sell on Amarzone', href: '/' },
   { label: 'Help', href: '/' },
   { label: 'COVID-19 Info', href: '/' },
-  { label: 'Terms of Use', href: '/' },
+  { label: 'Terms of Use', href: '/terms-of-use' },
   { label: 'Privacy & Security', href: '/' },
   { label: 'CA Privacy Rights', href: '/' },
   { label: 'Your Privacy Choices', href: '/' },
