@@ -15,7 +15,7 @@ const Footer = () => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   return (
-    <footer className="bg-[#041e42] text-white font-sans border-t border-slate-700 select-none">
+    <footer className="bg-[#170d2f] text-white font-sans">
       {/* 1. WALMART TOP FEEDBACK & BACK TO TOP BANNER */}
       <TopBanner onOpenFeedback={() => setShowFeedbackModal(true)} />
 

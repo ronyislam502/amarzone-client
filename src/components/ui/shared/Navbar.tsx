@@ -9,7 +9,7 @@ import NavAvatar from "./navbar/NavAvatar";
 
 const Navbar = () => {
   return (
-    <div className="max-lg:collapse bg-[#0071dc] text-white shadow-md w-full">
+    <div className="max-lg:collapse bg-[#170d2f] text-white shadow-md w-full">
       <input
         id="navbar-1-toggle"
         className="peer hidden"
