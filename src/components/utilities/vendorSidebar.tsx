@@ -94,7 +94,7 @@ export const vendorSidebarItems = [
         items: [
             {
                 label: "Store Profile",
-                href: "/vendor/store-settings",
+                href: "/vendor/profile",
                 icon: Store,
                 iconClass: "text-warning",
             },

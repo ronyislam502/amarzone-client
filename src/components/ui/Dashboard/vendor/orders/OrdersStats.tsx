@@ -68,9 +68,8 @@ const OrdersStats = ({
       {/* Stat 1: Total Pending Orders */}
       <div
         onClick={() => onStatusSelect?.("PENDING")}
-        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-amber-400/50 ${
-          activeStatus === "PENDING" ? "border-amber-400 ring-2 ring-amber-400/30" : "border-white/10"
-        }`}
+        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-amber-400/50 ${activeStatus === "PENDING" ? "border-amber-400 ring-2 ring-amber-400/30" : "border-white/10"
+          }`}
       >
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
@@ -82,7 +81,7 @@ const OrdersStats = ({
         <div className="relative z-10 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
-              Total Pending Orders
+              Pending
             </span>
             <div className="text-3xl font-black text-amber-400 tracking-tight">{counts.pending}</div>
             <div className="text-[11px] font-bold text-amber-300/80 flex items-center gap-1">
@@ -98,9 +97,8 @@ const OrdersStats = ({
       {/* Stat 2: Total Unshipped Orders */}
       <div
         onClick={() => onStatusSelect?.("UNSHIPPED")}
-        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-sky-400/50 ${
-          activeStatus === "UNSHIPPED" ? "border-sky-400 ring-2 ring-sky-400/30" : "border-white/10"
-        }`}
+        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-sky-400/50 ${activeStatus === "UNSHIPPED" ? "border-sky-400 ring-2 ring-sky-400/30" : "border-white/10"
+          }`}
       >
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-sky-400/60 to-transparent pointer-events-none z-20" />
@@ -112,7 +110,7 @@ const OrdersStats = ({
         <div className="relative z-10 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
-              Total Unshipped Orders
+              Unshipped
             </span>
             <div className="text-3xl font-black text-sky-400 tracking-tight">{counts.unshipped}</div>
             <div className="text-[11px] font-bold text-sky-300/80 flex items-center gap-1">
@@ -128,9 +126,8 @@ const OrdersStats = ({
       {/* Stat 3: Total Shipped Orders */}
       <div
         onClick={() => onStatusSelect?.("SHIPPED")}
-        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-indigo-400/50 ${
-          activeStatus === "SHIPPED" ? "border-indigo-400 ring-2 ring-indigo-400/30" : "border-white/10"
-        }`}
+        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-indigo-400/50 ${activeStatus === "SHIPPED" ? "border-indigo-400 ring-2 ring-indigo-400/30" : "border-white/10"
+          }`}
       >
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent pointer-events-none z-20" />
@@ -142,7 +139,7 @@ const OrdersStats = ({
         <div className="relative z-10 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
-              Total Shipped Orders
+              Shipped
             </span>
             <div className="text-3xl font-black text-indigo-400 tracking-tight">{counts.shipped}</div>
             <div className="text-[11px] font-bold text-indigo-300/80 flex items-center gap-1">
@@ -158,9 +155,8 @@ const OrdersStats = ({
       {/* Stat 4: Total Delivered Orders */}
       <div
         onClick={() => onStatusSelect?.("DELIVERED")}
-        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-emerald-400/50 ${
-          activeStatus === "DELIVERED" ? "border-emerald-400 ring-2 ring-emerald-400/30" : "border-white/10"
-        }`}
+        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-emerald-400/50 ${activeStatus === "DELIVERED" ? "border-emerald-400 ring-2 ring-emerald-400/30" : "border-white/10"
+          }`}
       >
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent pointer-events-none z-20" />
@@ -172,7 +168,7 @@ const OrdersStats = ({
         <div className="relative z-10 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
-              Total Delivered Orders
+              Delivered
             </span>
             <div className="text-3xl font-black text-emerald-400 tracking-tight">{counts.delivered}</div>
             <div className="text-[11px] font-bold text-emerald-400/90 flex items-center gap-1">
@@ -188,9 +184,8 @@ const OrdersStats = ({
       {/* Stat 5: Total Canceled Orders */}
       <div
         onClick={() => onStatusSelect?.("CANCELED")}
-        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-rose-400/50 ${
-          activeStatus === "CANCELED" ? "border-rose-400 ring-2 ring-rose-400/30" : "border-white/10"
-        }`}
+        className={`card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border shadow-2xl p-5 transition-all cursor-pointer hover:border-rose-400/50 ${activeStatus === "CANCELED" ? "border-rose-400 ring-2 ring-rose-400/30" : "border-white/10"
+          }`}
       >
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-rose-400/60 to-transparent pointer-events-none z-20" />
@@ -202,7 +197,7 @@ const OrdersStats = ({
         <div className="relative z-10 flex items-center justify-between">
           <div className="space-y-1">
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-300">
-              Total Canceled Orders
+              Canceled
             </span>
             <div className="text-3xl font-black text-rose-400 tracking-tight">{counts.canceled}</div>
             <div className="text-[11px] font-bold text-rose-300/80 flex items-center gap-1">

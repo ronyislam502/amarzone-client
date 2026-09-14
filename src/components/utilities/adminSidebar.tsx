@@ -133,6 +133,12 @@ export const adminSidebarItems = [
         title: "System Config",
         items: [
             {
+                label: "My Profile",
+                href: "/admin/profile",
+                icon: User,
+                iconClass: "text-amber-400",
+            },
+            {
                 label: "Settings",
                 href: "/admin/settings",
                 icon: Settings,

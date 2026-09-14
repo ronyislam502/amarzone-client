@@ -119,14 +119,18 @@ export const DashboardSidebar = ({ children }: TDynamicSidebarProps) => {
                     {/* Right: Notification Bell & User Profile */}
                     <div className="relative z-10 flex items-center gap-3">
                         <NotificationBell className="text-slate-200" />
-                        <div className="hidden md:flex flex-col text-right pl-3 border-l border-white/10">
-                            <span className="text-xs font-extrabold text-slate-100 tracking-wide">
+                        <Link
+                            href="/profile"
+                            className="hidden md:flex flex-col text-right pl-3 border-l border-white/10 group cursor-pointer"
+                            title="Go to My Profile"
+                        >
+                            <span className="text-xs font-extrabold text-slate-100 group-hover:text-amber-400 tracking-wide transition-colors">
                                 {user?.name}
                             </span>
                             <span className="text-[10px] text-slate-400 font-medium">
                                 {user?.email}
                             </span>
-                        </div>
+                        </Link>
                     </div>
                 </header>
 

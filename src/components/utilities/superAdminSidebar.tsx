@@ -155,6 +155,12 @@ export const superAdminSidebarItems = [
                 iconClass: "text-info",
             },
             {
+                label: "My Profile",
+                href: "/admin/profile",
+                icon: User,
+                iconClass: "text-amber-400",
+            },
+            {
                 label: "System Settings",
                 href: "/admin/settings",
                 icon: Settings,

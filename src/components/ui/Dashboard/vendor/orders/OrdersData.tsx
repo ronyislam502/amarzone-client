@@ -3,23 +3,39 @@
 import React, { useState, useMemo } from "react";
 import {
   Package,
-  Calendar,
-  Clock,
-  Truck,
-  CheckCircle2,
-  XCircle,
-  Eye,
-  ChevronDown,
-  Layers,
-  Filter,
+  Edit2,
+  PlusCircle,
 } from "lucide-react";
 import { TColumn } from "@/src/types/table";
 import AZTable from "../../../shared/AZTable";
 import { useMyOrdersQuery } from "@/src/redux/features/order/orderApi";
-import OrderDetailsModal from "./OrderDetailsModal";
-import { TPendingOrderRecord } from "./PendingOrdersTable";
+import Modal from "../../../shared/Modal";
+import UpdateOrderForm from "./UpdateOrder";
 
 export type TOrderStatusKey = "PENDING" | "UNSHIPPED" | "SHIPPED" | "DELIVERED" | "CANCELED" | "ALL";
+
+export interface TPendingOrderRecord {
+  id: string;
+  orderNo: string;
+  orderDate: {
+    relative: string;
+    date: string;
+    time: string;
+  };
+  fulfillmentMethod: string;
+  salesChannel: string;
+  product: {
+    title: string;
+    thumbnail: string;
+    asin: string;
+    sku: string;
+    quantity: number;
+    subtotal: number;
+  };
+  orderType: string;
+  status: "Pending" | "Unshipped" | "Shipped" | "Cancelled" | "Delivered";
+  statusSubtext: string;
+}
 
 interface OrdersDataProps {
   initialStatus?: TOrderStatusKey;
@@ -36,6 +52,8 @@ const OrdersData: React.FC<OrdersDataProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<TPendingOrderRecord | null>(null);
 
   const activeStatus = controlledStatus !== undefined ? controlledStatus : internalStatus;
@@ -65,6 +83,8 @@ const OrdersData: React.FC<OrdersDataProps> = ({
     },
     { refetchOnMountOrArgChange: true }
   );
+
+  console.log("data", apiResponse)
 
   // Process data from API or baseline
   const ordersList = useMemo<TPendingOrderRecord[]>(() => {
@@ -279,15 +299,19 @@ const OrdersData: React.FC<OrdersDataProps> = ({
       header: "Actions",
       align: "right",
       accessor: (order) => (
-        <button
-          type="button"
-          onClick={() => setSelectedOrder(order)}
-          className="btn btn-ghost btn-xs font-bold text-amber-400 gap-1 hover:bg-amber-400/10 border border-amber-400/20 hover:border-amber-400/40 rounded-xl cursor-pointer transition-all"
-        >
-          <Eye className="w-3.5 h-3.5" />
-          <span>More info</span>
-          <ChevronDown className="w-3 h-3" />
-        </button>
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedOrder(order);
+              setIsEditModalOpen(true);
+            }}
+            className="btn btn-ghost btn-xs font-bold text-amber-400 gap-1 hover:bg-amber-400/10 border border-amber-400/20 hover:border-amber-400/40 rounded-lg cursor-pointer transition-all"
+          >
+            <Edit2 className="w-3 h-3" />
+            <span>Manage</span>
+          </button>
+        </div>
       ),
     },
   ];
@@ -324,8 +348,8 @@ const OrdersData: React.FC<OrdersDataProps> = ({
                   type="button"
                   onClick={() => handleStatusSelect(tab.key)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${isActive
-                      ? "bg-amber-400 text-slate-950 shadow-md font-black"
-                      : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/10"
+                    ? "bg-amber-400 text-slate-950 shadow-md font-black"
+                    : "bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white border border-white/10"
                     }`}
                 >
                   {tab.label}
@@ -349,7 +373,6 @@ const OrdersData: React.FC<OrdersDataProps> = ({
             onRefresh={() => refetch()}
             isRefreshing={isFetching}
             isLoading={isLoading}
-            emptyTitle={`No ${activeStatus.charAt(0) + activeStatus.slice(1).toLowerCase()} Orders`}
             emptyMessage={`There are currently no orders under the "${activeStatus}" filter.`}
             emptyIcon={<Package className="w-8 h-8 text-amber-400" />}
             pagination={{
@@ -366,12 +389,27 @@ const OrdersData: React.FC<OrdersDataProps> = ({
         </div>
       </div>
 
-      {/* Details Modal */}
-      <OrderDetailsModal
-        order={selectedOrder}
-        isOpen={!!selectedOrder}
-        onClose={() => setSelectedOrder(null)}
-      />
+      {/* REUSABLE UPDATE ORDER MODAL */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedOrder(null);
+        }}
+        size="md"
+        className="!bg-[#170d2f] !border-white/10 text-slate-100 shadow-2xl relative overflow-hidden rounded-3xl"
+      >
+        {selectedOrder && (
+          <UpdateOrderForm
+            order={selectedOrder}
+            onSuccess={() => {
+              setIsEditModalOpen(false);
+              setSelectedOrder(null);
+              refetch();
+            }}
+          />
+        )}
+      </Modal>
     </>
   );
 };
