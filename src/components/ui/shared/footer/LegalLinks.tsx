@@ -4,15 +4,15 @@ import Link from 'next/link';
 const LEGAL_LINKS = [
   { label: 'All Departments', href: '/' },
   { label: 'Store Directory', href: '/' },
-  { label: 'Careers', href: '/' },
-  { label: 'Our Company', href: '/' },
-  { label: 'Sell on Amarzone', href: '/' },
+  { label: 'Careers', href: '/careers' },
+  { label: 'Our Company', href: '/our-company' },
+  { label: 'Sell on Amarzone', href: '/sell-on-amarzone' },
   { label: 'Help', href: '/' },
   { label: 'COVID-19 Info', href: '/' },
   { label: 'Terms of Use', href: '/terms-of-use' },
-  { label: 'Privacy & Security', href: '/' },
-  { label: 'CA Privacy Rights', href: '/' },
-  { label: 'Your Privacy Choices', href: '/' },
+  { label: 'Privacy & Security', href: '/privacy-and-security' },
+  { label: 'CA Privacy Rights', href: '/ca-privacy-rights' },
+  { label: 'Your Privacy Choices', href: '/your-privacy-choices' },
 ];
 
 const LegalLinks = () => {

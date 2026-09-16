@@ -13,6 +13,7 @@ import {
     User,
     UserCheck,
     Building2,
+    PackageCheck,
 } from "lucide-react";
 
 export const adminSidebarItems = [
@@ -99,6 +100,16 @@ export const adminSidebarItems = [
                 href: "/admin/products",
                 icon: ShoppingBag,
                 iconClass: "text-primary",
+            },
+            {
+                label: "Orders",
+                href: "/admin/orders",
+                icon: PackageCheck,
+                iconClass: "text-emerald-400",
+                badge: {
+                    text: "Fulfillment",
+                    className: "badge-success",
+                },
             },
         ],
     },

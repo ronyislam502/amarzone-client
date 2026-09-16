@@ -12,6 +12,9 @@ import {
 } from "./homeUtils";
 import { toast } from "react-toastify";
 
+import { useAppDispatch } from "@/src/redux/hooks";
+import { addToCart } from "@/src/redux/features/order/orderSlice";
+
 export interface ProductCardProps {
     product: TProduct;
     badgeLabel?: string;
@@ -25,6 +28,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     isRollback = false,
     className = "",
 }) => {
+    const dispatch = useAppDispatch();
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [isAdded, setIsAdded] = useState(false);
 
@@ -37,6 +41,51 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         e.preventDefault();
         e.stopPropagation();
         setIsAdded(true);
+
+        const firstVariant = product.variants?.[0];
+        const variantId = firstVariant?._id || (firstVariant as any)?.id || product._id;
+        const inv = (firstVariant as any)?.inventory?.[0];
+        const seller = inv?.seller;
+        const vendor = seller?.vendor || product.author;
+        const vendorId =
+            (typeof vendor === "object" ? (vendor as any)?._id || (vendor as any)?.id : vendor) ||
+            (typeof product.author === "object" ? (product.author as any)?._id || (product.author as any)?.id : product.author);
+        const price = priceInfo.price || 49.99;
+
+        const cartItem: any = {
+            ...product,
+            _id: variantId,
+            variantId: variantId,
+            variant: firstVariant,
+            productId: product._id,
+            title: product.title,
+            thumbnail:
+                firstVariant?.thumbnail ||
+                firstVariant?.images?.[0] ||
+                thumbnail ||
+                product.thumbnail,
+            image:
+                firstVariant?.thumbnail ||
+                firstVariant?.images?.[0] ||
+                thumbnail ||
+                product.thumbnail,
+            brand: product.brand,
+            category: (product.category as any)?.name || product.category || "General",
+            price: price,
+            originalPrice: priceInfo.originalPrice || Number((price * 1.15).toFixed(2)),
+            quantity: 1,
+            maxQuantity: seller?.quantity || 10,
+            seller: seller,
+            vendor: vendor,
+            vendorId: vendorId,
+            inStock: seller ? seller.isStock && seller.quantity > 0 : true,
+            shippingTime: seller?.shippingTime || 2,
+            attributes: firstVariant?.attributes || [],
+            isSelected: true,
+        };
+
+        dispatch(addToCart(cartItem));
+
         toast.success(`Added "${product.title.slice(0, 22)}..." to cart!`, {
             position: "bottom-right",
             autoClose: 1800,

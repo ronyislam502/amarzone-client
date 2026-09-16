@@ -19,8 +19,16 @@ export type TInventoryVariant = {
     };
 };
 
+export type TSellerVendor = {
+    _id: string;
+    name: string;
+    email?: string;
+    avatar?: string;
+    role?: string;
+};
+
 export type TSeller = {
-    vendor: string | { _id: string; name: string; email: string };
+    vendor: TSellerVendor;
     price: number;
     quantity: number;
     isStock: boolean;
@@ -36,6 +44,13 @@ export type TInventory = {
     asin: string;
     seller: TSeller;
     isDeleted?: boolean;
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string;
+    updatedAt?: string;
+};
+
+export type TInventoryResult = {
+    asin: string;
+    buyBoxWinner: TInventory | null;
+    totalSellers: number;
+    sellers: TInventory[];
 };

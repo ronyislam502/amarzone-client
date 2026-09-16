@@ -17,8 +17,8 @@ const FOOTER_COLUMNS: FooterColumn[] = [
     links: [
       { label: 'All Departments', href: '/' },
       { label: 'Store Directory', href: '/' },
-      { label: 'Our Company', href: '/' },
-      { label: 'Careers', href: '/' },
+      { label: 'Our Company', href: '/our-company' },
+      { label: 'Careers', href: '/careers' },
       { label: 'News & Newsroom', href: '/' },
     ],
   },
@@ -64,7 +64,7 @@ const FOOTER_COLUMNS: FooterColumn[] = [
   {
     title: 'Sell With Us',
     links: [
-      { label: 'Sell on Amarzone', href: '/' },
+      { label: 'Sell on Amarzone', href: '/sell-on-amarzone' },
       { label: 'Seller Portal', href: '/' },
       { label: 'Become a Supplier', href: '/' },
       { label: 'Advertise With Us', href: '/' },

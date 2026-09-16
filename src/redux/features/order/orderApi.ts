@@ -1,130 +1,214 @@
-import { baseApi } from "@/redux/api/baseApi";
 import { TResponseRedux } from "@/types/global";
+import { baseApi } from "../../api/baseApi";
+import { TOrder } from "@/src/types/order";
 
 const orderApi = baseApi.injectEndpoints({
-  overrideExisting: true,
   endpoints: (builder) => ({
+    allOrders: builder.query({
+      query: ({ search, page, limit }) => {
+        const params = new URLSearchParams();
+
+        if (search) {
+          params.append("searchTerm", search);
+        }
+        if (page) {
+          params.append("page", page);
+        }
+        if (limit) {
+          params.append("limit", limit);
+        }
+
+        return {
+          url: `/orders`,
+          method: "GET",
+          params: params,
+        };
+      },
+      providesTags: ["order"],
+      transformResponse: (response: TResponseRedux<TOrder[]>) => {
+        return {
+          data: response?.data,
+          meta: response?.meta,
+        };
+      },
+    }),
     createOrder: builder.mutation({
-      query: (orderData) => ({
+      query: (categoryInfo) => ({
         url: "/orders/create-order",
         method: "POST",
-        body: orderData,
+        body: categoryInfo,
       }),
-      invalidatesTags: ["order", "inventory"],
-    }),
-    allOrders: builder.query({
-      query: (params) => {
-        const queryParams = new URLSearchParams();
-        if (params?.search) queryParams.append("searchTerm", params.search);
-        if (params?.searchTerm) queryParams.append("searchTerm", params.searchTerm);
-        if (params?.page) queryParams.append("page", String(params.page));
-        if (params?.limit) queryParams.append("limit", String(params.limit));
-        if (params?.status) queryParams.append("status", params.status);
-
-        return {
-          url: `/orders?${queryParams.toString()}`,
-          method: "GET",
-        };
-      },
-      providesTags: ["order"],
-      transformResponse: (response: TResponseRedux<any[]>) => {
-        return {
-          data: response?.data,
-          meta: response?.meta,
-        };
-      },
     }),
     myOrders: builder.query({
-      query: (params) => {
-        const queryParams = new URLSearchParams();
-        if (params?.search) queryParams.append("searchTerm", params.search);
-        if (params?.searchTerm) queryParams.append("searchTerm", params.searchTerm);
-        if (params?.page) queryParams.append("page", String(params.page));
-        if (params?.limit) queryParams.append("limit", String(params.limit));
-        if (params?.status) queryParams.append("status", params.status);
-        if (params?.sort) queryParams.append("sort", params.sort);
+      query: ({ email, page, limit }) => {
+        const params = new URLSearchParams();
 
-        const queryString = queryParams.toString();
+        if (page) {
+          params.append("page", page);
+        }
+        if (limit) {
+          params.append("limit", limit);
+        }
+
         return {
-          url: `/orders/my-orders${queryString ? `?${queryString}` : ""}`,
+          url: `/orders/my-orders/${email}`,
           method: "GET",
+          params: params,
         };
       },
       providesTags: ["order"],
-      transformResponse: (response: TResponseRedux<any[]>) => {
+      transformResponse: (response: TResponseRedux<TOrder[]>) => {
         return {
           data: response?.data,
           meta: response?.meta,
         };
       },
     }),
-    // allOrdersByVendor: builder.query({
-    //   query: (params) => {
-    //     const queryParams = new URLSearchParams();
-    //     if (params?.search) queryParams.append("searchTerm", params.search);
-    //     if (params?.searchTerm) queryParams.append("searchTerm", params.searchTerm);
-    //     if (params?.page) queryParams.append("page", String(params.page));
-    //     if (params?.limit) queryParams.append("limit", String(params.limit));
-    //     if (params?.status) queryParams.append("status", params.status);
-    //     if (params?.sort) queryParams.append("sort", params.sort);
-
-    //     const queryString = queryParams.toString();
-    //     return {
-    //       url: `/orders/my-orders${queryString ? `?${queryString}` : ""}`,
-    //       method: "GET",
-    //     };
-    //   },
-    //   providesTags: ["order"],
-    //   transformResponse: (response: TResponseRedux<any[]>) => {
-    //     return {
-    //       data: response?.data,
-    //       meta: response?.meta,
-    //     };
-    //   },
-    // }),
-    // allOrdersByCustomer: builder.query({
-    //   query: (params) => {
-    //     const queryParams = new URLSearchParams();
-    //     if (params?.search) queryParams.append("searchTerm", params.search);
-    //     if (params?.page) queryParams.append("page", String(params.page));
-    //     if (params?.limit) queryParams.append("limit", String(params.limit));
-
-    //     return {
-    //       url: `/orders/customer?${queryParams.toString()}`,
-    //       method: "GET",
-    //     };
-    //   },
-    //   providesTags: ["order"],
-    //   transformResponse: (response: TResponseRedux<any[]>) => {
-    //     return {
-    //       data: response?.data,
-    //       meta: response?.meta,
-    //     };
-    //   },
-    // }),
-    updateOrderTracking: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `/orders/update-tracking/${id}`,
+    updateOrder: builder.mutation({
+      query: (args) => ({
+        url: `/orders/update/${args.id}`,
         method: "PATCH",
-        body: data,
+        body: args.data,
       }),
       invalidatesTags: ["order"],
     }),
-    updateOrderShipping: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `/orders/${id}/shipping`,
-        method: "PATCH",
-        body: data,
+    singleOrder: builder.query({
+      query: (id) => ({
+        url: `/orders/order/${id}`,
+        method: "GET",
       }),
-      invalidatesTags: ["order"],
+      providesTags: ["order"],
+    }),
+    pendingOrders: builder.query({
+      query: ({ page, limit }) => {
+        const params = new URLSearchParams();
+        if (page) {
+          params.append("page", page.toString());
+        }
+        if (limit) {
+          params.append("limit", limit.toString());
+        }
+        return {
+          url: `/orders/pending`,
+          method: "GET",
+          params,
+        };
+      },
+      providesTags: ["order"],
+      transformResponse: (response: TResponseRedux<TOrder[]>) => {
+        return {
+          data: response?.data,
+          meta: response?.meta,
+        };
+      },
+    }),
+    unshippedOrders: builder.query({
+      query: ({ page, limit }) => {
+        const params = new URLSearchParams();
+        if (page) {
+          params.append("page", page.toString());
+        }
+        if (limit) {
+          params.append("limit", limit.toString());
+        }
+        return {
+          url: `/orders/unshipped`,
+          method: "GET",
+          params,
+        };
+      },
+      providesTags: ["order"],
+      transformResponse: (response: TResponseRedux<TOrder[]>) => {
+        return {
+          data: response?.data,
+          meta: response?.meta,
+        };
+      },
+    }),
+    shippedOrders: builder.query({
+      query: ({ page, limit }) => {
+        const params = new URLSearchParams();
+        if (page) {
+          params.append("page", page.toString());
+        }
+        if (limit) {
+          params.append("limit", limit.toString());
+        }
+        return {
+          url: `/orders/shipped`,
+          method: "GET",
+          params,
+        };
+      },
+      providesTags: ["order"],
+      transformResponse: (response: TResponseRedux<TOrder[]>) => {
+        return {
+          data: response?.data,
+          meta: response?.meta,
+        };
+      },
+    }),
+    cancelOrders: builder.query({
+      query: ({ page, limit }) => {
+        const params = new URLSearchParams();
+        if (page) {
+          params.append("page", page.toString());
+        }
+        if (limit) {
+          params.append("limit", limit.toString());
+        }
+        return {
+          url: `/orders/cancel`,
+          method: "GET",
+          params,
+        };
+      },
+      providesTags: ["order"],
+      transformResponse: (response: TResponseRedux<TOrder[]>) => {
+        return {
+          data: response?.data,
+          meta: response?.meta,
+        };
+      },
+    }),
+    deliveredOrders: builder.query({
+      query: ({ page, limit }) => {
+        const params = new URLSearchParams();
+        if (page) {
+          params.append("page", page.toString());
+        }
+        if (limit) {
+          params.append("limit", limit.toString());
+        }
+        return {
+          url: `/orders/delivered`,
+          method: "GET",
+          params,
+        };
+      },
+      providesTags: ["order"],
+      transformResponse: (response: TResponseRedux<TOrder[]>) => {
+        return {
+          data: response?.data,
+          meta: response?.meta,
+        };
+      },
     }),
   }),
 });
 
 export const {
-  useCreateOrderMutation,
   useAllOrdersQuery,
+  useCreateOrderMutation,
   useMyOrdersQuery,
-  useUpdateOrderTrackingMutation,
-  useUpdateOrderShippingMutation,
+  useUpdateOrderMutation,
+  useSingleOrderQuery,
+  usePendingOrdersQuery,
+  useUnshippedOrdersQuery,
+  useShippedOrdersQuery,
+  useCancelOrdersQuery,
+  useDeliveredOrdersQuery,
 } = orderApi;
+
+export const useUpdateOrderShippingMutation = useUpdateOrderMutation;
+export const useUpdateOrderTrackingMutation = useUpdateOrderMutation;

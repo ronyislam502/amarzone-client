@@ -58,6 +58,19 @@ export const reviewApi = baseApi.injectEndpoints({
       }),
       providesTags: ["review"],
     }),
+    variantReviews: builder.query({
+      query: ({ variantId, params }: { variantId: string; params?: Record<string, any> }) => {
+        const queryParams = new URLSearchParams();
+        if (params?.page) queryParams.append("page", String(params.page));
+        if (params?.limit) queryParams.append("limit", String(params.limit));
+        const qs = queryParams.toString();
+        return {
+          url: `/product-reviews/variant-reviews/${variantId}${qs ? `?${qs}` : ""}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["review"],
+    }),
   }),
 });
 
@@ -65,6 +78,7 @@ export const {
   useCreateReviewMutation,
   useAllReviewsQuery,
   useProductReviewsQuery,
+  useVariantReviewsQuery,
   useMyReviewsQuery,
   useVendorReviewsQuery,
 } = reviewApi;

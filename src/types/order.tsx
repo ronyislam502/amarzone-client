@@ -1,80 +1,102 @@
-export interface Order {
+import { TVariant } from "./product";
+
+export type TCartItem = {
+    _id: string;
+    productId?: string;
+    variantId?: string;
+    variant?: TVariant | any;
+    title: string;
+    thumbnail?: string;
+    image?: string;
+    brand?: string;
+    category?: any;
+    price: number;
+    originalPrice?: number;
+    quantity: number;
+    maxQuantity?: number;
+    seller?: any;
+    vendor?: any;
+    vendorId?: string;
+    inStock?: boolean;
+    stockNote?: string;
+    shippingTime?: number;
+    attributes?: { type: string; value: string }[];
+    isSelected?: boolean;
+    [key: string]: any;
+};
+
+
+export type TCartState = {
+    user: string | null;
+    products: TCartItem[];
+    foods?: TCartItem[];
+    selectedItems: number;
+    totalPrice: number;
+    tax: number;
+    grandTotal: number;
+};
+
+
+export type TOrder = {
     _id: string
-    customer: Customer
-    vendor: Vendor
+    customer: TOdrCustomer
+    vendor: TOdrVendor
     orderNo: string
-    products: Product[]
+    products: TOdrProduct[]
     commission: number
+    tax: number
     totalPrice: number
     totalQuantity: number
     vendorAmount: number
-    shippedDate: ShippedDate
-    deliveryDate: DeliveryDate
+    shippedDate: TOdrShippedDate
+    deliveryDate: TOdrDeliveryDate
     status: string
     paymentStatus: string
     transactionId: string
     isDeleted: boolean
     createdAt: string
     updatedAt: string
+    __v: number
+    invoiceUrl: string
+    tracking?: {
+        trackingNumber?: string
+        courierName?: string
+        shippedBy?: string
+        shippedAt?: string
+        estimatedDelivery?: string
+        deliveredAt?: string
+        notes?: string
+    }
 }
 
-export interface Customer {
+export type Order = TOrder;
+
+
+
+export type TOdrCustomer = {
     _id: string
     name: string
     email: string
 }
 
-export interface Vendor {
+export type TOdrVendor = {
     _id: string
     name: string
     email: string
 }
 
-export interface Product {
+export type TOdrProduct = {
+    variant: any,
     quantity: number
     price: number
-    product: Product2
 }
 
-export interface Product2 {
-    _id: string
-    title: string
-    brand: string
-    category: string
-    department: string
-    author: Author
-    variant: Variant
-}
-
-export interface Author {
-    role: string
-    id: string
-    name: string
-    _id: string
-}
-
-export interface Variant {
-    asin: string
-    sku: string
-    attributes: Attribute[]
-    thumbnail: string
-    images: string[]
-    isPrivateLevel: boolean
-    isDeleted: boolean
-    _id: string
-}
-
-export interface Attribute {
-    type: string
-    value: string
-}
-
-export interface ShippedDate {
+export type TOdrShippedDate = {
     from: string
     to: string
 }
 
-export interface DeliveryDate {
+export type TOdrDeliveryDate = {
     from: string
     to: string
 }

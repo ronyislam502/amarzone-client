@@ -2,7 +2,9 @@ import { TCategory } from "./category"
 import { TDepartment } from "./department"
 import { TInventory } from "./inventory"
 import { TReview } from "./review"
-import { TVariant } from "./variant"
+import { TVariant, TAttribute } from "./variant"
+
+export type { TVariant, TAttribute };
 
 export type TProduct = {
     _id: string
