@@ -11,13 +11,41 @@ export const notificationApi = baseApi.injectEndpoints({
       providesTags: ["notification"],
     }),
     markAsRead: builder.mutation({
-      query: (id) => ({
+      query: (id: string) => ({
         url: `/notifications/${id}/read`,
         method: "PATCH",
+      }),
+      invalidatesTags: ["notification"],
+    }),
+    markAllAsRead: builder.mutation<any, void>({
+      query: () => ({
+        url: "/notifications/read-all",
+        method: "PATCH",
+      }),
+      invalidatesTags: ["notification"],
+    }),
+    clearAllNotifications: builder.mutation<any, void>({
+      query: () => ({
+        url: "/notifications/clear-all",
+        method: "DELETE",
+      }),
+      invalidatesTags: ["notification"],
+    }),
+    deleteNotification: builder.mutation({
+      query: (id: string) => ({
+        url: `/notifications/${id}`,
+        method: "DELETE",
       }),
       invalidatesTags: ["notification"],
     }),
   }),
 });
 
-export const { useGetMyNotificationsQuery, useMarkAsReadMutation } = notificationApi;
+export const {
+  useGetMyNotificationsQuery,
+  useMarkAsReadMutation,
+  useMarkAllAsReadMutation,
+  useClearAllNotificationsMutation,
+  useDeleteNotificationMutation,
+} = notificationApi;
+

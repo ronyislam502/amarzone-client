@@ -1,9 +1,9 @@
 "use client"
 
-import OrdersBread from "@/src/components/ui/Dashboard/vendor/orders/OrdersBread";
-import OrdersData, { TOrderStatusKey } from "@/src/components/ui/Dashboard/vendor/orders/OrdersData";
-import OrdersHeader from "@/src/components/ui/Dashboard/vendor/orders/OrdersHeader";
-import OrdersStats from "@/src/components/ui/Dashboard/vendor/orders/OrdersStats";
+import OrdersBread from "@/src/components/ui/analistics/vendor/orders/OrdersBread";
+import OrdersData, { TOrderStatusKey } from "@/src/components/ui/analistics/vendor/orders/OrdersData";
+import OrdersHeader from "@/src/components/ui/analistics/vendor/orders/OrdersHeader";
+import OrdersStats from "@/src/components/ui/analistics/vendor/orders/OrdersStats";
 import { useState } from "react";
 
 const CustomerOrders = () => {

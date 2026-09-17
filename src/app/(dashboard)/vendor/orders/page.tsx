@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import OrdersBread from "@/src/components/ui/Dashboard/vendor/orders/OrdersBread";
-import OrdersHeader from "@/src/components/ui/Dashboard/vendor/orders/OrdersHeader";
-import OrdersData, { TOrderStatusKey } from "@/src/components/ui/Dashboard/vendor/orders/OrdersData";
-import OrdersStats from "@/src/components/ui/Dashboard/vendor/orders/OrdersStats";
+import OrdersBread from "@/src/components/ui/analistics/vendor/orders/OrdersBread";
+import OrdersHeader from "@/src/components/ui/analistics/vendor/orders/OrdersHeader";
+import OrdersData, { TOrderStatusKey } from "@/src/components/ui/analistics/vendor/orders/OrdersData";
+import OrdersStats from "@/src/components/ui/analistics/vendor/orders/OrdersStats";
 
 const VendorOrders = () => {
   const [activeStatus, setActiveStatus] = useState<TOrderStatusKey>("PENDING");

@@ -1,7 +1,7 @@
-import CategoriesBread from "@/src/components/ui/Dashboard/admin/categories/CategoriesBread";
-import CategoriesData from "@/src/components/ui/Dashboard/admin/categories/CategoriesData";
-import CategoriesHeader from "@/src/components/ui/Dashboard/admin/categories/CategoriesHeader";
-import CategoriesStats from "@/src/components/ui/Dashboard/admin/categories/CategoriesStats";
+import CategoriesBread from "@/src/components/ui/analistics/admin/categories/CategoriesBread";
+import CategoriesData from "@/src/components/ui/analistics/admin/categories/CategoriesData";
+import CategoriesHeader from "@/src/components/ui/analistics/admin/categories/CategoriesHeader";
+import CategoriesStats from "@/src/components/ui/analistics/admin/categories/CategoriesStats";
 
 const Categories = () => {
 

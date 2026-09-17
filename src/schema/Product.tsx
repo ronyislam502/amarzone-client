@@ -6,3 +6,6 @@ export const productSchema = z.object({
   department: z.string().min(1, "Department is required"),
   category: z.string().min(1, "Category is required"),
 });
+
+
+

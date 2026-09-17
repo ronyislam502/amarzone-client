@@ -80,19 +80,22 @@ export const DashboardSidebar = ({ children }: TDynamicSidebarProps) => {
             {/* Main Content Page Wrapper */}
             <div className="drawer-content flex flex-col min-w-0">
                 {/* Top Navigation Header Bar */}
-                <header className="w-full navbar relative bg-[#090d16] text-slate-100 border-b border-white/10 px-4 sm:px-6 justify-between sticky top-0 z-30 shadow-xl overflow-hidden backdrop-blur-xl">
-                    {/* Base Radial Mesh Background Gradient */}
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.18),rgba(255,255,255,0))] pointer-events-none" />
+                <header className="w-full navbar relative bg-[#090d16] text-slate-100 border-b border-white/10 px-4 sm:px-6 justify-between sticky top-0 z-30 shadow-xl backdrop-blur-xl">
+                    {/* Ambient Background Effects (clipped) */}
+                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {/* Base Radial Mesh Background Gradient */}
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.18),rgba(255,255,255,0))]" />
 
-                    {/* Ambient Light Orbs */}
-                    <div className="absolute -top-20 -left-16 w-60 h-60 bg-gradient-to-br from-amber-500/20 via-orange-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-                    <div className="absolute -bottom-20 right-1/4 w-64 h-64 bg-gradient-to-tl from-indigo-600/20 via-purple-700/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+                        {/* Ambient Light Orbs */}
+                        <div className="absolute -top-20 -left-16 w-60 h-60 bg-gradient-to-br from-amber-500/20 via-orange-600/10 to-transparent rounded-full blur-3xl" />
+                        <div className="absolute -bottom-20 right-1/4 w-64 h-64 bg-gradient-to-tl from-indigo-600/20 via-purple-700/10 to-transparent rounded-full blur-3xl" />
 
-                    {/* Dot Grid overlay */}
-                    <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)] pointer-events-none" />
+                        {/* Dot Grid overlay */}
+                        <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)]" />
 
-                    {/* Glowing bottom border accent ray */}
-                    <div className="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/50 to-transparent pointer-events-none z-20" />
+                        {/* Glowing bottom border accent ray */}
+                        <div className="absolute bottom-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-amber-400/50 to-transparent z-20" />
+                    </div>
 
                     {/* Left: Mobile Drawer Trigger & Title */}
                     <div className="relative z-10 flex items-center gap-3">

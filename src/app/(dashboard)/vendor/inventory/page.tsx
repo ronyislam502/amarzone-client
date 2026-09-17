@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import InventoryBread from "@/src/components/ui/Dashboard/vendor/inventory/InventoryBread";
-import InventoryHeader from "@/src/components/ui/Dashboard/vendor/inventory/InventoryHeader";
+import InventoryBread from "@/src/components/ui/analistics/vendor/inventory/InventoryBread";
+import InventoryHeader from "@/src/components/ui/analistics/vendor/inventory/InventoryHeader";
 import InventoryStats, {
   InventoryStatsProps,
-} from "@/src/components/ui/Dashboard/vendor/inventory/InventoryStats";
+} from "@/src/components/ui/analistics/vendor/inventory/InventoryStats";
 import InventoryData, {
   InventoryStatsData,
-} from "@/src/components/ui/Dashboard/vendor/inventory/InventoryData";
+} from "@/src/components/ui/analistics/vendor/inventory/InventoryData";
 
 const VendorInventoryPage = () => {
   const [stats, setStats] = useState<InventoryStatsProps>({

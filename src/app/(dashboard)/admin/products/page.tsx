@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import ProductsBread from "@/src/components/ui/Dashboard/admin/products/ProductsBread";
-import ProductsHeader from "@/src/components/ui/Dashboard/admin/products/ProductsHeader";
-import ProductsStats from "@/src/components/ui/Dashboard/admin/products/ProductsStats";
-import ProductsData, { ProductsStatsData } from "@/src/components/ui/Dashboard/admin/products/ProductsData";
+import ProductsBread from "@/src/components/ui/analistics/admin/products/ProductsBread";
+import ProductsHeader from "@/src/components/ui/analistics/admin/products/ProductsHeader";
+import ProductsStats from "@/src/components/ui/analistics/admin/products/ProductsStats";
+import ProductsData, { ProductsStatsData } from "@/src/components/ui/analistics/admin/products/ProductsData";
 
 const ProductsPage = () => {
   const [stats, setStats] = useState<ProductsStatsData>({

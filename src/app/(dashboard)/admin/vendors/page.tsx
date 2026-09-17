@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import VendorsBread from "@/src/components/ui/Dashboard/admin/vendors/VendorsBread";
-import VendorsHeader from "@/src/components/ui/Dashboard/admin/vendors/VendorsHeader";
-import VendorsStats from "@/src/components/ui/Dashboard/admin/vendors/VendorsStats";
-import VendorsData, { VendorsStatsData } from "@/src/components/ui/Dashboard/admin/vendors/VendorsData";
+import VendorsBread from "@/src/components/ui/analistics/admin/vendors/VendorsBread";
+import VendorsHeader from "@/src/components/ui/analistics/admin/vendors/VendorsHeader";
+import VendorsStats from "@/src/components/ui/analistics/admin/vendors/VendorsStats";
+import VendorsData, { VendorsStatsData } from "@/src/components/ui/analistics/admin/vendors/VendorsData";
 
 const VendorsPage = () => {
   const [stats, setStats] = useState<VendorsStatsData>({

@@ -6,7 +6,7 @@ import {
   OrdersHeader,
   OrdersStats,
   OrdersData,
-} from "@/src/components/ui/Dashboard/admin/orders";
+} from "@/src/components/ui/analistics/admin/orders";
 import { useAllOrdersQuery } from "@/src/redux/features/order/orderApi";
 import { TOrder } from "@/src/types/order";
 import { toast } from "react-toastify";

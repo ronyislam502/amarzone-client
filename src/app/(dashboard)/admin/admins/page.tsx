@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import AdminsBread from "@/src/components/ui/Dashboard/admin/admins/AdminsBread";
-import AdminsHeader from "@/src/components/ui/Dashboard/admin/admins/AdminsHeader";
-import AdminsStats from "@/src/components/ui/Dashboard/admin/admins/AdminsStats";
-import AdminsData, { AdminsStatsData } from "@/src/components/ui/Dashboard/admin/admins/AdminsData";
+import AdminsBread from "@/src/components/ui/analistics/admin/admins/AdminsBread";
+import AdminsHeader from "@/src/components/ui/analistics/admin/admins/AdminsHeader";
+import AdminsStats from "@/src/components/ui/analistics/admin/admins/AdminsStats";
+import AdminsData, { AdminsStatsData } from "@/src/components/ui/analistics/admin/admins/AdminsData";
 
 const AdminsPage = () => {
   const [stats, setStats] = useState<AdminsStatsData>({

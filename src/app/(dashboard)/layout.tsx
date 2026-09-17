@@ -1,6 +1,6 @@
 
 import Background from "@/src/components/ui/auth/Background";
-import DashboardSidebar from "@/src/components/ui/Dashboard/DashSidebar";
+import DashboardSidebar from "@/src/components/ui/analistics/DashSidebar";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
     return (

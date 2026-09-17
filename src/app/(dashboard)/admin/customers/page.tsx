@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import CustomersBread from "@/src/components/ui/Dashboard/admin/customers/CustomersBread";
-import CustomersHeader from "@/src/components/ui/Dashboard/admin/customers/CustomersHeader";
-import CustomersStats from "@/src/components/ui/Dashboard/admin/customers/CustomersStats";
-import CustomersData, { CustomersStatsData } from "@/src/components/ui/Dashboard/admin/customers/CustomersData";
+import CustomersBread from "@/src/components/ui/analistics/admin/customers/CustomersBread";
+import CustomersHeader from "@/src/components/ui/analistics/admin/customers/CustomersHeader";
+import CustomersStats from "@/src/components/ui/analistics/admin/customers/CustomersStats";
+import CustomersData, { CustomersStatsData } from "@/src/components/ui/analistics/admin/customers/CustomersData";
 
 const CustomersPage = () => {
   const [stats, setStats] = useState<CustomersStatsData>({

@@ -1,6 +1,6 @@
 import React from "react";
 import { Metadata } from "next";
-import AdminProfileContainer from "@/src/components/ui/Dashboard/admin/profile/AdminProfileContainer";
+import AdminProfileContainer from "@/src/components/ui/analistics/admin/profile/AdminProfileContainer";
 
 export const metadata: Metadata = {
   title: "Admin Profile | Amarzone",

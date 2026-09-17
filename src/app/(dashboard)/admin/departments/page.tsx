@@ -1,7 +1,7 @@
-import DepartmentsBread from "@/src/components/ui/Dashboard/admin/departments/DepartmentsBread";
-import DepartmentsData from "@/src/components/ui/Dashboard/admin/departments/DepartmentsData";
-import DepartmentsHeader from "@/src/components/ui/Dashboard/admin/departments/DepartmentsHeader";
-import DepartmentsStats from "@/src/components/ui/Dashboard/admin/departments/DepartmentsStats";
+import DepartmentsBread from "@/src/components/ui/analistics/admin/departments/DepartmentsBread";
+import DepartmentsData from "@/src/components/ui/analistics/admin/departments/DepartmentsData";
+import DepartmentsHeader from "@/src/components/ui/analistics/admin/departments/DepartmentsHeader";
+import DepartmentsStats from "@/src/components/ui/analistics/admin/departments/DepartmentsStats";
 
 const Departments = () => {
     return (

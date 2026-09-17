@@ -8,57 +8,42 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { getSocket, joinUserRooms } from "../lib/socket";
+import { getSocket } from "../lib/socket";
 import {
   TNotification,
   TSocketConnectionStatus,
 } from "../types/notification";
+import { useAppSelector } from "@/src/redux/hooks";
+import {
+  selectCurrentUser,
+  useCurrentToken,
+} from "@/src/redux/features/auth/authSlice";
+import {
+  useGetMyNotificationsQuery,
+  useMarkAsReadMutation,
+  useMarkAllAsReadMutation,
+  useClearAllNotificationsMutation,
+  useDeleteNotificationMutation,
+} from "@/src/redux/features/notification/notificationApi";
 
 interface NotificationContextType {
   notifications: TNotification[];
   unreadCount: number;
   status: TSocketConnectionStatus;
   activeToasts: TNotification[];
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
-  removeNotification: (id: string) => void;
-  clearAll: () => void;
+  isLoading: boolean;
+  refetchNotifications: () => void;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  removeNotification: (id: string) => Promise<void>;
+  clearAll: () => Promise<void>;
   dismissToast: (id: string) => void;
-  sendTestNotification: (overrides?: Partial<TNotification>) => void;
   playNotificationSound: () => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
   undefined
 );
-
-// Initial placeholder mock notifications to show rich UI on first load
-const INITIAL_NOTIFICATIONS: TNotification[] = [
-  {
-    id: "notif-init-1",
-    type: "NEW_ORDER",
-    title: "Order Placed",
-    message: "A new order #AZ-9824 has been placed successfully.",
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
-  },
-  {
-    id: "notif-init-2",
-    type: "payment_success",
-    title: "Payment Received",
-    message: "Payment of $149.00 confirmed for Order #AZ-9824.",
-    isRead: false,
-    createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(), // 45 mins ago
-  },
-  {
-    id: "notif-init-3",
-    type: "ORDER_SHIPPED",
-    title: "Order Dispatched",
-    message: "Package with tracking #TRK-58210 has been handed to carrier.",
-    isRead: true,
-    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(), // 3 hours ago
-  },
-];
 
 // Helper: Synthesize an audio notification chime with Web Audio API
 const playNotificationSound = () => {
@@ -99,54 +84,100 @@ const playNotificationSound = () => {
   }
 };
 
-const STORAGE_KEY = "amarzone_notifications_list";
-
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [notifications, setNotifications] = useState<TNotification[]>([]);
+  const user = useAppSelector(selectCurrentUser);
+  const token = useAppSelector(useCurrentToken);
+
   const [activeToasts, setActiveToasts] = useState<TNotification[]>([]);
   const [status, setStatus] = useState<TSocketConnectionStatus>("connecting");
 
-  // Load saved notifications or fallback
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setNotifications(parsed);
-          return;
-        }
-      }
-    } catch {
-      // ignore
-    }
-    setNotifications(INITIAL_NOTIFICATIONS);
-  }, []);
+  // Query real notifications from database via RTK Query
+  const {
+    data: notifResponse,
+    isLoading,
+    refetch,
+  } = useGetMyNotificationsQuery(
+    { limit: 50 },
+    { skip: !token }
+  );
 
-  // Save to localStorage whenever notifications change
-  useEffect(() => {
-    if (notifications.length > 0) {
-      try {
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(notifications.slice(0, 30))
-        );
-      } catch {
-        // ignore
-      }
+  const [markAsReadApi] = useMarkAsReadMutation();
+  const [markAllAsReadApi] = useMarkAllAsReadMutation();
+  const [clearAllApi] = useClearAllNotificationsMutation();
+  const [deleteNotificationApi] = useDeleteNotificationMutation();
+
+  // Map API response to clean notification objects
+  const notifications: TNotification[] = useMemo(() => {
+    if (!token || !notifResponse?.data || !Array.isArray(notifResponse.data)) {
+      return [];
     }
-  }, [notifications]);
+
+    return notifResponse.data.map((item: any) => {
+      const msg = item.message || "";
+      let title = "Notification";
+      if (item.type === "NEW_ACCOUNT") {
+        title = msg.toLowerCase().includes("vendor")
+          ? "New Vendor Registered"
+          : "New Customer Registered";
+      } else {
+        title = formatNotificationTitle(item.type);
+      }
+
+      return {
+        id: item._id,
+        _id: item._id,
+        notificationId: item._id,
+        type: item.type,
+        title,
+        message: msg,
+        relatedId: item.relatedId,
+        recipientRole: item.recipientRole,
+        recipientId: item.recipientId,
+        isRead: item.isRead ?? false,
+        createdAt: item.createdAt || new Date().toISOString(),
+      };
+    });
+  }, [token, notifResponse]);
 
   const dismissToast = useCallback((id: string) => {
     setActiveToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  // Handle incoming raw socket notification
+  // Handle incoming live notification event from Socket.IO
   const handleIncomingNotification = useCallback(
     (data: any, fallbackType = "general") => {
       if (!data) return;
+
+      // Filter: if user has a role, ensure incoming notification matches
+      if (user?.role) {
+        const userRole = (user.role as string).toUpperCase();
+        if (data.recipientRole) {
+          const notifRole = (data.recipientRole as string).toUpperCase();
+          if (
+            (notifRole === "ADMIN" || notifRole === "SUPER_ADMIN") &&
+            userRole !== "ADMIN" &&
+            userRole !== "SUPER_ADMIN"
+          ) {
+            return;
+          }
+          if (notifRole === "VENDOR" && userRole !== "VENDOR") return;
+          if (notifRole === "CUSTOMER" && userRole !== "CUSTOMER") return;
+        }
+
+        const currentUserId = (user as any)._id || (user as any).id;
+        if (
+          data.recipientId &&
+          currentUserId &&
+          userRole !== "ADMIN" &&
+          userRole !== "SUPER_ADMIN"
+        ) {
+          if (data.recipientId.toString() !== currentUserId.toString()) {
+            return;
+          }
+        }
+      }
 
       const notifId =
         data.notificationId ||
@@ -161,7 +192,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const newNotif: TNotification = {
         id: notifId,
-        _id: data._id || data.notificationId,
+        _id: data._id || data.notificationId || notifId,
         notificationId: data.notificationId || notifId,
         type,
         title: data.title || formatNotificationTitle(type),
@@ -173,46 +204,45 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         createdAt: data.createdAt || new Date().toISOString(),
       };
 
-      // Add to notifications list (avoiding exact ID duplicate)
-      setNotifications((prev) => {
-        const exists = prev.some((n) => n.id === newNotif.id);
-        if (exists) return prev;
-        return [newNotif, ...prev];
-      });
-
-      // Show toast
-      setActiveToasts((prev) => [newNotif, ...prev.slice(0, 3)]);
-
-      // Auto dismiss toast after 6 seconds
+      // Toast alert
+      setActiveToasts((prev) => [newNotif, ...prev.slice(0, 2)]);
       setTimeout(() => {
         dismissToast(newNotif.id);
       }, 6000);
 
-      // Play sound
+      // Chime audio
       playNotificationSound();
+
+      // Refetch from database so state and meta stay perfectly in sync
+      if (token) {
+        refetch();
+      }
     },
-    [dismissToast]
+    [user, token, dismissToast, refetch]
   );
 
-  // Setup Socket.IO listener
+  // Setup Socket.IO listener according to authenticated user
   useEffect(() => {
     const socket = getSocket();
     if (!socket) return;
 
     const onConnect = () => {
       setStatus("connected");
-      // Join default common room and admin room
-      socket.emit("join_room", "admin_dashboard");
-      socket.emit("join_room", "ADMIN");
-      // Check if user session exists in cookie or localStorage
-      try {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-          const user = JSON.parse(storedUser);
-          joinUserRooms(user);
+
+      // Join appropriate socket rooms based on user role
+      if (user?.role) {
+        const userRole = (user.role as string).toUpperCase();
+        const userId = (user as any)._id || (user as any).id;
+
+        if (userRole === "ADMIN" || userRole === "SUPER_ADMIN") {
+          socket.emit("join_room", "admin_dashboard");
+          socket.emit("join_room", "ADMIN");
+          socket.emit("join_room", "SUPER_ADMIN");
+        } else if (userRole === "VENDOR" && userId) {
+          socket.emit("join_room", `vendor:${userId}`);
+        } else if (userRole === "CUSTOMER" && userId) {
+          socket.emit("join_room", `customer:${userId}`);
         }
-      } catch {
-        // ignore
       }
     };
 
@@ -238,7 +268,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       "NEW_ORDER",
       "new_order",
       "ORDER_DELIVERED",
+      "order_delivered",
       "ORDER_SHIPPED",
+      "order_shipped",
+      "ORDER_CANCELLED",
+      "order_cancelled",
       "NEW_ACCOUNT",
       "payment_success",
       "payment_failed",
@@ -254,61 +288,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       });
     });
 
-    // Connect socket
     if (!socket.connected) {
       socket.connect();
     } else {
       setStatus("connected");
+      onConnect();
     }
-
-    // Attempt to sync notifications from backend API if available
-    const syncWithBackend = async () => {
-      try {
-        const res = await fetch("http://localhost:9000/api/v1/notifications?limit=30", {
-          credentials: "include",
-        });
-        if (res.ok) {
-          const json = await res.json();
-          if (json?.data && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped: TNotification[] = json.data.map((item: any) => {
-              const msg = item.message || "";
-              let title = "New Notification";
-              if (item.type === "NEW_ACCOUNT") {
-                title = msg.toLowerCase().includes("vendor")
-                  ? "New Vendor Registered"
-                  : "New Customer Registered";
-              } else {
-                title = formatNotificationTitle(item.type);
-              }
-
-              return {
-                id: item._id,
-                _id: item._id,
-                notificationId: item._id,
-                type: item.type,
-                title,
-                message: msg,
-                relatedId: item.relatedId,
-                recipientRole: item.recipientRole,
-                recipientId: item.recipientId,
-                isRead: item.isRead ?? false,
-                createdAt: item.createdAt || new Date().toISOString(),
-              };
-            });
-
-            setNotifications((prev) => {
-              const existingIds = new Set(prev.map((n) => n.id));
-              const fresh = mapped.filter((m) => !existingIds.has(m.id));
-              return [...prev, ...fresh];
-            });
-          }
-        }
-      } catch {
-        // ignore fetch failure if unauthenticated or server offline
-      }
-    };
-
-    syncWithBackend();
 
     return () => {
       socket.off("connect", onConnect);
@@ -317,57 +302,45 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       socket.off("notification");
       specificEvents.forEach((evt) => socket.off(evt));
     };
-  }, [handleIncomingNotification]);
+  }, [user, handleIncomingNotification]);
 
-  const markAsRead = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-    );
-  }, []);
-
-  const markAllAsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-  }, []);
-
-  const removeNotification = useCallback((id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  }, []);
-
-  const clearAll = useCallback(() => {
-    setNotifications([]);
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  const sendTestNotification = useCallback(
-    (overrides?: Partial<TNotification>) => {
-      const types = [
-        "NEW_ORDER",
-        "payment_success",
-        "ORDER_SHIPPED",
-        "ORDER_DELIVERED",
-        "NEW_ACCOUNT",
-      ];
-      const randomType = types[Math.floor(Math.random() * types.length)];
-      const sampleId = Math.floor(1000 + Math.random() * 9000);
-
-      const mockPayload = {
-        notificationId: `test-${Date.now()}`,
-        type: overrides?.type || randomType,
-        message:
-          overrides?.message ||
-          `Real-time test alert for Order #AZ-${sampleId} received at ${new Date().toLocaleTimeString()}.`,
-        createdAt: new Date().toISOString(),
-        ...overrides,
-      };
-
-      handleIncomingNotification(mockPayload, mockPayload.type);
+  const markAsRead = useCallback(
+    async (id: string) => {
+      try {
+        await markAsReadApi(id).unwrap();
+      } catch (err) {
+        console.error("Failed to mark notification as read in database:", err);
+      }
     },
-    [handleIncomingNotification]
+    [markAsReadApi]
   );
+
+  const markAllAsRead = useCallback(async () => {
+    try {
+      await markAllAsReadApi().unwrap();
+    } catch (err) {
+      console.error("Failed to mark all notifications as read in database:", err);
+    }
+  }, [markAllAsReadApi]);
+
+  const removeNotification = useCallback(
+    async (id: string) => {
+      try {
+        await deleteNotificationApi(id).unwrap();
+      } catch (err) {
+        console.error("Failed to delete notification from database:", err);
+      }
+    },
+    [deleteNotificationApi]
+  );
+
+  const clearAll = useCallback(async () => {
+    try {
+      await clearAllApi().unwrap();
+    } catch (err) {
+      console.error("Failed to clear notifications in database:", err);
+    }
+  }, [clearAllApi]);
 
   const unreadCount = useMemo(
     () => notifications.filter((n) => !n.isRead).length,
@@ -381,12 +354,13 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         unreadCount,
         status,
         activeToasts,
+        isLoading,
+        refetchNotifications: refetch,
         markAsRead,
         markAllAsRead,
         removeNotification,
         clearAll,
         dismissToast,
-        sendTestNotification,
         playNotificationSound,
       }}
     >
@@ -414,14 +388,20 @@ function formatNotificationTitle(type: string): string {
       return "Order Delivered";
     case "ORDER_SHIPPED":
       return "Order Shipped";
+    case "ORDER_CANCELLED":
+      return "Order Cancelled";
     case "PAYMENT_SUCCESS":
       return "Payment Succeeded";
     case "PAYMENT_FAILED":
       return "Payment Issue";
+    case "PAYMENT_REFUNDED":
+      return "Payment Refunded";
     case "NEW_ACCOUNT":
       return "New Account Created";
     case "SLA_WARNING":
       return "SLA Performance Warning";
+    case "SLA_SUSPENDED":
+      return "Account SLA Suspension";
     case "FRAUD_ALERT":
       return "Fraud Detection Alert";
     default:

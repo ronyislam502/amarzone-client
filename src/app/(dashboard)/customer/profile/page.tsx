@@ -1,6 +1,6 @@
 
 import { Metadata } from "next";
-import CustomerProfileContainer from "@/src/components/ui/Dashboard/customer/profile/CustomerProfileContainer";
+import CustomerProfileContainer from "@/src/components/ui/analistics/customer/profile/CustomerProfileContainer";
 
 export const metadata: Metadata = {
   title: "Customer Profile | Amarzone",

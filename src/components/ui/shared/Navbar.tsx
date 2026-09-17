@@ -4,7 +4,6 @@ import Departments from "./navbar/Departments";
 import Search from "./navbar/Search";
 import Services from "./navbar/Services";
 import Logo from "./navbar/Logo";
-import { NotificationBell } from "../notification/NotificationBell";
 import NavAvatar from "./navbar/NavAvatar";
 
 const Navbar = () => {
@@ -49,10 +48,8 @@ const Navbar = () => {
         <div className="navbar-center hidden lg:flex absolute left-1/2 -translate-x-1/2 w-full max-w-4xl px-4">
           <Search />
         </div>
-        {/* RIGHT: Login + Notifications + Cart */}
+        {/* RIGHT: Avatar + Cart */}
         <div className="navbar-end gap-1 lg:gap-2">
-          {/* Notifications */}
-          <NotificationBell />
 
           {/* Login */}
           {/* <Link
