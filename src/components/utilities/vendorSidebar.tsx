@@ -7,6 +7,7 @@ import {
     Package,
     DollarSign,
     Settings,
+    Activity,
 } from "lucide-react";
 
 export const vendorSidebarItems = [
@@ -19,6 +20,16 @@ export const vendorSidebarItems = [
                 icon: Store,
                 iconClass: "text-warning",
                 exact: true,
+            },
+            {
+                label: "Account Health",
+                href: "/vendor/health",
+                icon: Activity,
+                iconClass: "text-emerald-400",
+                badge: {
+                    text: "SLA",
+                    className: "badge-success badge-outline",
+                },
             },
             {
                 label: "Sales Analytics",

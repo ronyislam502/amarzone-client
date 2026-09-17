@@ -40,18 +40,30 @@ const orderApi = baseApi.injectEndpoints({
       }),
     }),
     myOrders: builder.query({
-      query: ({ email, page, limit }) => {
+      query: (args?: {
+        page?: number | string;
+        limit?: number | string;
+        status?: string;
+        searchTerm?: string;
+        email?: string;
+      }) => {
         const params = new URLSearchParams();
 
-        if (page) {
-          params.append("page", page);
+        if (args?.page) {
+          params.append("page", String(args.page));
         }
-        if (limit) {
-          params.append("limit", limit);
+        if (args?.limit) {
+          params.append("limit", String(args.limit));
+        }
+        if (args?.status) {
+          params.append("status", args.status);
+        }
+        if (args?.searchTerm) {
+          params.append("searchTerm", args.searchTerm);
         }
 
         return {
-          url: `/orders/my-orders/${email}`,
+          url: `/orders/my-orders`,
           method: "GET",
           params: params,
         };
