@@ -17,10 +17,11 @@ import Modal from "../../../shared/Modal";
 import CreateDepartmentForm from "./CreateDepartment";
 import UpdateDepartmentForm from "./UpdateDepartment";
 
+const LIMIT = 10;
+
 const DepartmentsData: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<TDepartment | null>(null);
@@ -36,12 +37,10 @@ const DepartmentsData: React.FC = () => {
   } = useAllDepartmentsQuery({
     search: searchTerm,
     page: String(page),
-    limit: String(limit),
+    limit: String(LIMIT),
   });
 
   const departments: TDepartment[] = responseData?.data || [];
-
-  console.log('departments', departments)
   const meta = responseData?.meta;
 
   // Reusable Column Definitions
@@ -175,13 +174,9 @@ const DepartmentsData: React.FC = () => {
             }
             pagination={{
               page,
-              limit,
+              limit: LIMIT,
               total: meta?.total ?? departments.length,
               onPageChange: (p) => setPage(p),
-              onLimitChange: (l) => {
-                setLimit(l);
-                setPage(1);
-              },
             }}
           />
         </div>

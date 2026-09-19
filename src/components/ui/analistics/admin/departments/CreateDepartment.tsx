@@ -34,11 +34,11 @@ const CreateDepartment = ({ onSuccess }: CreateDepartmentProps) => {
 
 
     const onSubmit = async (data: FieldValues) => {
-        const formData = new FormData();
         const departmentData = {
             name: data.name,
         };
 
+        const formData = new FormData();
         try {
             formData.append("data", JSON.stringify(departmentData));
             if (image) {

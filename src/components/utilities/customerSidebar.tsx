@@ -48,6 +48,12 @@ export const customerSidebarItems = [
                 icon: Star,
                 iconClass: "text-warning",
             },
+            {
+                label: "Vendor Messages",
+                href: "/customer/chat",
+                icon: MessageSquare,
+                iconClass: "text-primary",
+            },
         ],
     },
     {

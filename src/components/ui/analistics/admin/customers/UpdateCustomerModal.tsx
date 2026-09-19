@@ -26,21 +26,21 @@ const UpdateCustomerModal = ({
   if (!isOpen || !customer) return null;
 
   const onSubmit = async (data: FieldValues) => {
-    try {
-      const payload = {
-        name: data.name,
-        phone: data.phone,
-        address: {
-          street: data.street || customer.address?.street || "",
-          state: data.state || customer.address?.state || "",
-          postalCode: data.postalCode || customer.address?.postalCode || "",
-          country: data.country || customer.address?.country || "",
-        },
-      };
+    const customerData = {
+      name: data.name,
+      phone: data.phone,
+      address: {
+        street: data.street || customer.address?.street || "",
+        state: data.state || customer.address?.state || "",
+        postalCode: data.postalCode || customer.address?.postalCode || "",
+        country: data.country || customer.address?.country || "",
+      },
+    };
 
+    try {
       const res = await updateCustomer({
         id: customer._id,
-        data: payload,
+        data: customerData,
       }).unwrap();
 
       if (res?.success) {

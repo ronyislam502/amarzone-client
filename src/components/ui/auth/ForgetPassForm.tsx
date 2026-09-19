@@ -14,16 +14,25 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import AZForm from '../shared/form/AZFrom';
 import AZInput from '../shared/form/AZInput';
 import { forgotPasswordSchema } from '@/src/schema/Auth';
-
+import { useForgotPasswordMutation } from '@/src/redux/features/auth/authApi';
+import { toast } from 'react-toastify';
 
 export const ForgetPassForm = () => {
+    const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
 
     const onSubmit = async (data: FieldValues) => {
-
         const forgotData = {
-            email: data?.email,
+            email: data.email,
         };
 
+        try {
+            const res = await forgotPassword(forgotData).unwrap();
+            if (res?.success) {
+                toast.success(res?.message || "Password reset link sent to your email!");
+            }
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Failed to send reset link. Please try again.");
+        }
     };
 
     return (

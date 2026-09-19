@@ -347,6 +347,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     [notifications]
   );
 
+  const safeRefetch = useCallback(() => {
+    if (token && typeof refetch === "function") {
+      try {
+        refetch();
+      } catch (err) {
+        console.warn("Could not refetch notifications:", err);
+      }
+    }
+  }, [token, refetch]);
+
   return (
     <NotificationContext.Provider
       value={{
@@ -355,7 +365,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         status,
         activeToasts,
         isLoading,
-        refetchNotifications: refetch,
+        refetchNotifications: safeRefetch,
         markAsRead,
         markAllAsRead,
         removeNotification,

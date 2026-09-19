@@ -37,23 +37,36 @@ const categoryApi = baseApi.injectEndpoints({
                 };
             },
             providesTags: ["category"],
-            transformResponse: (response: TResponseRedux<TCategory[]>) => {
+            transformResponse: (response: any) => {
                 return {
-                    data: response?.data,
-                    meta: response?.meta,
+                    data: (Array.isArray(response?.data)
+                        ? response?.data
+                        : response?.data?.data || []) as TCategory[],
+                    meta: response?.data?.meta || response?.meta,
                 };
             },
         }),
         categoriesByDepartment: builder.query({
-            query: (departmentId: string) => ({
-                url: `/categories/department/${departmentId}`,
-                method: "GET",
-            }),
-            providesTags: ["category"],
-            transformResponse: (response: TResponseRedux<TCategory[]>) => {
+            query: (args: string | { id: string; limit?: number | string }) => {
+                const id = typeof args === "string" ? args : args.id;
+                const limit = typeof args === "object" ? args.limit : 100;
+                const params = new URLSearchParams();
+                if (limit !== undefined && limit !== null) {
+                    params.append("limit", String(limit));
+                }
+                const queryString = params.toString();
                 return {
-                    data: response?.data,
-                    meta: response?.meta,
+                    url: `/categories/department/${id}${queryString ? `?${queryString}` : ""}`,
+                    method: "GET",
+                };
+            },
+            providesTags: ["category"],
+            transformResponse: (response: any) => {
+                return {
+                    data: (Array.isArray(response?.data)
+                        ? response?.data
+                        : response?.data?.data || []) as TCategory[],
+                    meta: response?.data?.meta || response?.meta,
                 };
             },
         }),

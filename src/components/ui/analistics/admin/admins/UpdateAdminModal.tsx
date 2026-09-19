@@ -26,14 +26,15 @@ const UpdateAdminModal = ({
   if (!isOpen || !admin) return null;
 
   const onSubmit = async (data: FieldValues) => {
-    try {
-      const payload: Record<string, any> = {};
-      if (data.name) payload.name = data.name.trim();
-      if (data.phone) payload.phone = data.phone.trim();
+    const adminData = {
+      name: data.name?.trim(),
+      phone: data.phone?.trim(),
+    };
 
+    try {
       const res = await updateAdmin({
         id: admin._id,
-        data: payload,
+        data: adminData,
       }).unwrap();
 
       if (res?.success) {

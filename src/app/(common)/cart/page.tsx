@@ -1,17 +1,9 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import {
-  CartItemList,
-  CartSummaryCard,
-  CartSavedForLater,
-  CartEmptyState,
-  StripePaymentModal,
-  TCartProduct,
-} from "@/src/components/ui/cart";
 import { ChevronRight, ShoppingBag, Star, Sparkles, LogIn, Lock } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "@/src/redux/hooks";
@@ -24,6 +16,7 @@ import {
 import { useCreateOrderMutation } from "@/src/redux/features/order/orderApi";
 import { useAllProductsQuery } from "@/src/redux/features/product/productApi";
 import { selectCurrentUser, useCurrentToken, setUser } from "@/src/redux/features/auth/authSlice";
+import { CartEmptyState, CartItemList, CartSavedForLater, CartSummaryCard, StripePaymentModal, TCartProduct } from "@/src/components/ui/cart";
 
 function CartPageContent() {
   const router = useRouter();

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSingleProductQuery } from "@/redux/features/product/productApi";
@@ -21,7 +21,7 @@ import {
   ProductReviewSection,
   ProductPageSkeleton,
 } from "@/components/ui/product";
-import { AlertTriangle, ArrowLeft, ShoppingCart, Zap } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ShoppingCart, Zap, Sparkles, ChevronRight } from "lucide-react";
 import { useAppDispatch } from "@/src/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";
 import { toast } from "react-toastify";
@@ -238,6 +238,73 @@ export default function SingleProductPage() {
                 selectedVariant={activeVariant}
                 isLoadingInventory={isLoadingInventory}
               />
+
+              {/* AI Product Assistant Advisor Card */}
+              <div className="mt-4 p-4 rounded-2xl bg-[#170d2f] text-white border border-amber-400/25 shadow-lg space-y-3 relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none" />
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-amber-400/20 text-amber-400 border border-amber-400/30 shrink-0">
+                    <Sparkles className="w-4 h-4 animate-spin-slow" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                      <span>Amarzone AI Advisor</span>
+                      <span className="badge badge-warning text-[9px] font-black px-1.5 py-0 text-slate-950">
+                        Instant
+                      </span>
+                    </h4>
+                    <p className="text-[11px] text-slate-300">
+                      Have questions about this item?
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                          new CustomEvent("open-ai-shopping-assistant", {
+                            detail: {
+                              productId: product._id,
+                              productTitle: product.title,
+                              category: product.category?.name,
+                              seedQuery: `Tell me the key highlights, compatibility, and user sentiment for ${product.title}`,
+                            },
+                          })
+                        );
+                      }
+                    }}
+                    className="w-full py-2 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center justify-between transition-all cursor-pointer shadow-sm active:scale-98"
+                  >
+                    <span>Ask AI About This Product</span>
+                    <Sparkles className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(
+                          new CustomEvent("open-ai-shopping-assistant", {
+                            detail: {
+                              productId: product._id,
+                              productTitle: product.title,
+                              category: product.category?.name,
+                              seedQuery: `Compare ${product.title} with top market alternatives in this category`,
+                            },
+                          })
+                        );
+                      }
+                    }}
+                    className="w-full py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-200 hover:text-white border border-white/10 text-[11px] font-semibold flex items-center justify-between transition-colors cursor-pointer"
+                  >
+                    <span>Compare with Alternatives</span>
+                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -266,6 +333,7 @@ export default function SingleProductPage() {
           averageRating={averageRating}
           totalRatings={totalRatings}
           isLoading={isLoadingReviews}
+          productTitle={product?.title}
         />
       </div>
 

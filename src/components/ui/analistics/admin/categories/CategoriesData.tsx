@@ -19,10 +19,11 @@ import Modal from "../../../shared/Modal";
 import CreateCategoryForm from "./CreateCategory";
 import UpdateCategoryForm from "./UpdateCategory";
 
+const LIMIT = 10;
+
 const CategoriesData: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<TCategory | null>(null);
@@ -35,7 +36,7 @@ const CategoriesData: React.FC = () => {
     error,
     refetch,
     isFetching,
-  } = useAllCategoriesQuery({ search: searchTerm, page: String(page), limit: String(limit) });
+  } = useAllCategoriesQuery({ search: searchTerm, page: String(page), limit: String(LIMIT) });
 
   const categories: TCategory[] = responseData?.data || [];
   const meta = responseData?.meta;
@@ -189,13 +190,9 @@ const CategoriesData: React.FC = () => {
             }
             pagination={{
               page,
-              limit,
+              limit: LIMIT,
               total: meta?.total ?? categories.length,
               onPageChange: (p) => setPage(p),
-              onLimitChange: (l) => {
-                setLimit(l);
-                setPage(1);
-              },
             }}
           />
         </div>

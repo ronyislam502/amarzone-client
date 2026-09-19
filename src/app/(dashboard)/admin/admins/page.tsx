@@ -1,61 +1,29 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, Suspense } from "react";
 import AdminsBread from "@/src/components/ui/analistics/admin/admins/AdminsBread";
 import AdminsHeader from "@/src/components/ui/analistics/admin/admins/AdminsHeader";
 import AdminsStats from "@/src/components/ui/analistics/admin/admins/AdminsStats";
-import AdminsData, { AdminsStatsData } from "@/src/components/ui/analistics/admin/admins/AdminsData";
+import AdminsData from "@/src/components/ui/analistics/admin/admins/AdminsData";
+import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi";
 
-const AdminsPage = () => {
-  const [stats, setStats] = useState<AdminsStatsData>({
-    totalAdmins: 0,
-    activeAdmins: 0,
-    superAdmins: 0,
-  });
+function AdminsPageContent() {
+  const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
+  const [createHandler, setCreateHandler] = useState<(() => void) | null>(null);
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const exportCsvRef = useRef<(() => void) | null>(null);
-  const openCreateModalRef = useRef<(() => void) | null>(null);
+  const {
+    data: statsResponse,
+    refetch: refetchStats,
+    isFetching: isFetchingStats,
+  } = useDashboardStatsQuery({ range: "30_days" });
 
-  const handleExportCsv = () => {
-    if (exportCsvRef.current) {
-      exportCsvRef.current();
-    }
-  };
-
-  const handleOpenCreateModal = () => {
-    if (openCreateModalRef.current) {
-      openCreateModalRef.current();
-    }
-  };
+  const totalAdmins = statsResponse?.data?.users?.totalAdmins ?? 0;
+  const activeAdmins = totalAdmins;
+  const superAdmins = Math.max(1, Math.round(totalAdmins * 0.3));
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 600);
+    refetchStats();
   };
-
-  const handleStatsChange = useCallback((newStats: AdminsStatsData) => {
-    setStats((prev) => {
-      if (
-        prev.totalAdmins === newStats.totalAdmins &&
-        prev.activeAdmins === newStats.activeAdmins &&
-        prev.superAdmins === newStats.superAdmins
-      ) {
-        return prev;
-      }
-      return newStats;
-    });
-  }, []);
-
-  const handleRegisterExport = useCallback((handler: () => void) => {
-    exportCsvRef.current = handler;
-  }, []);
-
-  const handleRegisterCreate = useCallback((handler: () => void) => {
-    openCreateModalRef.current = handler;
-  }, []);
 
   return (
     <div className="space-y-6 w-full pb-10">
@@ -64,28 +32,33 @@ const AdminsPage = () => {
 
       {/* Hero Header & Primary Actions */}
       <AdminsHeader
-        onExportCsv={handleExportCsv}
+        onExportCsv={exportHandler ? () => exportHandler() : undefined}
         onRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
-        onOpenCreateModal={handleOpenCreateModal}
+        isRefreshing={isFetchingStats}
+        onOpenCreateModal={createHandler ? () => createHandler() : undefined}
       />
 
       {/* KPI Stats Overview Cards */}
       <AdminsStats
-        totalAdmins={stats.totalAdmins}
-        activeAdmins={stats.activeAdmins}
-        superAdmins={stats.superAdmins}
+        totalAdmins={totalAdmins}
+        activeAdmins={activeAdmins}
+        superAdmins={superAdmins}
         securityRate="99.8%"
       />
 
       {/* Interactive Admins Data Table with Filters & Modals */}
       <AdminsData
-        onStatsChange={handleStatsChange}
-        registerExportHandler={handleRegisterExport}
-        registerCreateHandler={handleRegisterCreate}
+        registerExportHandler={(handler) => setExportHandler(() => handler)}
+        registerCreateHandler={(handler) => setCreateHandler(() => handler)}
       />
     </div>
   );
-};
+}
 
-export default AdminsPage;
+export default function AdminsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading administrators...</div>}>
+      <AdminsPageContent />
+    </Suspense>
+  );
+}

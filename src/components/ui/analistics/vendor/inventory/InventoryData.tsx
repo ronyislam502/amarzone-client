@@ -1,30 +1,29 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Layers,
-  Eye,
-  Edit2,
-  Boxes,
-  Tag,
-  Trophy,
-  Copy,
-  Check,
-  Truck,
-  AlertTriangle,
   CheckCircle2,
   XCircle,
+  Copy,
+  ExternalLink,
+  Edit2,
+  DollarSign,
+  Package,
 } from "lucide-react";
 import { useGetMyInventoryQuery } from "@/src/redux/features/inventory/inventoryApi";
 import { TInventory } from "@/src/types/inventory";
 import { TColumn } from "@/src/types/table";
 import AZTable from "../../../shared/AZTable";
-import InventoryFilterBar, { InventoryFilterState } from "./InventoryFilterBar";
+import InventoryFilterBar, {
+  InventoryFilterState,
+} from "./InventoryFilterBar";
 import UpdatePriceModal from "./UpdatePriceModal";
 import UpdateStockModal from "./UpdateStockModal";
 import InventoryDetailsModal from "./InventoryDetailsModal";
-import { toast } from "react-toastify";
 import { useDebounce } from "@/src/components/utilities/Debaounce";
+import { toast } from "react-toastify";
 
 export interface InventoryStatsData {
   totalItems: number;
@@ -39,23 +38,47 @@ interface InventoryDataProps {
   isRefreshing?: boolean;
 }
 
-const initialFilters: InventoryFilterState = {
-  stockStatus: "",
-  buyBox: "",
-  sort: "",
-};
+const LIMIT = 10;
 
 const InventoryData = ({
-  onStatsChange,
   registerExportHandler,
   isRefreshing = false,
 }: InventoryDataProps) => {
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // URL-driven query state
+  const page = Number(searchParams.get("page")) || 1;
+  const sortParam = searchParams.get("sort") || "";
+  const stockParam = searchParams.get("stockStatus") || "";
+  const urlSearch = searchParams.get("search") || "";
+
+  // Local search before debounce
+  const [search, setSearch] = useState(urlSearch);
   const debouncedSearch = useDebounce(search, 400);
-  const [filters, setFilters] = useState<InventoryFilterState>(initialFilters);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
   const [copiedAsin, setCopiedAsin] = useState<string | null>(null);
+
+  const updateUrl = useCallback(
+    (updates: Record<string, string | number | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams]
+  );
+
+  useEffect(() => {
+    if (debouncedSearch.trim() !== urlSearch) {
+      updateUrl({ search: debouncedSearch.trim() || null, page: 1 });
+    }
+  }, [debouncedSearch, urlSearch, updateUrl]);
 
   // Modals state
   const [selectedInventory, setSelectedInventory] = useState<TInventory | null>(null);
@@ -63,105 +86,38 @@ const InventoryData = ({
   const [isPriceModalOpen, setIsPriceModalOpen] = useState(false);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
 
+  const apiSort =
+    sortParam === "price_asc"
+      ? "seller.price"
+      : sortParam === "price_desc"
+      ? "-seller.price"
+      : sortParam === "qty_asc"
+      ? "seller.quantity"
+      : sortParam === "qty_desc"
+      ? "-seller.quantity"
+      : "-createdAt";
+
   // RTK Query: GET /inventories/my-inventory
   const { data: inventoryResponse, isLoading, isFetching, isError, refetch } =
     useGetMyInventoryQuery({
-      search: debouncedSearch,
-      page,
-      limit,
+      search: urlSearch || undefined,
+      page: String(page),
+      limit: String(LIMIT),
+      sort: apiSort,
     });
 
-  const rawInventory: TInventory[] = useMemo(() => {
-    return (inventoryResponse?.data as TInventory[]) || [];
-  }, [inventoryResponse]);
+  const inventoryList: TInventory[] = (inventoryResponse?.data as TInventory[]) || [];
 
   const meta = inventoryResponse?.meta || {
     page: 1,
-    limit: 10,
-    total: rawInventory.length,
+    limit: LIMIT,
+    total: inventoryList.length,
     totalPage: 1,
   };
 
-  // Client-side filtering & sorting
-  const filteredInventory = useMemo(() => {
-    let result = [...rawInventory];
-
-    // Filter by stock status
-    if (filters.stockStatus === "in_stock") {
-      result = result.filter(
-        (item) => item.seller?.isStock && (item.seller?.quantity || 0) > 0
-      );
-    } else if (filters.stockStatus === "low_stock") {
-      result = result.filter(
-        (item) =>
-          (item.seller?.quantity || 0) > 0 && (item.seller?.quantity || 0) <= 5
-      );
-    } else if (filters.stockStatus === "out_of_stock") {
-      result = result.filter(
-        (item) => !item.seller?.isStock || (item.seller?.quantity || 0) === 0
-      );
-    }
-
-    // Filter by Buy Box
-    if (filters.buyBox === "winner") {
-      result = result.filter((item) => item.seller?.isBuyBoxWinner);
-    } else if (filters.buyBox === "non_winner") {
-      result = result.filter((item) => !item.seller?.isBuyBoxWinner);
-    }
-
-    // Sort
-    if (filters.sort === "price_asc") {
-      result.sort(
-        (a, b) => (a.seller?.price || 0) - (b.seller?.price || 0)
-      );
-    } else if (filters.sort === "price_desc") {
-      result.sort(
-        (a, b) => (b.seller?.price || 0) - (a.seller?.price || 0)
-      );
-    } else if (filters.sort === "qty_asc") {
-      result.sort(
-        (a, b) => (a.seller?.quantity || 0) - (b.seller?.quantity || 0)
-      );
-    } else if (filters.sort === "qty_desc") {
-      result.sort(
-        (a, b) => (b.seller?.quantity || 0) - (a.seller?.quantity || 0)
-      );
-    }
-
-    return result;
-  }, [rawInventory, filters]);
-
-  const onStatsChangeRef = useRef(onStatsChange);
-  useEffect(() => {
-    onStatsChangeRef.current = onStatsChange;
-  }, [onStatsChange]);
-
-  // Report KPI stats
-  useEffect(() => {
-    if (!inventoryResponse?.data || !onStatsChangeRef.current) return;
-
-    const items = (inventoryResponse.data as TInventory[]) || [];
-    const inStockCount = items.filter(
-      (item) => item.seller?.isStock && (item.seller?.quantity || 0) > 0
-    ).length;
-    const lowStockCount = items.filter(
-      (item) => (item.seller?.quantity || 0) <= 5
-    ).length;
-    const buyBoxWinnersCount = items.filter(
-      (item) => item.seller?.isBuyBoxWinner
-    ).length;
-
-    onStatsChangeRef.current({
-      totalItems: inventoryResponse?.meta?.total ?? items.length,
-      inStockCount,
-      lowStockCount,
-      buyBoxWinnersCount,
-    });
-  }, [inventoryResponse?.data, inventoryResponse?.meta?.total]);
-
   // CSV Export
-  const handleExportCsv = () => {
-    if (!filteredInventory || filteredInventory.length === 0) {
+  const handleExportCsv = useCallback(() => {
+    if (!inventoryList || inventoryList.length === 0) {
       toast.warning("No inventory records to export");
       return;
     }
@@ -178,7 +134,7 @@ const InventoryData = ({
       "Shipping Days",
     ];
 
-    const rows = filteredInventory.map((item) => [
+    const rows = inventoryList.map((item: TInventory) => [
       `"${item.asin || ""}"`,
       `"${item.variant?.sku || ""}"`,
       `"${(item.variant?.product?.title || "").replace(/"/g, '""')}"`,
@@ -192,7 +148,7 @@ const InventoryData = ({
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+      [headers.join(","), ...rows.map((e: any[]) => e.join(","))].join("\n");
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -204,215 +160,159 @@ const InventoryData = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleExportCsvRef = useRef(handleExportCsv);
-  useEffect(() => {
-    handleExportCsvRef.current = handleExportCsv;
-  }, [filteredInventory]);
+  }, [inventoryList]);
 
   useEffect(() => {
-    if (registerExportHandler) {
-      registerExportHandler(() => handleExportCsvRef.current());
-    }
-  }, [registerExportHandler]);
+    registerExportHandler?.(handleExportCsv);
+  }, [registerExportHandler, handleExportCsv]);
 
-  const copyAsin = (asin: string) => {
+  const handleCopyAsin = (asin: string) => {
     navigator.clipboard.writeText(asin);
     setCopiedAsin(asin);
-    toast.info(`Copied ASIN: ${asin}`);
+    toast.success(`Copied ASIN: ${asin}`);
     setTimeout(() => setCopiedAsin(null), 2000);
   };
 
-  // Table Columns
+  const handleFilterChange = (newFilters: InventoryFilterState) => {
+    updateUrl({
+      ...newFilters,
+      page: 1,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearch("");
+    router.push(pathname);
+  };
+
+  // Columns definition
   const columns: TColumn<TInventory>[] = [
     {
-      header: "Product / Variant",
-      accessor: (item: TInventory) => {
-        const product = item.variant?.product;
-        const variant = item.variant;
-        const img =
-          variant?.images?.[0] ||
-          product?.featuredImage ||
-          product?.thumbnail ||
-          "https://placehold.co/80x80?text=Item";
+      header: "Product & ASIN",
+      accessor: (item) => {
+        const title = item.variant?.product?.title || "Unknown Product";
+        const brand = item.variant?.product?.brand || "";
+        const img = item.variant?.images?.[0] || "/placeholder.png";
 
         return (
-          <div className="flex items-center gap-3 max-w-sm">
-            <div className="w-12 h-12 rounded-xl bg-base-200 border border-base-300 overflow-hidden shrink-0 flex items-center justify-center">
+          <div className="flex items-center gap-3">
+            <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-base-content/10 bg-base-200 shrink-0">
               <img
                 src={img}
-                alt={product?.title || "Variant"}
+                alt={title}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src =
-                    "https://placehold.co/80x80?text=Item";
+                    "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100&q=80";
                 }}
               />
             </div>
-            <div className="space-y-0.5 min-w-0">
-              <div className="font-bold text-xs text-base-content line-clamp-1">
-                {product?.title || "Product Listing"}
-              </div>
-              <div className="text-[11px] text-base-content/60 font-mono">
-                SKU: {variant?.sku || "N/A"}
-              </div>
-              {variant?.attributes && variant.attributes.length > 0 && (
-                <div className="flex items-center gap-1 flex-wrap pt-0.5">
-                  {variant.attributes.map((attr, idx) => (
-                    <span
-                      key={idx}
-                      className="text-[9px] px-1.5 py-0.5 rounded-md bg-base-200 font-semibold text-base-content/70"
-                    >
-                      {attr.type}: {attr.value}
-                    </span>
-                  ))}
-                </div>
+            <div className="flex flex-col min-w-0 max-w-[200px] sm:max-w-xs">
+              <span className="text-xs font-semibold text-base-content truncate" title={title}>
+                {title}
+              </span>
+              {brand && (
+                <span className="text-[10px] text-base-content/60 truncate uppercase tracking-wider">
+                  {brand}
+                </span>
               )}
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="text-[10px] font-mono font-medium text-accent bg-accent/10 px-1.5 py-0.5 rounded">
+                  {item.asin}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopyAsin(item.asin)}
+                  className="p-0.5 text-base-content/40 hover:text-base-content transition"
+                  title="Copy ASIN"
+                >
+                  <Copy className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           </div>
         );
       },
     },
     {
-      header: "ASIN",
-      accessor: (item: TInventory) => (
-        <button
-          type="button"
-          onClick={() => copyAsin(item.asin)}
-          className="group flex items-center gap-1.5 font-mono text-xs font-bold text-accent hover:underline cursor-pointer"
-          title="Click to copy ASIN"
-        >
-          <span>{item.asin}</span>
-          {copiedAsin === item.asin ? (
-            <Check className="w-3 h-3 text-success" />
-          ) : (
-            <Copy className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-          )}
-        </button>
-      ),
-    },
-    {
-      header: "Price",
-      accessor: (item: TInventory) => (
-        <div className="flex items-center gap-1.5">
-          <span className="font-black text-xs sm:text-sm text-base-content">
+      header: "Listing Price",
+      accessor: (item) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-bold text-base-content">
             ${Number(item.seller?.price || 0).toFixed(2)}
           </span>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedInventory(item);
-              setIsPriceModalOpen(true);
-            }}
-            className="btn btn-xs btn-ghost btn-circle text-accent hover:bg-accent/10"
-            title="Edit price"
-          >
-            <Tag className="w-3 h-3" />
-          </button>
+          <span className="text-[10px] text-base-content/50">
+            Fulfillment: {item.seller?.fulfillmentBy || "FBM"}
+          </span>
         </div>
       ),
     },
     {
-      header: "Stock Level",
-      accessor: (item: TInventory) => {
+      header: "Available Stock",
+      accessor: (item) => {
         const qty = item.seller?.quantity || 0;
         const isStock = item.seller?.isStock && qty > 0;
+        const isLow = qty <= 5 && qty > 0;
 
         return (
-          <div className="flex items-center gap-2">
-            <div>
-              <span
-                className={`badge badge-sm font-bold gap-1 ${
-                  qty === 0
-                    ? "badge-error text-white"
-                    : qty <= 5
-                    ? "badge-warning text-white"
-                    : "badge-success text-white"
-                }`}
-              >
-                {qty === 0 ? (
-                  <XCircle className="w-3 h-3" />
-                ) : qty <= 5 ? (
-                  <AlertTriangle className="w-3 h-3" />
-                ) : (
-                  <CheckCircle2 className="w-3 h-3" />
-                )}
-                {qty} units
-              </span>
-              <div className="text-[10px] text-base-content/50 font-medium mt-0.5">
-                {isStock ? "In Stock" : "Out of Stock"}
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedInventory(item);
-                setIsStockModalOpen(true);
-              }}
-              className="btn btn-xs btn-ghost btn-circle text-success hover:bg-success/10"
-              title="Replenish stock"
+          <div className="flex flex-col">
+            <span
+              className={`text-xs font-bold ${
+                !isStock
+                  ? "text-error"
+                  : isLow
+                  ? "text-warning"
+                  : "text-base-content"
+              }`}
             >
-              <Boxes className="w-3 h-3" />
-            </button>
+              {qty} units
+            </span>
+            <span className="text-[10px] text-base-content/50">
+              {!isStock ? "Out of Stock" : isLow ? "Low Reserve" : "In Stock"}
+            </span>
           </div>
         );
       },
     },
     {
-      header: "Buy Box",
-      accessor: (item: TInventory) => {
-        const isWinner = Boolean(item.seller?.isBuyBoxWinner);
-        return isWinner ? (
-          <span className="badge badge-primary badge-sm font-bold gap-1 shadow-xs">
-            <Trophy className="w-3 h-3" /> Winner
-          </span>
-        ) : (
-          <span className="badge badge-ghost badge-sm text-base-content/60 font-semibold">
-            Competing
+      header: "Buy Box Standing",
+      accessor: (item) => {
+        const isWinner = item.seller?.isBuyBoxWinner;
+        return (
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+              isWinner
+                ? "bg-success/15 text-success border border-success/30"
+                : "bg-base-content/5 text-base-content/60 border border-base-content/10"
+            }`}
+          >
+            {isWinner ? (
+              <>
+                <CheckCircle2 className="w-3 h-3" /> Winning
+              </>
+            ) : (
+              <>
+                <XCircle className="w-3 h-3" /> Competing
+              </>
+            )}
           </span>
         );
       },
-    },
-    {
-      header: "Fulfillment",
-      accessor: (item: TInventory) => (
-        <div className="text-xs">
-          <div className="font-bold text-base-content flex items-center gap-1">
-            <Truck className="w-3 h-3 text-accent" />
-            {item.seller?.fulfillmentBy || "Merchant"}
-          </div>
-          <div className="text-[10px] text-base-content/60">
-            {item.seller?.shippingTime || 3} days transit
-          </div>
-        </div>
-      ),
     },
     {
       header: "Actions",
-      accessor: (item: TInventory) => (
+      accessor: (item) => (
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => {
               setSelectedInventory(item);
-              setIsDetailsOpen(true);
-            }}
-            className="btn btn-xs btn-ghost btn-circle hover:bg-base-200 text-base-content/80"
-            title="View Details"
-          >
-            <Eye className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setSelectedInventory(item);
               setIsPriceModalOpen(true);
             }}
-            className="btn btn-xs btn-ghost btn-circle hover:bg-accent/10 text-accent"
-            title="Edit Price"
+            className="btn btn-ghost btn-xs btn-square text-base-content/70 hover:text-accent hover:bg-accent/10"
+            title="Adjust Price"
           >
-            <Tag className="w-3.5 h-3.5" />
+            <DollarSign className="w-3.5 h-3.5" />
           </button>
           <button
             type="button"
@@ -420,40 +320,54 @@ const InventoryData = ({
               setSelectedInventory(item);
               setIsStockModalOpen(true);
             }}
-            className="btn btn-xs btn-ghost btn-circle hover:bg-success/10 text-success"
+            className="btn btn-ghost btn-xs btn-square text-base-content/70 hover:text-accent hover:bg-accent/10"
             title="Update Stock"
           >
-            <Boxes className="w-3.5 h-3.5" />
+            <Package className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedInventory(item);
+              setIsDetailsOpen(true);
+            }}
+            className="btn btn-ghost btn-xs btn-square text-base-content/70 hover:text-accent hover:bg-accent/10"
+            title="Full Details"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
           </button>
         </div>
       ),
     },
   ];
 
+  const currentFilters: InventoryFilterState = {
+    stockStatus: stockParam,
+    buyBox: "",
+    sort: sortParam,
+  };
+
   return (
     <div className="space-y-4">
-      {/* Filter Bar */}
+      {/* Filter / Search Bar */}
       <InventoryFilterBar
         search={search}
-        onSearchChange={setSearch}
-        filters={filters}
-        onFilterChange={setFilters}
-        onReset={() => {
-          setSearch("");
-          setFilters(initialFilters);
-        }}
+        onSearchChange={(val: string) => setSearch(val)}
+        filters={currentFilters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
       />
 
       {/* Reusable AZTable */}
       <AZTable
         title="Live Inventory Catalog"
         subtitle="Manage stock units, live prices, and Buy Box competitiveness"
-        badgeText={`${filteredInventory.length} SKU${filteredInventory.length !== 1 ? "s" : ""}`}
+        badgeText={`${meta.total || inventoryList.length} SKU${(meta.total || inventoryList.length) !== 1 ? "s" : ""}`}
         icon={<Layers className="w-5 h-5 text-accent" />}
-        data={filteredInventory}
+        data={inventoryList}
         columns={columns}
-        keyExtractor={(item) => item._id}
-        isLoading={isLoading || isFetching}
+        keyExtractor={(item: TInventory) => item._id}
+        isLoading={isLoading || isFetching || isRefreshing}
         isError={isError}
         errorMessage="Failed to fetch your inventory from server. Please verify your connection."
         onRetry={refetch}
@@ -462,13 +376,9 @@ const InventoryData = ({
         emptyIcon={<Layers className="w-10 h-10 text-base-content/30" />}
         pagination={{
           page,
-          limit,
-          total: meta.total || filteredInventory.length,
-          onPageChange: (newPage) => setPage(newPage),
-          onLimitChange: (newLimit) => {
-            setLimit(newLimit);
-            setPage(1);
-          },
+          limit: LIMIT,
+          total: meta.total || inventoryList.length,
+          onPageChange: (newPage: number) => updateUrl({ page: newPage }),
         }}
       />
 

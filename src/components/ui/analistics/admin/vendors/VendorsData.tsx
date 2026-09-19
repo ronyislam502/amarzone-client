@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Store,
   Eye,
@@ -12,7 +13,6 @@ import {
   Phone,
   MapPin,
   Calendar,
-  Image as ImageIcon,
 } from "lucide-react";
 import {
   useAllVendorsQuery,
@@ -25,6 +25,7 @@ import VendorsFilterBar, { VendorsFilterState } from "./VendorsFilterBar";
 import VendorDetailsModal from "./VendorDetailsModal";
 import UpdateVendorModal from "./UpdateVendorModal";
 import { toast } from "react-toastify";
+import { useDebounce } from "@/src/components/utilities/Debaounce";
 
 export interface VendorsStatsData {
   totalVendors: number;
@@ -37,20 +38,46 @@ interface VendorsDataProps {
   registerExportHandler?: (handler: () => void) => void;
 }
 
-const initialFilters: VendorsFilterState = {
-  status: "",
-  country: "",
-  sort: "",
-};
+const LIMIT = 10;
 
 const VendorsData = ({
-  onStatsChange,
   registerExportHandler,
 }: VendorsDataProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<VendorsFilterState>(initialFilters);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // URL-driven query state
+  const page = Number(searchParams.get("page")) || 1;
+  const statusParam = searchParams.get("status") || "";
+  const sortParam = searchParams.get("sort") || "";
+  const countryParam = searchParams.get("country") || "";
+  const urlSearch = searchParams.get("search") || "";
+
+  // Local search input before debounce
+  const [searchTerm, setSearchTerm] = useState(urlSearch);
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  const updateUrl = useCallback(
+    (updates: Record<string, string | number | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams]
+  );
+
+  useEffect(() => {
+    if (debouncedSearch.trim() !== urlSearch) {
+      updateUrl({ search: debouncedSearch.trim() || null, page: 1 });
+    }
+  }, [debouncedSearch, urlSearch, updateUrl]);
 
   // Modal states
   const [selectedViewVendor, setSelectedViewVendor] = useState<TVendor | null>(null);
@@ -58,6 +85,15 @@ const VendorsData = ({
 
   const [selectedEditVendor, setSelectedEditVendor] = useState<TVendor | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const apiSort =
+    sortParam === "name_asc"
+      ? "name"
+      : sortParam === "name_desc"
+      ? "-name"
+      : sortParam === "oldest"
+      ? "createdAt"
+      : "-createdAt";
 
   // Queries & Mutations
   const {
@@ -68,97 +104,20 @@ const VendorsData = ({
     refetch,
     isFetching,
   } = useAllVendorsQuery({
-    search: searchTerm.trim() || undefined,
+    search: urlSearch || undefined,
     page: String(page),
-    limit: String(limit),
+    limit: String(LIMIT),
+    status: statusParam || undefined,
+    sort: apiSort,
   });
 
   const [deleteVendor] = useDeleteVendorMutation();
 
-  const rawVendors: TVendor[] = responseData?.data || [];
+  const vendors: TVendor[] = responseData?.data || [];
   const meta = responseData?.meta;
 
-  // Filter and sort locally based on filter bar
-  const vendors = useMemo(() => {
-    let result = [...rawVendors];
-
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      result = result.filter(
-        (v) =>
-          v.name?.toLowerCase().includes(q) ||
-          v.email?.toLowerCase().includes(q) ||
-          v.phone?.toLowerCase().includes(q) ||
-          v.address?.country?.toLowerCase().includes(q)
-      );
-    }
-
-    if (filters.status === "active") {
-      result = result.filter((v) => !v.isDeleted);
-    } else if (filters.status === "inactive") {
-      result = result.filter((v) => v.isDeleted);
-    }
-
-    if (filters.country) {
-      const fCountry = filters.country.toLowerCase();
-      const euCountries = [
-        "germany", "france", "italy", "spain", "netherlands", "sweden",
-        "poland", "belgium", "austria", "ireland", "denmark", "portugal",
-        "finland", "czech republic", "greece", "romania", "hungary", "luxembourg"
-      ];
-
-      result = result.filter((v) => {
-        const vCountry = (v.address?.country || "").toLowerCase();
-        if (fCountry === "european union" || fCountry === "eu") {
-          return euCountries.includes(vCountry);
-        }
-        if (fCountry === "bd" || fCountry === "bangladesh") {
-          return vCountry === "bd" || vCountry === "bangladesh";
-        }
-        if (fCountry === "usa" || fCountry === "united states") {
-          return vCountry === "usa" || vCountry === "united states";
-        }
-        if (fCountry === "ca" || fCountry === "canada") {
-          return vCountry === "ca" || vCountry === "canada";
-        }
-        return vCountry === fCountry;
-      });
-    }
-
-    if (filters.sort === "name_asc") {
-      result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    } else if (filters.sort === "name_desc") {
-      result.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
-    } else if (filters.sort === "oldest") {
-      result.sort(
-        (a, b) =>
-          new Date(a.createdAt || "").getTime() -
-          new Date(b.createdAt || "").getTime()
-      );
-    }
-
-    return result;
-  }, [rawVendors, searchTerm, filters]);
-
-  const onStatsChangeRef = useRef(onStatsChange);
-  useEffect(() => {
-    onStatsChangeRef.current = onStatsChange;
-  }, [onStatsChange]);
-
-  // Compute stats to emit upward
-  useEffect(() => {
-    if (!responseData?.data || !onStatsChangeRef.current) return;
-    const items = (responseData.data as TVendor[]) || [];
-    const activeCount = items.filter((v) => !v.isDeleted).length;
-    onStatsChangeRef.current({
-      totalVendors: meta?.total ?? items.length,
-      activeVendors: activeCount,
-      newVendorsCount: items.length,
-    });
-  }, [responseData?.data, meta?.total]);
-
   // CSV Export logic
-  const handleExportCsv = () => {
+  const handleExportCsv = useCallback(() => {
     if (!vendors || vendors.length === 0) return;
 
     const headers = [
@@ -201,18 +160,11 @@ const VendorsData = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleExportCsvRef = useRef(handleExportCsv);
-  useEffect(() => {
-    handleExportCsvRef.current = handleExportCsv;
   }, [vendors]);
 
   useEffect(() => {
-    if (registerExportHandler) {
-      registerExportHandler(() => handleExportCsvRef.current());
-    }
-  }, [registerExportHandler]);
+    registerExportHandler?.(handleExportCsv);
+  }, [registerExportHandler, handleExportCsv]);
 
   const handleDeleteVendor = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to remove/suspend vendor "${name}"?`)) {
@@ -221,174 +173,173 @@ const VendorsData = ({
 
     try {
       const res = await deleteVendor(id).unwrap();
-      toast.success(res?.message || "Vendor removed successfully");
+      toast.success(res?.message || "Vendor removed/suspended successfully");
       refetch();
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to remove vendor");
     }
   };
 
+  const handleFilterChange = (newFilters: Partial<VendorsFilterState>) => {
+    updateUrl({
+      ...newFilters,
+      page: 1,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    router.push(pathname);
+  };
+
   // Table Columns Definition
   const columns: TColumn<TVendor>[] = [
     {
-      header: "Merchant Storefront",
+      header: "Store & Brand",
       accessor: (vendor) => (
         <div className="flex items-center gap-3 max-w-sm">
-          <div className="w-12 h-12 rounded-xl bg-[#120824] border border-white/15 flex items-center justify-center shrink-0 overflow-hidden relative shadow-sm">
+          <div className="w-12 h-12 rounded-xl bg-slate-900/80 border border-white/15 flex items-center justify-center shrink-0 overflow-hidden relative shadow-sm">
             {vendor.logo ? (
               <img
                 src={vendor.logo}
                 alt={vendor.name}
-                className="w-full h-full object-contain p-1"
-              />
-            ) : (
-              <Store className="w-5 h-5 text-amber-400" />
-            )}
-          </div>
-          <div className="min-w-0 space-y-0.5">
-            <div
-              className="font-extrabold text-xs text-white line-clamp-1 hover:text-amber-400 transition-colors cursor-pointer"
-              onClick={() => {
-                setSelectedViewVendor(vendor);
-                setIsViewModalOpen(true);
-              }}
-            >
-              {vendor.name}
-            </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-              <span className="badge badge-warning badge-xs font-black text-slate-950 px-1.5 py-0.5">
-                Merchant
-              </span>
-              <span className="truncate max-w-[140px] text-slate-400">{vendor.email}</span>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Contact Channels",
-      accessor: (vendor) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-200">
-            <Phone className="w-3 h-3 text-amber-400 shrink-0" />
-            <span className="truncate">{vendor.phone || "No phone"}</span>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-slate-400">
-            <Mail className="w-3 h-3 text-slate-500 shrink-0" />
-            <a
-              href={`mailto:${vendor.email}`}
-              className="text-amber-400/90 hover:underline truncate max-w-[140px]"
-            >
-              {vendor.email}
-            </a>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Business Location",
-      accessor: (vendor) => (
-        <div className="space-y-0.5 text-xs max-w-[180px]">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-200 truncate">
-            <MapPin className="w-3 h-3 text-sky-400 shrink-0" />
-            <span className="truncate">
-              {vendor.address?.street || "Street Unassigned"}
-            </span>
-          </div>
-          <div className="text-[10px] text-slate-400 pl-4 truncate">
-            {[vendor.address?.state, vendor.address?.country]
-              .filter(Boolean)
-              .join(", ") || "Location unassigned"}
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Storefront Branding",
-      accessor: (vendor) => (
-        <div className="flex items-center gap-2">
-          {vendor.banner ? (
-            <div className="w-16 h-8 rounded-lg overflow-hidden border border-white/15 relative group bg-[#120824] shadow-sm">
-              <img
-                src={vendor.banner}
-                alt="Banner"
                 className="w-full h-full object-cover"
               />
+            ) : (
+              <div className="w-full h-full bg-amber-400/10 text-amber-400 flex items-center justify-center font-bold text-sm">
+                {vendor.name?.charAt(0)?.toUpperCase() || "V"}
+              </div>
+            )}
+          </div>
+          <div className="space-y-0.5">
+            <div className="font-extrabold text-xs text-white">
+              {vendor.name}
             </div>
-          ) : (
-            <span className="badge badge-outline border-white/15 text-[10px] text-slate-400 gap-1 bg-white/5">
-              <ImageIcon className="w-2.5 h-2.5" /> No Banner
-            </span>
-          )}
+            <div className="text-[10px] text-slate-400 flex items-center gap-1">
+              <Mail className="w-3 h-3 text-amber-400/80 shrink-0" />
+              <span className="truncate max-w-[150px]">{vendor.email}</span>
+            </div>
+          </div>
         </div>
       ),
     },
     {
-      header: "Status",
-      accessor: (vendor) =>
-        !vendor.isDeleted ? (
-          <span className="badge badge-success badge-outline bg-success/10 border-success/30 text-success badge-sm font-bold gap-1">
-            <CheckCircle2 className="w-3 h-3" /> Active
-          </span>
-        ) : (
-          <span className="badge badge-error badge-outline bg-error/10 border-error/30 text-error badge-sm font-bold gap-1">
-            <AlertTriangle className="w-3 h-3" /> Suspended
-          </span>
-        ),
-    },
-    {
-      header: "Onboarded",
+      header: "Business Phone",
       accessor: (vendor) => (
-        <div className="flex items-center gap-1 text-[11px] text-slate-300">
-          <Calendar className="w-3 h-3 text-slate-500" />
-          <span>
-            {vendor.createdAt
-              ? new Date(vendor.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })
-              : "N/A"}
-          </span>
+        <div className="text-[11px] text-slate-300 flex items-center gap-1.5 font-medium">
+          <Phone className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
+          <span>{vendor.phone || "No phone provided"}</span>
         </div>
       ),
+    },
+    {
+      header: "Commercial Location",
+      accessor: (vendor) => {
+        const addr = vendor.address;
+        if (!addr || (!addr.state && !addr.country && !addr.street)) {
+          return (
+            <span className="text-[11px] text-slate-500 italic">
+              Address not specified
+            </span>
+          );
+        }
+        return (
+          <div className="text-[11px] text-slate-300 max-w-[200px] truncate">
+            <div className="flex items-center gap-1 text-slate-200 font-semibold truncate">
+              <MapPin className="w-3 h-3 text-amber-400/80 shrink-0" />
+              <span>
+                {addr.state || ""}
+                {addr.country ? ` (${addr.country})` : ""}
+              </span>
+            </div>
+            {addr.street && (
+              <div className="text-[10px] text-slate-400 truncate pl-4">
+                {addr.street}
+              </div>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      header: "Merchant Status",
+      accessor: (vendor) => {
+        const isSuspended = vendor.isDeleted;
+        return (
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm ${
+              !isSuspended
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+            }`}
+          >
+            {!isSuspended ? (
+              <>
+                <CheckCircle2 className="w-3 h-3" />
+                Authorized
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-3 h-3" />
+                Suspended
+              </>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Onboarding Date",
+      accessor: (vendor) => {
+        const dateStr = vendor.createdAt
+          ? new Date(vendor.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "N/A";
+
+        return (
+          <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+            <Calendar className="w-3 h-3 text-slate-500 shrink-0" />
+            <span>{dateStr}</span>
+          </div>
+        );
+      },
     },
     {
       header: "Actions",
-      align: "right",
       accessor: (vendor) => (
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center gap-2">
+          {/* Quick View Details */}
           <button
-            type="button"
-            title="View Storefront Details"
             onClick={() => {
               setSelectedViewVendor(vendor);
               setIsViewModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs font-bold text-amber-400 gap-1 hover:bg-amber-400/10 border border-amber-400/20 hover:border-amber-400/40 rounded-lg cursor-pointer transition-all"
+            title="View Details"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200"
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>View</span>
           </button>
 
+          {/* Quick Edit Vendor */}
           <button
-            type="button"
-            title="Edit Vendor Profile"
             onClick={() => {
               setSelectedEditVendor(vendor);
               setIsEditModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs font-bold text-sky-400 gap-1 hover:bg-sky-400/10 border border-sky-400/20 hover:border-sky-400/40 rounded-lg cursor-pointer transition-all"
+            title="Edit Store Profile"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200"
           >
             <Edit2 className="w-3.5 h-3.5" />
-            <span>Edit</span>
           </button>
 
+          {/* Suspend / Delete Vendor */}
           <button
-            type="button"
-            title="Suspend / Delete Vendor"
             onClick={() => handleDeleteVendor(vendor._id, vendor.name)}
-            className="btn btn-ghost btn-xs font-bold text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 hover:border-rose-500/40 rounded-lg cursor-pointer transition-all"
+            title="Suspend Merchant"
+            className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-500/20 text-rose-400 transition-all duration-200"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -397,24 +348,23 @@ const VendorsData = ({
     },
   ];
 
+  const currentFilters: VendorsFilterState = {
+    status: statusParam,
+    country: countryParam,
+    sort: sortParam,
+  };
+
   return (
     <div className="space-y-4">
-      {/* Search & Dynamic Filter Toolbar */}
+      {/* Search & Filter Toolbar */}
       <VendorsFilterBar
-        filters={filters}
-        onFilterChange={(newFilters) => {
-          setFilters((prev) => ({ ...prev, ...newFilters }));
-          setPage(1);
-        }}
-        onReset={() => {
-          setFilters(initialFilters);
-          setSearchTerm("");
-          setPage(1);
-        }}
+        filters={currentFilters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
       />
 
-      {/* Main Vendors Directory Table Container */}
-      <div className="card relative overflow-hidden bg-[#170d2f] shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl [&_.input]:bg-[#120824] [&_.input]:border-white/15 [&_.input]:text-slate-200 [&_.input]:placeholder:text-slate-500 [&_.input:focus]:border-amber-400 [&_thead_th]:text-slate-300 [&_thead_th]:bg-white/[0.03] [&_thead_th]:border-b [&_thead_th]:border-white/10 [&_tbody_tr]:border-b [&_tbody_tr]:border-white/5 [&_tbody_tr:hover]:bg-white/[0.05] [&_tbody_tr]:text-slate-200 [&_.border-base-200]:!border-white/10 [&_.border-base-300]:!border-white/10 [&_.card-title]:!text-white [&_p]:!text-slate-300 [&_.select]:bg-[#120824] [&_.select]:border-white/15 [&_.select]:text-slate-200 [&_.select]:focus:border-amber-400 [&_.join-item.btn-outline]:bg-white/5 [&_.join-item.btn-outline]:border-white/15 [&_.join-item.btn-outline]:text-slate-200 [&_.join-item.btn-outline:hover]:bg-white/10 [&_.join-item.btn-primary]:bg-amber-400 [&_.join-item.btn-primary]:text-slate-950 [&_.join-item.btn-primary]:border-amber-400 [&_strong]:text-amber-400 [&_.btn-square.btn-ghost]:border-white/15 [&_.btn-square.btn-ghost]:bg-white/5 [&_.btn-square.btn-ghost]:text-amber-400 [&_.badge-primary]:bg-amber-400 [&_.badge-primary]:text-slate-950 [&_.badge-primary]:border-none">
+      {/* Main Table Card */}
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-4 sm:p-6">
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
 
@@ -427,7 +377,7 @@ const VendorsData = ({
 
         <div className="relative z-10">
           <AZTable
-            title="Verified Merchant Directory"
+            title="Merchant Storefronts"
             subtitle="Catalog of registered store partners, verified branding assets, and commercial locations."
             badgeText={meta?.total ?? vendors.length}
             icon={<Store className="w-5 h-5 text-amber-400" />}
@@ -442,23 +392,16 @@ const VendorsData = ({
             onRefresh={refetch}
             isRefreshing={isFetching}
             searchValue={searchTerm}
-            onSearchChange={(val) => {
-              setSearchTerm(val);
-              setPage(1);
-            }}
+            onSearchChange={(val: string) => setSearchTerm(val)}
             searchPlaceholder="Search vendors by store name, email, phone, location..."
             emptyTitle="No Vendors Found"
             emptyMessage="No merchant storefronts match your active filters or search term."
             emptyIcon={<Store className="w-6 h-6 text-amber-400" />}
             pagination={{
               page,
-              limit,
+              limit: LIMIT,
               total: meta?.total ?? vendors.length,
-              onPageChange: (p) => setPage(p),
-              onLimitChange: (l) => {
-                setLimit(l);
-                setPage(1);
-              },
+              onPageChange: (p) => updateUrl({ page: p }),
             }}
           />
         </div>

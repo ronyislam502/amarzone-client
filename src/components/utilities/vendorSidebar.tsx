@@ -8,6 +8,7 @@ import {
     DollarSign,
     Settings,
     Activity,
+    MessageSquare,
 } from "lucide-react";
 
 export const vendorSidebarItems = [
@@ -97,6 +98,12 @@ export const vendorSidebarItems = [
                     text: "$12.4k",
                     className: "badge-success",
                 },
+            },
+            {
+                label: "Customer Messages",
+                href: "/vendor/chat",
+                icon: MessageSquare,
+                iconClass: "text-primary",
             },
         ],
     },

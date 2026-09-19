@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   ShoppingBag,
   Eye,
@@ -25,6 +26,7 @@ import UpdateProductModal from "./UpdateProductModal";
 import ProductDetailsModal from "./ProductDetailsModal";
 import CreateVariantModal from "./CreateVariantModal";
 import ProductsFilterBar, { ProductsFilterState } from "./ProductsFilterBar";
+import { useDebounce } from "@/src/components/utilities/Debaounce";
 
 export interface ProductsStatsData {
   totalProducts: number;
@@ -36,27 +38,54 @@ export interface ProductsStatsData {
 export interface ProductsDataProps {
   onStatsChange?: (stats: ProductsStatsData) => void;
   registerExportHandler?: (handler: () => void) => void;
-  registerCreateHandler?: (handler: () => void) => void;
+  registerCreateHandler?: (handler: (initialData?: any) => void) => void;
 }
 
-const initialFilters: ProductsFilterState = {
-  department: "",
-  category: "",
-  sort: "",
-};
+const LIMIT = 10;
 
 const ProductsData: React.FC<ProductsDataProps> = ({
-  onStatsChange,
   registerExportHandler,
   registerCreateHandler,
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<ProductsFilterState>(initialFilters);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // URL-driven query state
+  const page = Number(searchParams.get("page")) || 1;
+  const departmentParam = searchParams.get("department") || "";
+  const categoryParam = searchParams.get("category") || "";
+  const sortParam = searchParams.get("sort") || "";
+  const urlSearch = searchParams.get("search") || "";
+
+  // Local search before debounce
+  const [searchTerm, setSearchTerm] = useState(urlSearch);
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  const updateUrl = useCallback(
+    (updates: Record<string, string | number | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams]
+  );
+
+  useEffect(() => {
+    if (debouncedSearch.trim() !== urlSearch) {
+      updateUrl({ search: debouncedSearch.trim() || null, page: 1 });
+    }
+  }, [debouncedSearch, urlSearch, updateUrl]);
 
   // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createInitialData, setCreateInitialData] = useState<any>(null);
   const [selectedProductDetails, setSelectedProductDetails] = useState<TProduct | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedProductEdit, setSelectedProductEdit] = useState<TProduct | null>(null);
@@ -73,12 +102,12 @@ const ProductsData: React.FC<ProductsDataProps> = ({
     refetch,
     isFetching,
   } = useAllProductsQuery({
-    search: searchTerm,
+    search: urlSearch || undefined,
     page: String(page),
-    limit: String(limit),
-    department: filters.department || undefined,
-    category: filters.category || undefined,
-    sort: filters.sort || undefined,
+    limit: String(LIMIT),
+    department: departmentParam || undefined,
+    category: categoryParam || undefined,
+    sort: sortParam || undefined,
   });
 
   const products: TProduct[] = responseData?.data || [];
@@ -87,11 +116,14 @@ const ProductsData: React.FC<ProductsDataProps> = ({
   // Register parent actions
   useEffect(() => {
     if (registerCreateHandler) {
-      registerCreateHandler(() => setIsCreateModalOpen(true));
+      registerCreateHandler((initData?: any) => {
+        if (initData) setCreateInitialData(initData);
+        setIsCreateModalOpen(true);
+      });
     }
   }, [registerCreateHandler]);
 
-  // Export CSV handler (strictly TProduct & TVariants metadata, no inventory/pricing data)
+  // Export CSV handler
   const handleExportCsv = useCallback(() => {
     if (!products.length) return;
     const headers = [
@@ -118,10 +150,13 @@ const ProductsData: React.FC<ProductsDataProps> = ({
       `"${(p.tags || []).join(", ")}"`,
       p.variants?.length || 0,
       p.isBestSeller ? "Yes" : "No",
-      p.isDeleted ? "Archived" : "Active",
+      p.isDeleted ? "Inactive" : "Active",
     ]);
 
-    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -138,78 +173,56 @@ const ProductsData: React.FC<ProductsDataProps> = ({
     }
   }, [registerExportHandler, handleExportCsv]);
 
-  // Notify parent of stats
-  useEffect(() => {
-    if (onStatsChange && meta) {
-      const totalVariants = products.reduce((acc, p) => acc + (p.variants?.length || 0), 0);
-      const bestSellerCount = products.filter((p) => p.isBestSeller).length;
-      // const ratings = products.map((p) => p.averageRating).filter(Boolean);
-      // const avgRating = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 4.8;
-      const avgRating = 4.5
-
-      onStatsChange({
-        totalProducts: meta.total || products.length,
-        totalVariants,
-        bestSellerCount,
-        avgRating,
-      });
-    }
-  }, [products, meta, onStatsChange]);
-
   const handleFilterChange = (newFilters: Partial<ProductsFilterState>) => {
-    setFilters((prev) => ({ ...prev, ...newFilters }));
-    setPage(1);
+    updateUrl({
+      ...newFilters,
+      page: 1,
+    });
   };
 
   const handleResetFilters = () => {
-    setFilters(initialFilters);
     setSearchTerm("");
-    setPage(1);
+    router.push(pathname);
   };
 
-  // Columns definition strictly showing TProduct and TVariants data (no inventory/pricing data)
+  // Reusable Column Definitions
   const columns: TColumn<TProduct>[] = [
     {
-      header: "Product Listing",
-      accessor: (prod) => {
-        const thumb =
-          (prod as any).thumbnail ||
-          prod.variants?.[0]?.thumbnail ||
-          prod.variants?.[0]?.images?.[0];
+      header: "Product Title & Brand",
+      accessor: (p) => {
+        const firstVariant = p.variants?.[0];
+        const displayImage = firstVariant?.images?.[0] || "";
 
         return (
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/10 flex items-center justify-center overflow-hidden shrink-0 shadow-sm relative">
-              {thumb ? (
+          <div className="flex items-center gap-3 max-w-sm">
+            <div className="w-12 h-12 rounded-xl bg-slate-900/80 border border-white/15 flex items-center justify-center shrink-0 overflow-hidden relative shadow-sm">
+              {displayImage ? (
                 <img
-                  src={thumb}
-                  alt={prod.title}
+                  src={displayImage}
+                  alt={p.title}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <ImageIcon className="w-5 h-5 text-slate-500" />
               )}
+              {p.isBestSeller && (
+                <div className="absolute top-1 right-1 bg-amber-400 text-slate-950 p-0.5 rounded-full shadow-sm">
+                  <Flame className="w-2.5 h-2.5 fill-current" />
+                </div>
+              )}
             </div>
-            <div className="max-w-[220px] sm:max-w-xs">
-              <div
-                className="font-extrabold text-xs text-white truncate hover:text-amber-400 transition-colors cursor-pointer"
-                title={prod.title}
-                onClick={() => {
-                  setSelectedProductDetails(prod);
-                  setIsDetailsModalOpen(true);
-                }}
-              >
-                {prod.title}
+            <div className="space-y-0.5">
+              <div className="font-extrabold text-xs text-white line-clamp-1">
+                {p.title}
               </div>
-              <div className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-                <span className="font-bold text-amber-400/90 uppercase tracking-wider text-[10px]">
-                  {prod.brand}
+              <div className="text-[10px] text-slate-400 flex items-center gap-1.5">
+                <span className="text-amber-400 font-bold uppercase tracking-wider">
+                  {p.brand}
                 </span>
-                {prod.isBestSeller && (
-                  <span className="badge badge-xs bg-orange-500/10 text-orange-400 border border-orange-500/30 gap-1 font-bold">
-                    <Flame className="w-2.5 h-2.5 fill-orange-400" /> Best Seller
-                  </span>
-                )}
+                <span>•</span>
+                <span className="text-slate-300">
+                  {p.variants?.length || 0} variants
+                </span>
               </div>
             </div>
           </div>
@@ -217,60 +230,54 @@ const ProductsData: React.FC<ProductsDataProps> = ({
       },
     },
     {
-      header: "Department / Category",
-      accessor: (prod) => {
+      header: "Taxonomy",
+      accessor: (p) => {
         const deptName =
-          typeof prod.department === "object"
-            ? prod.department?.name
-            : prod.department || "General";
+          typeof p.department === "object"
+            ? p.department?.name
+            : p.department || "General";
         const catName =
-          typeof prod.category === "object"
-            ? prod.category?.name
-            : prod.category || "Unassigned";
+          typeof p.category === "object"
+            ? p.category?.name
+            : p.category || "Unassigned";
 
         return (
           <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-xs text-slate-200">
-              <Building2 className="w-3 h-3 text-amber-400 shrink-0" />
-              <span className="font-medium truncate max-w-[140px]">{deptName}</span>
+            <div className="text-xs font-bold text-slate-200 flex items-center gap-1">
+              <Building2 className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
+              <span>{deptName}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-              <Layers className="w-3 h-3 text-sky-400 shrink-0" />
-              <span className="truncate max-w-[140px]">{catName}</span>
+            <div className="text-[10px] text-slate-400 flex items-center gap-1">
+              <Layers className="w-3 h-3 text-slate-500 shrink-0" />
+              <span>{catName}</span>
             </div>
           </div>
         );
       },
     },
     {
-      header: "Features & Tags",
-      accessor: (prod) => {
-        const featCount = prod.features?.length || 0;
-        const tags = prod.tags || [];
-
+      header: "Features & Attributes",
+      accessor: (p) => {
+        const count = p.features?.length || 0;
         return (
-          <div className="space-y-1.5 max-w-[200px]">
-            {/* Features summary */}
-            <div className="flex items-center gap-1.5 text-xs text-slate-200">
-              <ListCheck className="w-3 h-3 text-amber-400 shrink-0" />
-              <span className="font-semibold text-slate-200 text-xs">
-                {featCount} {featCount === 1 ? "Feature" : "Features"}
-              </span>
+          <div className="space-y-1">
+            <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <ListCheck className="w-3.5 h-3.5 text-amber-400/80 shrink-0" />
+              <span>{count} Specifications</span>
             </div>
-            {/* Tags preview */}
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {tags.slice(0, 3).map((t, idx) => (
+            {p.tags && p.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 max-w-xs">
+                {p.tags.slice(0, 2).map((t, idx) => (
                   <span
                     key={idx}
-                    className="badge badge-xs bg-amber-400/10 text-amber-400 border border-amber-400/25 text-[9px] font-bold px-1.5 py-0.5"
+                    className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-400 font-medium"
                   >
                     #{t}
                   </span>
                 ))}
-                {tags.length > 3 && (
-                  <span className="text-[9px] text-slate-400 font-bold self-center">
-                    +{tags.length - 3}
+                {p.tags.length > 2 && (
+                  <span className="text-[9px] text-slate-500 font-bold self-center">
+                    +{p.tags.length - 2}
                   </span>
                 )}
               </div>
@@ -280,176 +287,100 @@ const ProductsData: React.FC<ProductsDataProps> = ({
       },
     },
     {
-      header: "SKU & Variants",
-      accessor: (prod) => {
-        const count = prod.variants?.length || 0;
-        const firstVariant = prod.variants?.[0];
-
-        return (
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span
-                className={`badge badge-sm font-bold gap-1 ${count > 0
-                  ? "bg-amber-400/10 text-amber-400 border border-amber-400/30"
-                  : "bg-white/5 text-slate-400 border border-white/10"
-                  }`}
-              >
-                <Boxes className="w-3 h-3" />
-                {count} {count === 1 ? "variant" : "variants"}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedProductVariant(prod);
-                  setIsVariantModalOpen(true);
-                }}
-                className="btn btn-ghost btn-xs text-[10px] text-amber-400 hover:bg-amber-400/10 font-bold px-1.5 rounded-lg cursor-pointer"
-                title="Add SKU Variant"
-              >
-                + Add
-              </button>
-            </div>
-
-            {/* TVariants fields preview: SKU, ASIN, Private Label, Attributes */}
-            {firstVariant && (
-              <div className="space-y-0.5 text-[10px] text-slate-400">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-slate-300 font-semibold text-[10px]">
-                    SKU: {firstVariant.sku || "N/A"}
-                  </span>
-                  {firstVariant.isPrivateLevel && (
-                    <span className="badge badge-xs bg-purple-500/15 border border-purple-500/30 text-purple-400 font-bold text-[9px] px-1">
-                      Private Label
-                    </span>
-                  )}
-                </div>
-                {firstVariant.asin && (
-                  <div className="font-mono text-slate-400 text-[9px]">
-                    ASIN: {firstVariant.asin}
-                  </div>
-                )}
-                {firstVariant.attributes && firstVariant.attributes.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pt-0.5">
-                    {firstVariant.attributes.slice(0, 2).map((a, aIdx) => (
-                      <span
-                        key={aIdx}
-                        className="text-[9px] px-1 py-0.2 rounded bg-white/5 border border-white/10 text-slate-300"
-                      >
-                        {a.type}: {a.value}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+      header: "Created By",
+      accessor: (p) => (
+        <div className="space-y-0.5">
+          <div className="text-xs font-bold text-slate-200">
+            {p.author?.name || "System Administrator"}
           </div>
-        );
-      },
-    },
-    {
-      header: "Author",
-      accessor: (prod) => {
-        const authorName = prod.author?.name || "Super Admin";
-        const authorRole = prod.author?.role || "SUPER_ADMIN";
-        const isSuper = String(authorRole).toUpperCase().includes("SUPER");
-
-        return (
-          <div className="space-y-0.5">
-            <div className="font-bold text-xs text-white flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span className="truncate max-w-[120px]">{authorName}</span>
-            </div>
-            <div className="text-[10px]">
-              <span
-                className={`badge badge-xs font-semibold px-1.5 py-0.5 ${isSuper
-                  ? "bg-amber-400/10 text-amber-400 border border-amber-400/30"
-                  : "bg-indigo-400/10 text-indigo-300 border border-indigo-400/30"
-                  }`}
-              >
-                {String(authorRole).replace(/_/g, " ")}
-              </span>
-            </div>
+          <div className="text-[10px] text-amber-400/90 font-medium flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3 shrink-0" />
+            <span>{p.author?.role || "SUPER_ADMIN"}</span>
           </div>
-        );
-      },
+        </div>
+      ),
     },
     {
       header: "Status",
-      accessor: (prod) =>
-        prod.isDeleted ? (
-          <span className="badge badge-error badge-outline bg-error/10 border-error/30 text-error badge-sm font-bold">
-            Archived
-          </span>
-        ) : (
-          <span className="badge badge-success badge-outline bg-success/10 border-success/30 text-success badge-sm font-bold gap-1">
-            <CheckCircle2 className="w-3 h-3" /> Active
-          </span>
-        ),
+      accessor: (p) => (
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm ${
+            !p.isDeleted
+              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+              : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+          }`}
+        >
+          <CheckCircle2 className="w-3 h-3" />
+          {!p.isDeleted ? "Active" : "Archived"}
+        </span>
+      ),
     },
     {
       header: "Actions",
-      align: "right",
-      accessor: (prod) => (
-        <div className="flex items-center justify-end gap-1.5">
+      accessor: (p) => (
+        <div className="flex items-center gap-2">
+          {/* Quick Details View */}
           <button
             type="button"
             onClick={() => {
-              setSelectedProductDetails(prod);
+              setSelectedProductDetails(p);
               setIsDetailsModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs text-slate-300 hover:text-white hover:bg-white/10 border border-white/10 rounded-lg cursor-pointer transition-all"
-            title="View Details"
+            title="View Product Details"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200 cursor-pointer"
           >
-            <Eye className="w-3 h-3 text-sky-400" />
-            <span className="hidden sm:inline">Details</span>
+            <Eye className="w-3.5 h-3.5" />
           </button>
 
+          {/* Quick Edit Base Details */}
           <button
             type="button"
             onClick={() => {
-              setSelectedProductEdit(prod);
+              setSelectedProductEdit(p);
               setIsEditModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs font-bold text-amber-400 gap-1 hover:bg-amber-400/10 border border-amber-400/20 hover:border-amber-400/40 rounded-lg cursor-pointer transition-all"
-            title="Edit Product"
+            title="Edit Base Metadata"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200 cursor-pointer"
           >
-            <Edit2 className="w-3 h-3" />
-            <span className="hidden sm:inline">Edit</span>
+            <Edit2 className="w-3.5 h-3.5" />
           </button>
 
+          {/* Add Variant to Product */}
           <button
             type="button"
             onClick={() => {
-              setSelectedProductVariant(prod);
+              setSelectedProductVariant(p);
               setIsVariantModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs text-emerald-400 hover:bg-emerald-400/10 border border-emerald-400/20 hover:border-emerald-400/40 rounded-lg cursor-pointer transition-all"
             title="Add Variant"
+            className="p-1.5 rounded-lg bg-amber-400/10 border border-amber-400/20 hover:border-amber-400/40 hover:bg-amber-400/20 text-amber-400 transition-all duration-200 cursor-pointer"
           >
-            <PlusCircle className="w-3 h-3" />
-            <span className="hidden sm:inline">Variant</span>
+            <Boxes className="w-3.5 h-3.5" />
           </button>
         </div>
       ),
     },
   ];
 
+  const currentFilters: ProductsFilterState = {
+    department: departmentParam,
+    category: categoryParam,
+    sort: sortParam,
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Search & Filter Bar */}
+    <div className="space-y-4">
+      {/* FILTER & SEARCH TOOLBAR */}
       <ProductsFilterBar
-        filters={filters}
+        filters={currentFilters}
         onFilterChange={handleFilterChange}
         onReset={handleResetFilters}
         searchTerm={searchTerm}
-        onSearchChange={(val) => {
-          setSearchTerm(val);
-          setPage(1);
-        }}
+        onSearchChange={(val) => setSearchTerm(val)}
       />
 
-      {/* Main Products Directory Table */}
-      <div className="card relative overflow-hidden bg-[#170d2f] shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl [&_.input]:bg-[#120824] [&_.input]:border-white/15 [&_.input]:text-slate-200 [&_.input]:placeholder:text-slate-500 [&_.input:focus]:border-amber-400 [&_thead_th]:text-slate-300 [&_thead_th]:bg-white/[0.03] [&_thead_th]:border-b [&_thead_th]:border-white/10 [&_tbody_tr]:border-b [&_tbody_tr]:border-white/5 [&_tbody_tr:hover]:bg-white/[0.05] [&_tbody_tr]:text-slate-200 [&_.border-base-200]:!border-white/10 [&_.border-base-300]:!border-white/10 [&_.card-title]:!text-white [&_p]:!text-slate-300 [&_.select]:bg-[#120824] [&_.select]:border-white/15 [&_.select]:text-slate-200 [&_.select]:focus:border-amber-400 [&_.join-item.btn-outline]:bg-white/5 [&_.join-item.btn-outline]:border-white/15 [&_.join-item.btn-outline]:text-slate-200 [&_.join-item.btn-outline:hover]:bg-white/10 [&_.join-item.btn-primary]:bg-amber-400 [&_.join-item.btn-primary]:text-slate-950 [&_.join-item.btn-primary]:border-amber-400 [&_strong]:text-amber-400 [&_.btn-square.btn-ghost]:border-white/15 [&_.btn-square.btn-ghost]:bg-white/5 [&_.btn-square.btn-ghost]:text-amber-400 [&_.badge-primary]:bg-amber-400 [&_.badge-primary]:text-slate-950 [&_.badge-primary]:border-none">
+      {/* MAIN DATA TABLE CARD */}
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-4 sm:p-6">
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
 
@@ -463,13 +394,13 @@ const ProductsData: React.FC<ProductsDataProps> = ({
         <div className="relative z-10">
           <AZTable
             title="Product Master Catalog"
-            subtitle="Central directory of all master listings and SKU configurations."
-            badgeText={meta?.total || products.length}
+            subtitle="Global parent product profiles, brand taxonomy, and SKU variations."
+            badgeText={meta?.total ?? products.length}
             icon={<ShoppingBag className="w-5 h-5 text-amber-400" />}
             className="!bg-transparent !shadow-none !border-none text-slate-100"
             data={products}
             columns={columns}
-            keyExtractor={(prod) => prod._id}
+            keyExtractor={(p) => p._id}
             isLoading={isLoading}
             isError={isError}
             errorMessage={(error as any)?.data?.message}
@@ -477,10 +408,7 @@ const ProductsData: React.FC<ProductsDataProps> = ({
             onRefresh={refetch}
             isRefreshing={isFetching}
             searchValue={searchTerm}
-            onSearchChange={(val) => {
-              setSearchTerm(val);
-              setPage(1);
-            }}
+            onSearchChange={(val) => setSearchTerm(val)}
             searchPlaceholder="Search by title, brand, tags..."
             headerActions={
               <button
@@ -497,13 +425,9 @@ const ProductsData: React.FC<ProductsDataProps> = ({
             emptyIcon={<ShoppingBag className="w-6 h-6 text-amber-400" />}
             pagination={{
               page: page,
-              limit: limit,
+              limit: LIMIT,
               total: meta?.total || products.length,
-              onPageChange: (p) => setPage(p),
-              onLimitChange: (l) => {
-                setLimit(l);
-                setPage(1);
-              },
+              onPageChange: (p) => updateUrl({ page: p }),
             }}
           />
         </div>
@@ -512,14 +436,19 @@ const ProductsData: React.FC<ProductsDataProps> = ({
       {/* REUSABLE CREATE PRODUCT MODAL */}
       <Modal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setCreateInitialData(null);
+        }}
         size="lg"
         className="!bg-[#170d2f] !border-white/10 text-slate-100 shadow-2xl relative overflow-hidden rounded-3xl"
       >
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
         <CreateProduct
+          initialData={createInitialData}
           onSuccess={() => {
             setIsCreateModalOpen(false);
+            setCreateInitialData(null);
             refetch();
           }}
         />

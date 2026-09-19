@@ -42,6 +42,13 @@ export interface TShoppingAssistantInput {
   };
 }
 
+export interface TProductComparisonItem {
+  item: string;
+  pros: string[];
+  cons: string[];
+  verdict: string;
+}
+
 export interface TShoppingAssistantOutput {
   reply: string;
   intent: "search" | "comparison" | "recommendation" | "general_inquiry" | "support";
@@ -55,13 +62,37 @@ export interface TShoppingAssistantOutput {
     keyAttributes?: Record<string, string>;
   };
   suggestions: string[];
-  comparisons?: Array<{
-    item: string;
-    pros: string[];
-    cons: string[];
-    verdict: string;
-  }>;
+  comparisons?: TProductComparisonItem[];
   recommendedCategories?: string[];
+}
+
+export interface TReviewModerationInput {
+  reviewText: string;
+  rating: number;
+  productTitle?: string;
+}
+
+export interface TReviewModerationOutput {
+  isAppropriate: boolean;
+  sentiment: "POSITIVE" | "NEUTRAL" | "NEGATIVE" | "MIXED";
+  flaggedReasons: string[];
+  moderationConfidence: number;
+}
+
+export interface TFraudAnalysisInput {
+  userId: string;
+  orderAmount: number;
+  paymentMethod: string;
+  shippingAddress: Record<string, any>;
+  billingAddress: Record<string, any>;
+  recentAttemptsCount?: number;
+}
+
+export interface TFraudAnalysisOutput {
+  riskScore: number;
+  riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  riskFactors: string[];
+  recommendedAction: "ALLOW" | "REVIEW" | "BLOCK";
 }
 
 export interface TDashboardInsightsInput {
@@ -133,8 +164,8 @@ export const aiApi = baseApi.injectEndpoints({
     }),
 
     moderateReview: builder.mutation<
-      { success: boolean; message: string; data: any },
-      { reviewText: string; rating: number; productTitle?: string }
+      { success: boolean; message: string; data: TReviewModerationOutput },
+      TReviewModerationInput
     >({
       query: (payload) => ({
         url: "/ai/review-moderation",
@@ -145,8 +176,8 @@ export const aiApi = baseApi.injectEndpoints({
     }),
 
     analyzeFraudRisk: builder.mutation<
-      { success: boolean; message: string; data: any },
-      any
+      { success: boolean; message: string; data: TFraudAnalysisOutput },
+      TFraudAnalysisInput
     >({
       query: (payload) => ({
         url: "/ai/fraud-analysis",

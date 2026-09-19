@@ -13,6 +13,7 @@ import { QuickStatsStrip } from "@/src/components/ui/analistics/admin/summary/Qu
 import { ConciseChartsRow } from "@/src/components/ui/analistics/admin/summary/ConciseChartsRow";
 import { RecentOrdersTable } from "@/src/components/ui/analistics/admin/summary/RecentOrdersTable";
 import { RecentNotificationsWidget } from "@/src/components/ui/analistics/admin/summary/RecentNotificationsWidget";
+import { AiDashboardInsightsWidget } from "@/src/components/ui/ai/AiDashboardInsightsWidget";
 
 const AdminDashboard: React.FC = () => {
   const [selectedRange, setSelectedRange] = useState<TDashboardDateRange>("30_days");
@@ -97,6 +98,30 @@ const AdminDashboard: React.FC = () => {
       {/* Main Dashboard Summary Sections */}
       {statsData && !isLoading && (
         <>
+          {/* AI Executive Intelligence Widget */}
+          <div id="ai-insights" className="scroll-mt-6">
+            <AiDashboardInsightsWidget
+              stats={{
+                overviewCards: statsData.overviewCards,
+                users: statsData.users,
+                products: statsData.products,
+                inventory: statsData.inventory,
+                reviews: statsData.reviews,
+                marketplaceHealth: statsData.marketplaceHealth,
+                recentOrdersCount: statsData.recentActivities?.recentOrders?.length || 0,
+                selectedRange,
+              }}
+              role="ADMIN"
+              defaultTimeframe={
+                selectedRange === "7_days"
+                  ? "weekly"
+                  : selectedRange === "12_months"
+                  ? "yearly"
+                  : "monthly"
+              }
+            />
+          </div>
+
           {/* 2. Total Revenue: Gross Revenue, Commission, and Revenue Excluding Commission */}
           <RevenueBreakdownCard overviewCards={statsData.overviewCards} />
 

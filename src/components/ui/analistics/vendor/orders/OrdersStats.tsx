@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { Clock, Package, Truck, CheckCircle2, XCircle } from "lucide-react";
 import { useMyOrdersQuery } from "@/src/redux/features/order/orderApi";
 
@@ -28,40 +28,30 @@ const OrdersStats = ({
     { refetchOnMountOrArgChange: false }
   );
 
-  const counts = useMemo(() => {
-    const rawOrders = apiResponse?.data;
-    if (Array.isArray(rawOrders)) {
-      let pending = 0;
-      let unshipped = 0;
-      let shipped = 0;
-      let delivered = 0;
-      let canceled = 0;
+  const rawOrders = apiResponse?.data;
+  const counts = {
+    pending: totalPending ?? 0,
+    unshipped: totalUnshipped ?? 0,
+    shipped: totalShipped ?? 0,
+    delivered: totalDelivered ?? 0,
+    canceled: totalCanceled ?? 0,
+  };
 
-      rawOrders.forEach((ord: any) => {
-        const s = ord.status?.toUpperCase();
-        if (s === "PENDING") pending++;
-        else if (s === "UNSHIPPED") unshipped++;
-        else if (s === "SHIPPED") shipped++;
-        else if (s === "DELIVERED") delivered++;
-        else if (s === "CANCELLED" || s === "CANCELED") canceled++;
-      });
-
-      return {
-        pending,
-        unshipped,
-        shipped,
-        delivered,
-        canceled,
-      };
+  if (Array.isArray(rawOrders)) {
+    counts.pending = 0;
+    counts.unshipped = 0;
+    counts.shipped = 0;
+    counts.delivered = 0;
+    counts.canceled = 0;
+    for (const ord of rawOrders) {
+      const s = ord.status?.toUpperCase();
+      if (s === "PENDING") counts.pending++;
+      else if (s === "UNSHIPPED") counts.unshipped++;
+      else if (s === "SHIPPED") counts.shipped++;
+      else if (s === "DELIVERED") counts.delivered++;
+      else if (s === "CANCELLED" || s === "CANCELED") counts.canceled++;
     }
-    return {
-      pending: totalPending ?? 0,
-      unshipped: totalUnshipped ?? 0,
-      shipped: totalShipped ?? 0,
-      delivered: totalDelivered ?? 0,
-      canceled: totalCanceled ?? 0,
-    };
-  }, [apiResponse, totalPending, totalUnshipped, totalShipped, totalDelivered, totalCanceled]);
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">

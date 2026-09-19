@@ -11,11 +11,12 @@ const inventoryApi = baseApi.injectEndpoints({
       providesTags: ["inventory"],
     }),
     getMyInventory: builder.query({
-      query: (params) => {
+      query: (params?: { search?: string; sort?: string; page?: number | string; limit?: number | string }) => {
         const queryParams = new URLSearchParams();
         if (params?.search) queryParams.append("searchTerm", params.search);
+        if (params?.sort) queryParams.append("sort", params.sort);
         if (params?.page) queryParams.append("page", String(params.page));
-        if (params?.limit) queryParams.append("limit", String(params.limit));
+        if (params?.limit !== undefined && params?.limit !== null) queryParams.append("limit", String(params.limit));
 
         return {
           url: `/inventories/my-inventory?${queryParams.toString()}`,

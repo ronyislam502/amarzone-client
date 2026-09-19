@@ -60,20 +60,21 @@ const CreateAdminModal = ({
   };
 
   const onSubmit = async (data: FieldValues) => {
-    if (!data.name || !data.email || !data.phone) {
+    const adminData = {
+      password: data.password || "admin123",
+      admin: {
+        name: data.name?.trim(),
+        email: data.email?.trim(),
+        phone: data.phone?.trim(),
+      },
+    };
+
+    if (!adminData.admin.name || !adminData.admin.email || !adminData.admin.phone) {
       toast.error("Please fill in Name, Email, and Phone");
       return;
     }
 
     try {
-      const adminData = {
-        password: data.password || "admin123",
-        admin: {
-          name: data.name.trim(),
-          email: data.email.trim(),
-          phone: data.phone.trim(),
-        },
-      };
 
       const formData = new FormData();
       formData.append("data", JSON.stringify(adminData));

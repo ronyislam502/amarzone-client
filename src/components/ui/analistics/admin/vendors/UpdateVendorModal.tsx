@@ -26,21 +26,21 @@ const UpdateVendorModal = ({
   if (!isOpen || !vendor) return null;
 
   const onSubmit = async (data: FieldValues) => {
-    try {
-      const payload = {
-        name: data.name,
-        phone: data.phone,
-        address: {
-          street: data.street || vendor.address?.street || "",
-          state: data.state || vendor.address?.state || "",
-          postalCode: data.postalCode || vendor.address?.postalCode || "",
-          country: data.country || vendor.address?.country || "",
-        },
-      };
+    const vendorData = {
+      name: data.name,
+      phone: data.phone,
+      address: {
+        street: data.street || vendor.address?.street || "",
+        state: data.state || vendor.address?.state || "",
+        postalCode: data.postalCode || vendor.address?.postalCode || "",
+        country: data.country || vendor.address?.country || "",
+      },
+    };
 
+    try {
       const res = await updateVendor({
         id: vendor._id,
-        data: payload,
+        data: vendorData,
       }).unwrap();
 
       if (res?.success) {

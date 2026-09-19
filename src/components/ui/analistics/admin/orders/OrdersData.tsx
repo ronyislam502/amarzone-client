@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useAllOrdersQuery } from "@/src/redux/features/order/orderApi";
 import { TOrder } from "@/src/types/order";
 import { TColumn } from "@/src/types/table";
@@ -27,38 +27,56 @@ import { toast } from "react-toastify";
 
 export interface OrdersDataProps {
   onOrdersLoaded?: (orders: TOrder[]) => void;
+  registerExportHandler?: (handler: () => void) => void;
+  registerRefreshHandler?: (handler: () => void) => void;
 }
 
-export const OrdersData: React.FC<OrdersDataProps> = ({ onOrdersLoaded }) => {
+const LIMIT = 10;
+
+export const OrdersData: React.FC<OrdersDataProps> = ({
+  registerExportHandler,
+  registerRefreshHandler,
+}) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrderStatus, setSelectedOrderStatus] = useState("ALL");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("ALL");
   const [sortBy, setSortBy] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
-  const [limitPerPage, setLimitPerPage] = useState(10);
   const [copiedOrderNo, setCopiedOrderNo] = useState<string | null>(null);
 
   // Selected Order for Modal Details
   const [selectedOrder, setSelectedOrder] = useState<TOrder | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  // Fetch orders from API
+  // Convert sort key to Mongoose sort string for QueryBuilder
+  const sortParam =
+    sortBy === "oldest"
+      ? "createdAt"
+      : sortBy === "highest_amount"
+      ? "-totalPrice"
+      : sortBy === "lowest_amount"
+      ? "totalPrice"
+      : "-createdAt";
+
+  // Server-side query matching the CategoriesData pattern
   const {
     data: ordersResponse,
     isLoading,
     isError,
+    error,
     refetch,
     isFetching,
-  } = useAllOrdersQuery({});
+  } = useAllOrdersQuery({
+    search: searchTerm.trim() || undefined,
+    page: String(currentPage),
+    limit: String(LIMIT),
+    status: selectedOrderStatus !== "ALL" ? selectedOrderStatus : undefined,
+    paymentStatus: selectedPaymentStatus !== "ALL" ? selectedPaymentStatus : undefined,
+    sort: sortParam,
+  });
 
-  const allOrdersList: TOrder[] = useMemo(() => {
-    const list = ordersResponse?.data || [];
-    if (onOrdersLoaded && list.length > 0) {
-      onOrdersLoaded(list);
-    }
-    return list;
-  }, [ordersResponse, onOrdersLoaded]);
-
+  const ordersList: TOrder[] = ordersResponse?.data || [];
+  const meta = ordersResponse?.meta;
 
   // Handle Copy Order Number
   const handleCopyOrderNo = (orderNo: string, e: React.MouseEvent) => {
@@ -74,74 +92,6 @@ export const OrdersData: React.FC<OrdersDataProps> = ({ onOrdersLoaded }) => {
     }
   };
 
-  // Filter and sort orders
-  const filteredOrders = useMemo(() => {
-    let result = [...allOrdersList];
-
-    // Search filter
-    if (searchTerm.trim()) {
-      const lower = searchTerm.toLowerCase().trim();
-      result = result.filter((order) => {
-        const orderNo = order.orderNo?.toLowerCase() || "";
-        const customerName = order.customer?.name?.toLowerCase() || "";
-        const customerEmail = order.customer?.email?.toLowerCase() || "";
-        const vendorName = order.vendor?.name?.toLowerCase() || "";
-        const vendorEmail = order.vendor?.email?.toLowerCase() || "";
-        const transactionId = order.transactionId?.toLowerCase() || "";
-
-        return (
-          orderNo.includes(lower) ||
-          customerName.includes(lower) ||
-          customerEmail.includes(lower) ||
-          vendorName.includes(lower) ||
-          vendorEmail.includes(lower) ||
-          transactionId.includes(lower)
-        );
-      });
-    }
-
-    // Order status filter
-    if (selectedOrderStatus !== "ALL") {
-      result = result.filter(
-        (order) => order.status?.toUpperCase() === selectedOrderStatus
-      );
-    }
-
-    // Payment status filter
-    if (selectedPaymentStatus !== "ALL") {
-      result = result.filter(
-        (order) => order.paymentStatus?.toUpperCase() === selectedPaymentStatus
-      );
-    }
-
-    // Sort
-    if (sortBy === "oldest") {
-      result.sort(
-        (a, b) =>
-          new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime()
-      );
-    } else if (sortBy === "highest_amount") {
-      result.sort((a, b) => (b.totalPrice || 0) - (a.totalPrice || 0));
-    } else if (sortBy === "lowest_amount") {
-      result.sort((a, b) => (a.totalPrice || 0) - (b.totalPrice || 0));
-    } else {
-      // newest first
-      result.sort(
-        (a, b) =>
-          new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
-      );
-    }
-
-    return result;
-  }, [allOrdersList, searchTerm, selectedOrderStatus, selectedPaymentStatus, sortBy]);
-
-  // Client-side pagination slicing
-  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / limitPerPage));
-  const paginatedOrders = useMemo(() => {
-    const start = (currentPage - 1) * limitPerPage;
-    return filteredOrders.slice(start, start + limitPerPage);
-  }, [filteredOrders, currentPage, limitPerPage]);
-
   const handleResetFilters = () => {
     setSearchTerm("");
     setSelectedOrderStatus("ALL");
@@ -149,6 +99,76 @@ export const OrdersData: React.FC<OrdersDataProps> = ({ onOrdersLoaded }) => {
     setSortBy("newest");
     setCurrentPage(1);
   };
+
+  // CSV Export handler
+  const handleExportCsv = useCallback(() => {
+    if (ordersList.length === 0) {
+      toast.info("No orders available to export.");
+      return;
+    }
+
+    const headers = [
+      "Order Number",
+      "Customer Name",
+      "Customer Email",
+      "Vendor Name",
+      "Vendor Email",
+      "Total Quantity",
+      "Gross Total ($)",
+      "Commission ($)",
+      "Vendor Amount ($)",
+      "Order Status",
+      "Payment Status",
+      "Transaction ID",
+      "Date Placed",
+    ];
+
+    const rows = ordersList.map((order) => [
+      `"${order.orderNo || ""}"`,
+      `"${order.customer?.name || ""}"`,
+      `"${order.customer?.email || ""}"`,
+      `"${order.vendor?.name || ""}"`,
+      `"${order.vendor?.email || ""}"`,
+      order.totalQuantity || 0,
+      (order.totalPrice || 0).toFixed(2),
+      (order.commission || 0).toFixed(2),
+      (order.vendorAmount || 0).toFixed(2),
+      `"${order.status || ""}"`,
+      `"${order.paymentStatus || ""}"`,
+      `"${order.transactionId || ""}"`,
+      `"${order.createdAt ? new Date(order.createdAt).toISOString() : ""}"`,
+    ]);
+
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `amarzone_orders_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success(`Exported ${ordersList.length} orders to CSV!`, {
+      position: "bottom-right",
+      autoClose: 2000,
+    });
+  }, [ordersList]);
+
+  // Register export and refresh handlers with parent
+  useEffect(() => {
+    if (registerExportHandler) {
+      registerExportHandler(handleExportCsv);
+    }
+  }, [registerExportHandler, handleExportCsv]);
+
+  useEffect(() => {
+    if (registerRefreshHandler) {
+      registerRefreshHandler(() => refetch());
+    }
+  }, [registerRefreshHandler, refetch]);
 
   // Column definitions for AZTable
   const columns: TColumn<TOrder>[] = [
@@ -374,7 +394,10 @@ export const OrdersData: React.FC<OrdersDataProps> = ({ onOrdersLoaded }) => {
             setCurrentPage(1);
           }}
           sortBy={sortBy}
-          onSortChange={setSortBy}
+          onSortChange={(s) => {
+            setSortBy(s);
+            setCurrentPage(1);
+          }}
           onResetFilters={handleResetFilters}
         />
 
@@ -382,15 +405,16 @@ export const OrdersData: React.FC<OrdersDataProps> = ({ onOrdersLoaded }) => {
         <div className="relative z-10">
           <AZTable<TOrder>
             title="Marketplace Orders Directory"
-            subtitle={`Displaying ${filteredOrders.length} matching order records`}
+            subtitle={`Displaying ${meta?.total ?? ordersList.length} matching order records`}
             icon={<ShoppingBag className="w-5 h-5 text-amber-400" />}
-            badgeText={`${filteredOrders.length} Orders`}
+            badgeText={`${meta?.total ?? ordersList.length} Orders`}
             className="!bg-transparent !shadow-none !border-none text-slate-100"
             columns={columns}
-            data={paginatedOrders}
+            data={ordersList}
             keyExtractor={(order) => order._id}
             isLoading={isLoading}
             isError={isError}
+            errorMessage={(error as any)?.data?.message}
             onRefresh={refetch}
             isRefreshing={isFetching}
             emptyTitle="No Orders Found"
@@ -406,13 +430,9 @@ export const OrdersData: React.FC<OrdersDataProps> = ({ onOrdersLoaded }) => {
             }
             pagination={{
               page: currentPage,
-              limit: limitPerPage,
-              total: filteredOrders.length,
+              limit: LIMIT,
+              total: meta?.total ?? ordersList.length,
               onPageChange: setCurrentPage,
-              onLimitChange: (newLimit) => {
-                setLimitPerPage(newLimit);
-                setCurrentPage(1);
-              },
             }}
           />
         </div>

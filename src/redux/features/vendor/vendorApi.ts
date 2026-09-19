@@ -5,11 +5,13 @@ import { TVendor } from "@/types/vendor";
 const vendorApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     allVendors: builder.query({
-      query: (params) => {
+      query: (params?: { search?: string; sort?: string; status?: string; page?: number | string; limit?: number | string }) => {
         const urlParams = new URLSearchParams();
         if (params?.search) urlParams.append("searchTerm", params.search);
+        if (params?.sort) urlParams.append("sort", params.sort);
+        if (params?.status) urlParams.append("status", params.status);
         if (params?.page) urlParams.append("page", String(params.page));
-        if (params?.limit) urlParams.append("limit", String(params.limit));
+        if (params?.limit !== undefined && params?.limit !== null) urlParams.append("limit", String(params.limit));
         return { url: "/vendors", method: "GET", params: urlParams };
       },
       providesTags: ["vendor"],

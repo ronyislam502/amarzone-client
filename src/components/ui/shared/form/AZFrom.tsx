@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
+import { FormProvider, SubmitHandler, useForm, UseFormReturn } from "react-hook-form";
 
 
 interface formConfig {
@@ -10,9 +10,10 @@ interface formConfig {
 interface IProps extends formConfig {
     children: ReactNode;
     onSubmit: SubmitHandler<any>;
+    methods?: UseFormReturn<any>;
 }
 
-const AZForm = ({ children, onSubmit, defaultValues, resolver }: IProps) => {
+const AZForm = ({ children, onSubmit, defaultValues, resolver, methods: externalMethods }: IProps) => {
     const formConfig: formConfig = {};
 
     if (defaultValues) {
@@ -23,7 +24,8 @@ const AZForm = ({ children, onSubmit, defaultValues, resolver }: IProps) => {
         formConfig["resolver"] = resolver;
     }
 
-    const methods = useForm(formConfig);
+    const internalMethods = useForm(formConfig);
+    const methods = externalMethods || internalMethods;
 
     const submitHandler = methods.handleSubmit;
 

@@ -116,6 +116,15 @@ export const AdminSummaryHeader: React.FC<AdminSummaryHeaderProps> = ({
             <span className="hidden sm:inline">Refresh</span>
           </button>
 
+          {/* AI Executive Briefing Trigger */}
+          <a
+            href="#ai-insights"
+            className="btn btn-sm gap-1.5 font-black bg-gradient-to-r from-violet-600 via-purple-600 to-amber-500 hover:from-violet-500 hover:to-amber-400 text-white border-0 rounded-xl shadow-lg shadow-purple-600/20 cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <span>AI Briefing</span>
+          </a>
+
           {/* Link to Full Analytics */}
           <Link
             href="/admin/analytics"

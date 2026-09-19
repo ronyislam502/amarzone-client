@@ -15,6 +15,7 @@ import {
     Key,
     Server,
     Building2,
+    MessageSquare,
 } from "lucide-react";
 
 export const superAdminSidebarItems = [
@@ -130,6 +131,12 @@ export const superAdminSidebarItems = [
                     text: "3 Open",
                     className: "badge-error",
                 },
+            },
+            {
+                label: "Support Chat",
+                href: "/admin/chat",
+                icon: MessageSquare,
+                iconClass: "text-accent",
             },
         ],
     },

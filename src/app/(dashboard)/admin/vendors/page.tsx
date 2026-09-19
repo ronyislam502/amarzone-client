@@ -1,50 +1,28 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, Suspense } from "react";
 import VendorsBread from "@/src/components/ui/analistics/admin/vendors/VendorsBread";
 import VendorsHeader from "@/src/components/ui/analistics/admin/vendors/VendorsHeader";
 import VendorsStats from "@/src/components/ui/analistics/admin/vendors/VendorsStats";
-import VendorsData, { VendorsStatsData } from "@/src/components/ui/analistics/admin/vendors/VendorsData";
+import VendorsData from "@/src/components/ui/analistics/admin/vendors/VendorsData";
+import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi";
 
-const VendorsPage = () => {
-  const [stats, setStats] = useState<VendorsStatsData>({
-    totalVendors: 0,
-    activeVendors: 0,
-    newVendorsCount: 0,
-  });
+function VendorsPageContent() {
+  const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
 
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const exportCsvRef = useRef<(() => void) | null>(null);
+  const {
+    data: statsResponse,
+    refetch: refetchStats,
+    isFetching: isFetchingStats,
+  } = useDashboardStatsQuery({ range: "30_days" });
 
-  const handleExportCsv = () => {
-    if (exportCsvRef.current) {
-      exportCsvRef.current();
-    }
-  };
+  const totalVendors = statsResponse?.data?.users?.totalVendors ?? 0;
+  const activeVendors = statsResponse?.data?.users?.activeVendors ?? totalVendors;
+  const newVendorsCount = statsResponse?.data?.users?.newUsersThisMonth ?? 0;
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 600);
+    refetchStats();
   };
-
-  const handleStatsChange = useCallback((newStats: VendorsStatsData) => {
-    setStats((prev) => {
-      if (
-        prev.totalVendors === newStats.totalVendors &&
-        prev.activeVendors === newStats.activeVendors &&
-        prev.newVendorsCount === newStats.newVendorsCount
-      ) {
-        return prev;
-      }
-      return newStats;
-    });
-  }, []);
-
-  const handleRegisterExport = useCallback((handler: () => void) => {
-    exportCsvRef.current = handler;
-  }, []);
 
   return (
     <div className="space-y-6 w-full pb-10">
@@ -53,25 +31,30 @@ const VendorsPage = () => {
 
       {/* Hero Header & Primary Actions */}
       <VendorsHeader
-        onExportCsv={handleExportCsv}
+        onExportCsv={exportHandler ? () => exportHandler() : undefined}
         onRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
+        isRefreshing={isFetchingStats}
       />
 
       {/* KPI Stats Overview Cards */}
       <VendorsStats
-        totalVendors={stats.totalVendors}
-        activeVendors={stats.activeVendors}
-        newVendorsCount={stats.newVendorsCount}
+        totalVendors={totalVendors}
+        activeVendors={activeVendors}
+        newVendorsCount={newVendorsCount}
       />
 
       {/* Interactive Vendors Data Table with Filters & Modals */}
       <VendorsData
-        onStatsChange={handleStatsChange}
-        registerExportHandler={handleRegisterExport}
+        registerExportHandler={(handler) => setExportHandler(() => handler)}
       />
     </div>
   );
-};
+}
 
-export default VendorsPage;
+export default function VendorsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading vendors...</div>}>
+      <VendorsPageContent />
+    </Suspense>
+  );
+}

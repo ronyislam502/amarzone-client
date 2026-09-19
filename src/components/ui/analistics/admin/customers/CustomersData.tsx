@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Users,
   Eye,
@@ -37,21 +38,47 @@ interface CustomersDataProps {
   registerExportHandler?: (handler: () => void) => void;
 }
 
-const initialFilters: CustomersFilterState = {
-  status: "",
-  country: "",
-  sort: "",
-};
+const LIMIT = 10;
 
 const CustomersData = ({
-  onStatsChange,
   registerExportHandler,
 }: CustomersDataProps) => {
-  const [search, setSearch] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // URL-driven query state
+  const page = Number(searchParams.get("page")) || 1;
+  const statusParam = searchParams.get("status") || "";
+  const sortParam = searchParams.get("sort") || "";
+  const countryParam = searchParams.get("country") || "";
+  const urlSearch = searchParams.get("search") || "";
+
+  // Local search input state before debounce
+  const [search, setSearch] = useState(urlSearch);
   const debouncedSearch = useDebounce(search, 500);
-  const [filters, setFilters] = useState<CustomersFilterState>(initialFilters);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+
+  // Sync debounced search with URL
+  const updateUrl = useCallback(
+    (updates: Record<string, string | number | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams]
+  );
+
+  useEffect(() => {
+    if (debouncedSearch.trim() !== urlSearch) {
+      updateUrl({ search: debouncedSearch.trim() || null, page: 1 });
+    }
+  }, [debouncedSearch, urlSearch, updateUrl]);
 
   // Modal states
   const [selectedViewCustomer, setSelectedViewCustomer] = useState<TCustomer | null>(null);
@@ -59,6 +86,15 @@ const CustomersData = ({
 
   const [selectedEditCustomer, setSelectedEditCustomer] = useState<TCustomer | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const apiSort =
+    sortParam === "name_asc"
+      ? "name"
+      : sortParam === "name_desc"
+      ? "-name"
+      : sortParam === "oldest"
+      ? "createdAt"
+      : "-createdAt";
 
   // Queries & Mutations
   const {
@@ -69,102 +105,20 @@ const CustomersData = ({
     refetch,
     isFetching,
   } = useAllCustomersQuery({
-    search: debouncedSearch.trim() || undefined,
-    page,
-    limit,
+    search: urlSearch || undefined,
+    page: String(page),
+    limit: String(LIMIT),
+    status: statusParam || undefined,
+    sort: apiSort,
   });
 
   const [deleteCustomer] = useDeleteCustomerMutation();
 
-  const rawCustomers: TCustomer[] = responseData?.data || [];
+  const customers: TCustomer[] = responseData?.data || [];
   const meta = responseData?.meta;
 
-  // Filter and sort locally
-  const customers = useMemo(() => {
-    let result = [...rawCustomers];
-
-    if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.name?.toLowerCase().includes(q) ||
-          c.email?.toLowerCase().includes(q) ||
-          c.phone?.toLowerCase().includes(q) ||
-          c.address?.country?.toLowerCase().includes(q)
-      );
-    }
-
-    if (filters.status === "active") {
-      result = result.filter((c) => !c.isDeleted);
-    } else if (filters.status === "inactive") {
-      result = result.filter((c) => c.isDeleted);
-    }
-
-    if (filters.country) {
-      const fCountry = filters.country.toLowerCase();
-      const euCountries = [
-        "germany", "france", "italy", "spain", "netherlands", "sweden",
-        "poland", "belgium", "austria", "ireland", "denmark", "portugal",
-        "finland", "czech republic", "greece", "romania", "hungary", "luxembourg",
-        "slovakia", "croatia", "estonia", "latvia", "lithuania", "slovenia", "cyprus"
-      ];
-
-      result = result.filter((c) => {
-        const cCountry = (c.address?.country || "").toLowerCase();
-        if (fCountry === "european union" || fCountry === "eu") {
-          return euCountries.includes(cCountry);
-        }
-        if (fCountry === "bd" || fCountry === "bangladesh") {
-          return cCountry === "bd" || cCountry === "bangladesh";
-        }
-        if (fCountry === "usa" || fCountry === "united states") {
-          return cCountry === "usa" || cCountry === "united states";
-        }
-        if (fCountry === "ca" || fCountry === "canada") {
-          return cCountry === "ca" || cCountry === "canada";
-        }
-        return cCountry === fCountry;
-      });
-    }
-
-    if (filters.sort === "name_asc") {
-      result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    } else if (filters.sort === "name_desc") {
-      result.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
-    } else if (filters.sort === "oldest") {
-      result.sort(
-        (a, b) =>
-          new Date(a.createdAt || "").getTime() -
-          new Date(b.createdAt || "").getTime()
-      );
-    }
-
-    return result;
-  }, [rawCustomers, debouncedSearch, filters]);
-
-  const onStatsChangeRef = useRef(onStatsChange);
-  useEffect(() => {
-    onStatsChangeRef.current = onStatsChange;
-  }, [onStatsChange]);
-
-  // Compute stats to emit upward
-  useEffect(() => {
-    if (!responseData?.data || !onStatsChangeRef.current) return;
-    const items = (responseData.data as TCustomer[]) || [];
-    const activeCount = items.filter((c) => !c.isDeleted).length;
-    const verifiedCount = items.filter(
-      (c) => c.phone && c.address?.street
-    ).length;
-
-    onStatsChangeRef.current({
-      totalCustomers: meta?.total ?? items.length,
-      activeCustomers: activeCount,
-      verifiedProfiles: verifiedCount,
-    });
-  }, [responseData?.data, meta?.total]);
-
   // CSV Export logic
-  const handleExportCsv = () => {
+  const handleExportCsv = useCallback(() => {
     if (!customers || customers.length === 0) return;
 
     const headers = [
@@ -207,18 +161,11 @@ const CustomersData = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleExportCsvRef = useRef(handleExportCsv);
-  useEffect(() => {
-    handleExportCsvRef.current = handleExportCsv;
   }, [customers]);
 
   useEffect(() => {
-    if (registerExportHandler) {
-      registerExportHandler(() => handleExportCsvRef.current());
-    }
-  }, [registerExportHandler]);
+    registerExportHandler?.(handleExportCsv);
+  }, [registerExportHandler, handleExportCsv]);
 
   const handleDeleteCustomer = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to suspend customer account "${name}"?`)) {
@@ -227,156 +174,167 @@ const CustomersData = ({
 
     try {
       const res = await deleteCustomer(id).unwrap();
-      toast.success(res?.message || "Customer account suspended successfully");
-      refetch();
+      if (res.success) {
+        toast.success(`Customer "${name}" suspended successfully`);
+        refetch();
+      } else {
+        toast.error(res.message || "Failed to suspend customer");
+      }
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to suspend customer account");
     }
   };
 
-  // Table Columns Definition
+  const handleFilterChange = (newFilters: Partial<CustomersFilterState>) => {
+    updateUrl({
+      ...newFilters,
+      page: 1,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearch("");
+    router.push(pathname);
+  };
+
+  // Columns definition
   const columns: TColumn<TCustomer>[] = [
     {
-      header: "Customer Profile",
+      header: "Customer",
       accessor: (customer) => (
-        <div className="flex items-center gap-3 max-w-sm">
-          <div className="w-12 h-12 rounded-xl bg-[#120824] border border-white/10 flex items-center justify-center shrink-0 overflow-hidden relative shadow-sm">
-            {customer.avatar ? (
-              <img
-                src={customer.avatar}
-                alt={customer.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-amber-400/10 text-amber-400 flex items-center justify-center font-bold text-sm">
-                {customer.name?.charAt(0)?.toUpperCase() || "C"}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center text-amber-400 shrink-0 shadow-sm font-black text-sm">
+            {customer.name?.charAt(0).toUpperCase() || "C"}
+          </div>
+          <div>
+            <div className="font-extrabold text-xs text-white">
+              {customer.name}
+            </div>
+            <div className="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5">
+              <Mail className="w-3 h-3 text-amber-400/80 shrink-0" />
+              <span>{customer.email}</span>
+            </div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: "Contact & Phone",
+      accessor: (customer) => (
+        <div className="text-[11px] text-slate-300 flex items-center gap-1.5 font-medium">
+          <Phone className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
+          <span>{customer.phone || "No phone provided"}</span>
+        </div>
+      ),
+    },
+    {
+      header: "Shipping Destination",
+      accessor: (customer) => {
+        const addr = customer.address;
+        if (!addr || (!addr.state && !addr.country && !addr.street)) {
+          return (
+            <span className="text-[11px] text-slate-500 italic">
+              Address not set
+            </span>
+          );
+        }
+        return (
+          <div className="text-[11px] text-slate-300 max-w-[200px] truncate">
+            <div className="flex items-center gap-1 text-slate-200 font-semibold truncate">
+              <MapPin className="w-3 h-3 text-amber-400/80 shrink-0" />
+              <span>
+                {addr.state || ""}
+                {addr.country ? ` (${addr.country})` : ""}
+              </span>
+            </div>
+            {addr.street && (
+              <div className="text-[10px] text-slate-400 truncate pl-4">
+                {addr.street}
               </div>
             )}
           </div>
-          <div className="min-w-0 space-y-0.5">
-            <div
-              className="font-extrabold text-xs text-white line-clamp-1 hover:text-amber-400 transition-colors cursor-pointer"
-              onClick={() => {
-                setSelectedViewCustomer(customer);
-                setIsViewModalOpen(true);
-              }}
-            >
-              {customer.name}
-            </div>
-            <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-              <span className="badge badge-warning badge-xs font-black text-slate-950 px-1.5 py-0.5">
-                Shopper
-              </span>
-              <span className="truncate max-w-[140px]">{customer.email}</span>
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Contact Details",
-      accessor: (customer) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-200">
-            <Phone className="w-3 h-3 text-amber-400 shrink-0" />
-            <span className="truncate">{customer.phone || "No phone listed"}</span>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-slate-400">
-            <Mail className="w-3 h-3 text-slate-400 shrink-0" />
-            <a
-              href={`mailto:${customer.email}`}
-              className="text-slate-300 hover:text-amber-400 hover:underline truncate max-w-[140px]"
-            >
-              {customer.email}
-            </a>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Default Shipping Address",
-      accessor: (customer) => (
-        <div className="space-y-0.5 text-xs max-w-[180px]">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-200 truncate">
-            <MapPin className="w-3 h-3 text-emerald-400 shrink-0" />
-            <span className="truncate">
-              {customer.address?.street || "Street Unassigned"}
-            </span>
-          </div>
-          <div className="text-[10px] text-slate-400 pl-4 truncate">
-            {[customer.address?.state, customer.address?.country]
-              .filter(Boolean)
-              .join(", ") || "Location unassigned"}
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: "Status",
-      accessor: (customer) =>
-        !customer.isDeleted ? (
-          <span className="badge badge-sm font-bold gap-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <CheckCircle2 className="w-3 h-3" /> Active
+      accessor: (customer) => {
+        const isSuspended = customer.isDeleted;
+        return (
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm ${
+              !isSuspended
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+            }`}
+          >
+            {!isSuspended ? (
+              <>
+                <CheckCircle2 className="w-3 h-3" />
+                Active
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-3 h-3" />
+                Suspended
+              </>
+            )}
           </span>
-        ) : (
-          <span className="badge badge-sm font-bold gap-1 bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <AlertTriangle className="w-3 h-3" /> Suspended
-          </span>
-        ),
+        );
+      },
     },
     {
-      header: "Registered",
-      accessor: (customer) => (
-        <div className="flex items-center gap-1 text-[11px] text-slate-300">
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span>
-            {customer.createdAt
-              ? new Date(customer.createdAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              })
-              : "N/A"}
-          </span>
-        </div>
-      ),
+      header: "Joined Date",
+      accessor: (customer) => {
+        const dateStr = customer.createdAt
+          ? new Date(customer.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "N/A";
+
+        return (
+          <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+            <Calendar className="w-3 h-3 text-slate-500 shrink-0" />
+            <span>{dateStr}</span>
+          </div>
+        );
+      },
     },
     {
       header: "Actions",
-      align: "right",
       accessor: (customer) => (
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center gap-2">
+          {/* Quick View */}
           <button
-            type="button"
-            title="View Profile Details"
             onClick={() => {
               setSelectedViewCustomer(customer);
               setIsViewModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs font-bold text-sky-400 gap-1 hover:bg-sky-500/10 border border-sky-500/20 hover:border-sky-500/40 rounded-lg cursor-pointer transition-all"
+            title="View Details"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200"
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>View</span>
           </button>
 
+          {/* Quick Edit */}
           <button
-            type="button"
-            title="Edit Customer Profile"
             onClick={() => {
               setSelectedEditCustomer(customer);
               setIsEditModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs font-bold text-amber-400 gap-1 hover:bg-amber-400/10 border border-amber-400/20 hover:border-amber-400/40 rounded-lg cursor-pointer transition-all"
+            title="Edit Customer"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200"
           >
             <Edit2 className="w-3.5 h-3.5" />
-            <span>Edit</span>
           </button>
 
+          {/* Delete / Suspend */}
           <button
-            type="button"
-            title="Suspend / Delete Account"
             onClick={() => handleDeleteCustomer(customer._id, customer.name)}
-            className="btn btn-ghost btn-xs font-bold text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 hover:border-rose-500/40 rounded-lg cursor-pointer transition-all"
+            title="Suspend Account"
+            className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-500/20 text-rose-400 transition-all duration-200"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -385,29 +343,25 @@ const CustomersData = ({
     },
   ];
 
+  const currentFilters: CustomersFilterState = {
+    status: statusParam,
+    country: countryParam,
+    sort: sortParam,
+  };
+
   return (
     <div className="space-y-4">
       {/* Search & Filter Toolbar */}
       <CustomersFilterBar
+        filters={currentFilters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
         searchTerm={search}
-        onSearchChange={(val) => {
-          setSearch(val);
-          setPage(1);
-        }}
-        filters={filters}
-        onFilterChange={(newFilters) => {
-          setFilters((prev) => ({ ...prev, ...newFilters }));
-          setPage(1);
-        }}
-        onReset={() => {
-          setFilters(initialFilters);
-          setSearch("");
-          setPage(1);
-        }}
+        onSearchChange={(val) => setSearch(val)}
       />
 
-      {/* Main Customers AZTable Container */}
-      <div className="card relative overflow-hidden bg-[#170d2f] shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl [&_.input]:bg-[#120824] [&_.input]:border-white/15 [&_.input]:text-slate-200 [&_.input]:placeholder:text-slate-500 [&_.input:focus]:border-amber-400 [&_thead_th]:text-slate-300 [&_thead_th]:bg-white/[0.03] [&_thead_th]:border-b [&_thead_th]:border-white/10 [&_tbody_tr]:border-b [&_tbody_tr]:border-white/5 [&_tbody_tr:hover]:bg-white/[0.05] [&_tbody_tr]:text-slate-200 [&_.border-base-200]:!border-white/10 [&_.border-base-300]:!border-white/10 [&_.card-title]:!text-white [&_p]:!text-slate-300 [&_.select]:bg-[#120824] [&_.select]:border-white/15 [&_.select]:text-slate-200 [&_.select]:focus:border-amber-400 [&_.join-item.btn-outline]:bg-white/5 [&_.join-item.btn-outline]:border-white/15 [&_.join-item.btn-outline]:text-slate-200 [&_.join-item.btn-outline:hover]:bg-white/10 [&_.join-item.btn-primary]:bg-amber-400 [&_.join-item.btn-primary]:text-slate-950 [&_.join-item.btn-primary]:border-amber-400 [&_strong]:text-amber-400 [&_.btn-square.btn-ghost]:border-white/15 [&_.btn-square.btn-ghost]:bg-white/5 [&_.btn-square.btn-ghost]:text-amber-400 [&_.badge-primary]:bg-amber-400 [&_.badge-primary]:text-slate-950 [&_.badge-primary]:border-none">
+      {/* Main Table Card */}
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-4 sm:p-6">
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
 
@@ -435,23 +389,16 @@ const CustomersData = ({
             onRefresh={refetch}
             isRefreshing={isFetching}
             searchValue={search}
-            onSearchChange={(val) => {
-              setSearch(val);
-              setPage(1);
-            }}
+            onSearchChange={(val) => setSearch(val)}
             searchPlaceholder="Search customers by name, email, phone, country..."
             emptyTitle="No Customers Found"
             emptyMessage="No customer accounts match your active filters or search query."
             emptyIcon={<Users className="w-6 h-6 text-amber-400" />}
             pagination={{
               page,
-              limit,
+              limit: LIMIT,
               total: meta?.total ?? customers.length,
-              onPageChange: (p) => setPage(p),
-              onLimitChange: (l) => {
-                setLimit(l);
-                setPage(1);
-              },
+              onPageChange: (p) => updateUrl({ page: p }),
             }}
           />
         </div>

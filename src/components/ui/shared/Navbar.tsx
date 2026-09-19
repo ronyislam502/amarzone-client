@@ -1,5 +1,7 @@
+'use client';
+
 import Link from "next/link";
-import { Menu, LogIn, ShoppingCart } from "lucide-react";
+import { Menu, LogIn, ShoppingCart, Sparkles } from "lucide-react";
 import Departments from "./navbar/Departments";
 import Search from "./navbar/Search";
 import Services from "./navbar/Services";
@@ -61,6 +63,25 @@ const Navbar = () => {
               Login
             </span>
           </Link> */}
+          {/* AI Shopping Assistant Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(
+                  new CustomEvent("open-ai-shopping-assistant", {
+                    detail: {},
+                  })
+                );
+              }
+            }}
+            className="btn btn-sm btn-ghost gap-1.5 font-bold text-amber-300 hover:text-white hover:bg-white/10 rounded-xl px-2.5 hidden sm:flex border border-amber-400/25 cursor-pointer"
+            title="Open AI Shopping Assistant"
+          >
+            <Sparkles className="h-4 w-4 text-amber-400 animate-spin-slow" />
+            <span className="text-xs">Ask AI</span>
+          </button>
+
           <NavAvatar />
 
           {/* Cart */}

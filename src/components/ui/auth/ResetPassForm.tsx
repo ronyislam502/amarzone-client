@@ -19,13 +19,38 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import AZForm from '../shared/form/AZFrom';
 import AZInput from '../shared/form/AZInput';
 import { resetPasswordSchema } from '@/src/schema/Auth';
+import { useResetPasswordMutation } from '@/src/redux/features/auth/authApi';
+import { toast } from 'react-toastify';
 
 
 const ResetPassContent: React.FC = () => {
     const [showNewPassword, setShowNewPassword] = useState(false);
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const token = searchParams.get('token') || '';
+    const emailParam = searchParams.get('email') || '';
+
+    const [resetPassword, { isLoading }] = useResetPasswordMutation();
 
     const onSubmit = async (data: FieldValues) => {
+        const resetData = {
+            email: data.email,
+            newPassword: data.newPassword,
+        };
 
+        try {
+            const res = await resetPassword({
+                data: resetData,
+                token: token,
+            }).unwrap();
+
+            if (res?.success) {
+                toast.success(res?.message || "Password reset successfully!");
+                router.push("/login");
+            }
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Failed to reset password. Please try again.");
+        }
     };
 
     return (
@@ -45,34 +70,57 @@ const ResetPassContent: React.FC = () => {
             </div>
 
             {/* Pure Design Form Presentation */}
-            <AZForm resolver={zodResolver(resetPasswordSchema)}
-                onSubmit={onSubmit}>
-
-                {/* New Password */}
-                <div className="relative">
+            <AZForm
+                defaultValues={{ email: emailParam }}
+                resolver={zodResolver(resetPasswordSchema)}
+                onSubmit={onSubmit}
+            >
+                <div className="space-y-4">
+                    {/* Email */}
                     <AZInput
-                        label="New Password"
-                        name="newPassword"
+                        label="Account Email"
+                        name="email"
+                        type="email"
+                        placeholder="your registered email"
+                        icon={<Mail className="w-4 h-4" />}
+                    />
+
+                    {/* New Password */}
+                    <div className="relative">
+                        <AZInput
+                            label="New Password"
+                            name="newPassword"
+                            type={showNewPassword ? 'text' : 'password'}
+                            placeholder="Min. 4 characters"
+                            icon={<Lock className="w-4 h-4" />}
+                        />
+                        <div
+                            className="absolute right-4 top-10 cursor-pointer text-gray-400 hover:text-white transition-colors"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                        >
+                            {showNewPassword ? <Eye size={18} /> : <EyeOff size={18} />}
+                        </div>
+                    </div>
+
+                    {/* Confirm Password */}
+                    <AZInput
+                        label="Confirm New Password"
+                        name="confirmPassword"
                         type={showNewPassword ? 'text' : 'password'}
-                        placeholder="Min. 4 characters"
+                        placeholder="Re-enter new password"
                         icon={<Lock className="w-4 h-4" />}
                     />
-                    <div
-                        className="absolute right-4 top-10 cursor-pointer text-gray-400 hover:text-white transition-colors"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                    >
-                        {showNewPassword ? <Eye size={18} /> : <EyeOff size={18} />}
-                    </div>
                 </div>
 
                 {/* Submit Button */}
                 <div className="mt-8">
                     <button
                         type="submit"
-                        className="w-full group flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-slate-950 py-4 rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all shadow-[0_15px_30px_-5px_rgba(16,185,129,0.3)] active:scale-95"
+                        disabled={isLoading}
+                        className="w-full group flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-600 text-slate-950 py-4 rounded-xl text-xs font-black uppercase tracking-[0.2em] transition-all shadow-[0_15px_30px_-5px_rgba(16,185,129,0.3)] active:scale-95 disabled:opacity-50"
                     >
                         <ShieldCheck className="w-4 h-4" />
-                        <span>Reset Password Now</span>
+                        <span>{isLoading ? "Resetting Password..." : "Reset Password Now"}</span>
                     </button>
                 </div>
             </AZForm>

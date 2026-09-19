@@ -1,13 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { ShoppingBag, Sparkles, X, Flame } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ShoppingBag, Sparkles, X, Flame, Wand2 } from "lucide-react";
 import { useUpdateProductMutation } from "@/redux/features/product/productApi";
 import { toast } from "react-toastify";
-import { FieldValues } from "react-hook-form";
+import { FieldValues, useForm } from "react-hook-form";
 import AZForm from "../../../shared/form/AZFrom";
 import AZInput from "../../../shared/form/AZInput";
 import { TProduct } from "@/src/types/product";
+import AiProductContentModal from "./AiProductContentModal";
+import { TProductContentOutput } from "@/redux/features/ai/aiApi";
 
 interface UpdateProductModalProps {
   product: TProduct | null;
@@ -25,21 +27,39 @@ const UpdateProductModal = ({
   const [isBestSeller, setIsBestSeller] = useState<boolean>(
     Boolean(product?.isBestSeller)
   );
+  const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+
+  const methods = useForm({
+    defaultValues: {
+      title: product?.title || "",
+      brand: product?.brand || "",
+    },
+  });
+
+  useEffect(() => {
+    if (product) {
+      methods.reset({
+        title: product.title || "",
+        brand: product.brand || "",
+      });
+      setIsBestSeller(Boolean(product.isBestSeller));
+    }
+  }, [product, methods]);
 
   if (!isOpen || !product) return null;
 
   const onSubmit = async (data: FieldValues) => {
-    try {
-      const payload = {
-        title: data.title,
-        brand: data.brand,
-        isBestSeller: Boolean(isBestSeller),
-      };
+    const productData = {
+      title: data.title,
+      brand: data.brand,
+      isBestSeller: Boolean(isBestSeller),
+    };
 
+    try {
       const res = await updateProduct({
         id: product._id,
-        data: payload,
+        data: productData,
       }).unwrap();
 
       if (res?.success) {
@@ -94,20 +114,32 @@ const UpdateProductModal = ({
         <div className="overflow-y-auto p-6 flex-1 text-xs relative z-10">
           <AZForm
             key={product._id}
-            defaultValues={{
-              title: product.title || "",
-              brand: product.brand || "",
-            }}
+            methods={methods}
             onSubmit={onSubmit}
           >
             <div className="space-y-4">
-              <AZInput
-                label="Product Title"
-                name="title"
-                type="text"
-                placeholder="Enter product title"
-                inputClassName="bg-[#120824] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl"
-              />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-300">
+                    Product Title
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsAiModalOpen(true)}
+                    className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <Wand2 className="w-3 h-3" />
+                    <span>AI Optimize Title</span>
+                  </button>
+                </div>
+                <AZInput
+                  name="title"
+                  type="text"
+                  placeholder="Enter product title"
+                  inputClassName="bg-[#120824] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl"
+                />
+              </div>
+
               <AZInput
                 label="Brand"
                 name="brand"
@@ -154,6 +186,30 @@ const UpdateProductModal = ({
             </div>
           </AZForm>
         </div>
+
+        {/* AI Product Content Studio Modal */}
+        <AiProductContentModal
+          isOpen={isAiModalOpen}
+          onClose={() => setIsAiModalOpen(false)}
+          initialValues={{
+            title: methods.watch("title") || product.title,
+            brand: methods.watch("brand") || product.brand,
+            category:
+              typeof product.category === "object"
+                ? (product.category as any)?.name
+                : undefined,
+            features: product.features,
+            keywords: product.tags,
+          }}
+          onApply={(content) => {
+            if (content.seoTitle) {
+              methods.setValue("title", content.seoTitle, {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+            }
+          }}
+        />
       </div>
     </div>
   );

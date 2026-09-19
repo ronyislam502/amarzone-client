@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   X,
   Copy,
@@ -18,9 +19,26 @@ import {
   Receipt,
   Mail,
   Hash,
+  Sparkles,
+  ShieldAlert,
+  AlertTriangle,
+  Loader2,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
+  Activity,
+  Zap,
+  MessageSquare,
 } from "lucide-react";
 import { TOrder } from "@/src/types/order";
 import { toast } from "react-toastify";
+import {
+  useAnalyzeFraudRiskMutation,
+  TFraudAnalysisOutput,
+} from "@/redux/features/ai/aiApi";
+import { useCreateConversationMutation } from "@/src/redux/features/chat/chatApi";
+import { useAppSelector } from "@/src/redux/hooks";
+import { selectCurrentUser } from "@/src/redux/features/auth/authSlice";
 
 export interface OrderDetailsModalProps {
   order: TOrder | null;
@@ -33,9 +51,56 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   isOpen,
   onClose,
 }) => {
+  const router = useRouter();
+  const currentUser = useAppSelector(selectCurrentUser);
+  const [createConversationApi] = useCreateConversationMutation();
+  const [isStartingChat, setIsStartingChat] = useState(false);
+
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
+  // AI Fraud Analysis state
+  const [fraudResult, setFraudResult] = useState<TFraudAnalysisOutput | null>(null);
+  const [isFraudScanOpen, setIsFraudScanOpen] = useState(false);
+  const [analyzeFraudRisk, { isLoading: isFraudLoading }] =
+    useAnalyzeFraudRiskMutation();
+
   if (!isOpen || !order) return null;
+
+  const isCustomerUser =
+    (currentUser as any)?.role?.toUpperCase() === "CUSTOMER";
+
+  const handleStartVendorChat = async () => {
+    const vendorId =
+      typeof order.vendor === "object" ? order.vendor?._id : order.vendor;
+
+    if (!vendorId) {
+      toast.error("Vendor details unavailable for this order.");
+      return;
+    }
+
+    try {
+      setIsStartingChat(true);
+      const res = await createConversationApi({
+        participants: [String(vendorId)],
+        conversationType: "ORDER",
+        order: order._id,
+      }).unwrap();
+
+      onClose();
+      if (res?.data?._id) {
+        toast.success(`Connected to vendor for Order #${order.orderNo}`);
+        router.push(`/customer/chat?conversationId=${res.data._id}`);
+      } else {
+        router.push(`/customer/chat`);
+      }
+    } catch (err: any) {
+      toast.error(
+        err?.data?.message || err?.message || "Failed to start conversation with vendor"
+      );
+    } finally {
+      setIsStartingChat(false);
+    }
+  };
 
   const handleCopy = (text: string, label: string) => {
     if (typeof window !== "undefined") {
@@ -46,6 +111,40 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         position: "bottom-right",
         autoClose: 1600,
       });
+    }
+  };
+
+  const handleFraudScan = async () => {
+    if (!order) return;
+    try {
+      const payload = {
+        userId: order.customer?._id || "unknown",
+        orderAmount: order.totalPrice || 0,
+        paymentMethod: order.transactionId ? "ONLINE_PAYMENT" : "CASH_ON_DELIVERY",
+        shippingAddress: {
+          name: order.customer?.name || "",
+          email: order.customer?.email || "",
+          orderId: order._id,
+          orderNo: order.orderNo,
+        },
+        billingAddress: {
+          name: order.customer?.name || "",
+          email: order.customer?.email || "",
+          transactionId: order.transactionId || "",
+        },
+        recentAttemptsCount: 1,
+      };
+      const res = await analyzeFraudRisk(payload).unwrap();
+      setFraudResult(res.data);
+      setIsFraudScanOpen(true);
+      const level = res.data.riskLevel;
+      if (level === "CRITICAL" || level === "HIGH") {
+        toast.error(`⚠️ ${level} risk detected for Order #${order.orderNo}!`, { autoClose: 4000 });
+      } else {
+        toast.success("🛡️ AI Fraud Scan complete.", { autoClose: 2500 });
+      }
+    } catch {
+      toast.error("AI Fraud scan failed. Please retry.");
     }
   };
 
@@ -175,9 +274,26 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
             {/* Vendor Card */}
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
-              <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
-                <Store className="w-4 h-4" />
-                <span>Vendor Details</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-purple-400 font-bold text-sm">
+                  <Store className="w-4 h-4" />
+                  <span>Vendor Details</span>
+                </div>
+                {isCustomerUser && (
+                  <button
+                    type="button"
+                    onClick={handleStartVendorChat}
+                    disabled={isStartingChat}
+                    className="btn btn-xs gap-1 font-bold bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 rounded-lg cursor-pointer"
+                  >
+                    {isStartingChat ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <MessageSquare className="w-3 h-3" />
+                    )}
+                    <span>Chat with Vendor</span>
+                  </button>
+                )}
               </div>
               <div className="space-y-1 text-slate-300">
                 <div className="font-semibold text-white text-sm">
@@ -321,6 +437,169 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             </div>
           </div>
 
+          {/* ── AI FRAUD RISK ANALYSIS SECTION ── */}
+          <div className="rounded-2xl border border-white/10 overflow-hidden">
+            {/* Section Header / Trigger */}
+            <div
+              className="flex items-center justify-between p-4 bg-white/[0.03] cursor-pointer hover:bg-white/[0.06] transition-colors"
+              onClick={() => setIsFraudScanOpen((v) => !v)}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-rose-500/30 to-amber-500/30 flex items-center justify-center border border-rose-500/20">
+                  <ShieldAlert className="w-4 h-4 text-rose-400" />
+                </div>
+                <div>
+                  <span className="text-sm font-black text-white">AI Fraud Risk Scanner</span>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] font-semibold text-rose-400/80 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded-full">
+                      ADMIN ONLY
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      {fraudResult
+                        ? `Last scan: ${fraudResult.riskLevel} risk · Score ${fraudResult.riskScore}/100`
+                        : "No scan performed yet"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleFraudScan(); }}
+                disabled={isFraudLoading}
+                className="btn btn-xs gap-1.5 bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white border-0 rounded-xl font-bold shadow-md shadow-rose-900/40 cursor-pointer disabled:opacity-60"
+              >
+                {isFraudLoading ? (
+                  <><Loader2 className="w-3 h-3 animate-spin" /><span>Scanning...</span></>
+                ) : fraudResult ? (
+                  <><RefreshCw className="w-3 h-3" /><span>Re-scan</span></>
+                ) : (
+                  <><Sparkles className="w-3 h-3" /><span>Run AI Scan</span></>
+                )}
+              </button>
+            </div>
+
+            {/* Results Panel */}
+            {isFraudScanOpen && fraudResult && (
+              <div className="p-5 space-y-5 border-t border-white/10 bg-white/[0.01]">
+                {/* Risk Score Meter */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-400 font-semibold uppercase tracking-wider">Risk Score</span>
+                    <span className={`font-black text-lg font-mono ${
+                      fraudResult.riskScore >= 80 ? "text-rose-400" :
+                      fraudResult.riskScore >= 60 ? "text-orange-400" :
+                      fraudResult.riskScore >= 40 ? "text-amber-400" : "text-emerald-400"
+                    }`}>
+                      {fraudResult.riskScore}<span className="text-slate-500 text-xs font-normal">/100</span>
+                    </span>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-3 w-full bg-white/10 rounded-full overflow-hidden border border-white/5">
+                    <div
+                      className={`h-full rounded-full transition-all duration-700 ${
+                        fraudResult.riskScore >= 80 ? "bg-gradient-to-r from-rose-600 to-red-500" :
+                        fraudResult.riskScore >= 60 ? "bg-gradient-to-r from-orange-500 to-amber-500" :
+                        fraudResult.riskScore >= 40 ? "bg-gradient-to-r from-amber-400 to-yellow-400" :
+                        "bg-gradient-to-r from-emerald-500 to-teal-500"
+                      }`}
+                      style={{ width: `${fraudResult.riskScore}%` }}
+                    />
+                  </div>
+                  {/* Tick labels */}
+                  <div className="flex justify-between text-[10px] text-slate-600 font-semibold">
+                    <span>0</span><span className="text-emerald-600">Safe</span><span className="text-amber-500">Caution</span><span className="text-rose-500">Critical</span><span>100</span>
+                  </div>
+                </div>
+
+                {/* Risk Level + Action Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Risk Level */}
+                  <div className={`p-3.5 rounded-2xl border ${
+                    fraudResult.riskLevel === "CRITICAL" ? "bg-rose-500/10 border-rose-500/30" :
+                    fraudResult.riskLevel === "HIGH" ? "bg-orange-500/10 border-orange-500/30" :
+                    fraudResult.riskLevel === "MEDIUM" ? "bg-amber-500/10 border-amber-500/30" :
+                    "bg-emerald-500/10 border-emerald-500/30"
+                  } space-y-1`}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Risk Level</span>
+                    <div className={`flex items-center gap-1.5 font-black text-base ${
+                      fraudResult.riskLevel === "CRITICAL" ? "text-rose-400" :
+                      fraudResult.riskLevel === "HIGH" ? "text-orange-400" :
+                      fraudResult.riskLevel === "MEDIUM" ? "text-amber-400" : "text-emerald-400"
+                    }`}>
+                      {fraudResult.riskLevel === "LOW" ? <ShieldCheck className="w-4 h-4" /> :
+                       fraudResult.riskLevel === "MEDIUM" ? <Activity className="w-4 h-4" /> :
+                       <ShieldAlert className="w-4 h-4" />}
+                      {fraudResult.riskLevel}
+                    </div>
+                  </div>
+
+                  {/* Recommended Action */}
+                  <div className={`p-3.5 rounded-2xl border ${
+                    fraudResult.recommendedAction === "BLOCK" ? "bg-rose-500/10 border-rose-500/30" :
+                    fraudResult.recommendedAction === "REVIEW" ? "bg-amber-500/10 border-amber-500/30" :
+                    "bg-emerald-500/10 border-emerald-500/30"
+                  } space-y-1`}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recommended Action</span>
+                    <div className={`flex items-center gap-1.5 font-black text-base ${
+                      fraudResult.recommendedAction === "BLOCK" ? "text-rose-400" :
+                      fraudResult.recommendedAction === "REVIEW" ? "text-amber-400" : "text-emerald-400"
+                    }`}>
+                      {fraudResult.recommendedAction === "ALLOW" ? <CheckCircle2 className="w-4 h-4" /> :
+                       fraudResult.recommendedAction === "REVIEW" ? <Zap className="w-4 h-4" /> :
+                       <XCircle className="w-4 h-4" />}
+                      {fraudResult.recommendedAction}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Risk Factors */}
+                {fraudResult.riskFactors.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                      <AlertTriangle className="w-3 h-3 text-amber-400" />
+                      Detected Risk Factors ({fraudResult.riskFactors.length})
+                    </span>
+                    <div className="space-y-1.5">
+                      {fraudResult.riskFactors.map((factor, i) => (
+                        <div key={i} className="flex items-start gap-2 p-2.5 rounded-xl bg-white/[0.04] border border-white/5 text-xs text-slate-300">
+                          <span className="w-4 h-4 rounded-full bg-rose-500/20 text-rose-400 font-black text-[10px] flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                          <span>{factor}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {fraudResult.riskFactors.length === 0 && (
+                  <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 font-semibold">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    No risk factors detected — this order appears legitimate.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Pre-scan placeholder */}
+            {!fraudResult && !isFraudLoading && (
+              <div className="p-6 text-center space-y-2 border-t border-white/10">
+                <ShieldAlert className="w-8 h-8 text-slate-600 mx-auto" />
+                <p className="text-xs text-slate-500">
+                  Click <strong className="text-rose-400">Run AI Scan</strong> to analyse this order for fraud signals using AI risk modeling.
+                </p>
+              </div>
+            )}
+
+            {/* Loading skeleton */}
+            {isFraudLoading && (
+              <div className="p-6 space-y-3 border-t border-white/10 animate-pulse">
+                <div className="h-4 bg-white/10 rounded-lg w-3/4" />
+                <div className="h-3 bg-white/10 rounded-lg w-1/2" />
+                <div className="h-16 bg-white/10 rounded-xl w-full" />
+                <div className="h-3 bg-white/10 rounded-lg w-2/3" />
+              </div>
+            )}
+          </div>
+
           {/* Shipping & Delivery Schedules */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/10 space-y-1.5">
@@ -410,7 +689,24 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
         </div>
 
         {/* Modal Footer */}
-        <div className="relative z-10 flex items-center justify-end p-4 border-t border-white/10 bg-white/[0.02]">
+        <div className="relative z-10 flex items-center justify-between p-4 border-t border-white/10 bg-white/[0.02]">
+          <div>
+            {isCustomerUser && (
+              <button
+                type="button"
+                onClick={handleStartVendorChat}
+                disabled={isStartingChat}
+                className="btn btn-sm gap-2 font-bold bg-primary hover:bg-primary/90 text-slate-950 rounded-xl border-none shadow-sm cursor-pointer"
+              >
+                {isStartingChat ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <MessageSquare className="w-4 h-4" />
+                )}
+                <span>Message Store Vendor</span>
+              </button>
+            )}
+          </div>
           <button
             type="button"
             onClick={onClose}

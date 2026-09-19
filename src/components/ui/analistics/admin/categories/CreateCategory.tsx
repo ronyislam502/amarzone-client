@@ -52,12 +52,12 @@ const CreateCategory = ({ onSuccess }: CreateCategoryFormProps) => {
     };
 
     const onSubmit = async (data: FieldValues) => {
-        const formData = new FormData();
         const categoryData = {
             name: data.name,
             department: data.department,
         };
 
+        const formData = new FormData();
         try {
 
             formData.append("data", JSON.stringify(categoryData));

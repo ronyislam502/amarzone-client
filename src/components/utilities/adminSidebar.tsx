@@ -14,6 +14,7 @@ import {
     UserCheck,
     Building2,
     PackageCheck,
+    MessageSquare,
 } from "lucide-react";
 
 export const adminSidebarItems = [
@@ -136,6 +137,12 @@ export const adminSidebarItems = [
                     text: "3 Open",
                     className: "badge-error",
                 },
+            },
+            {
+                label: "Support Chat",
+                href: "/admin/chat",
+                icon: MessageSquare,
+                iconClass: "text-accent",
             },
         ],
     },

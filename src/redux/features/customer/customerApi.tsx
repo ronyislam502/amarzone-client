@@ -6,7 +6,7 @@ const customerApi = baseApi.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
         allCustomers: builder.query({
-            query: (args?: { search?: string; sort?: string; page?: number; limit?: number }) => {
+            query: (args?: { search?: string; sort?: string; status?: string; page?: number | string; limit?: number | string }) => {
                 const params = new URLSearchParams();
 
                 if (args?.search) {
@@ -15,10 +15,13 @@ const customerApi = baseApi.injectEndpoints({
                 if (args?.sort) {
                     params.append("sort", args.sort);
                 }
+                if (args?.status) {
+                    params.append("status", args.status);
+                }
                 if (args?.page) {
                     params.append("page", String(args.page));
                 }
-                if (args?.limit) {
+                if (args?.limit !== undefined && args?.limit !== null) {
                     params.append("limit", String(args.limit));
                 }
 

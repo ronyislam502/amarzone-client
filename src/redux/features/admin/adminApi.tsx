@@ -6,7 +6,7 @@ import { TAdmin } from "@/src/types/admin";
 const adminApi = baseApi.injectEndpoints({
     endpoints: (builder) => ({
         allAdmins: builder.query({
-            query: (args?: { search?: string; sort?: string; page?: number; limit?: number }) => {
+            query: (args?: { search?: string; sort?: string; page?: number | string; limit?: number | string; role?: string; status?: string }) => {
                 const params = new URLSearchParams();
 
                 if (args?.search) {
@@ -15,10 +15,16 @@ const adminApi = baseApi.injectEndpoints({
                 if (args?.sort) {
                     params.append("sort", args.sort);
                 }
+                if (args?.role) {
+                    params.append("role", args.role);
+                }
+                if (args?.status) {
+                    params.append("status", args.status);
+                }
                 if (args?.page) {
                     params.append("page", String(args.page));
                 }
-                if (args?.limit) {
+                if (args?.limit !== undefined && args?.limit !== null) {
                     params.append("limit", String(args.limit));
                 }
 

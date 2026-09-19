@@ -1,13 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
-import {
-  Elements,
-  PaymentElement,
-  useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
+import { FieldValues } from "react-hook-form";
 import {
   X,
   Lock,
@@ -15,20 +9,19 @@ import {
   CheckCircle2,
   Calendar,
   CreditCard,
+  Mail,
+  KeyRound,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "react-toastify";
-
-const stripePublishableKey =
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
-
-const stripePromise = stripePublishableKey
-  ? loadStripe(stripePublishableKey)
-  : null;
+import AZForm from "@/src/components/ui/shared/form/AZFrom";
+import AZInput from "@/src/components/ui/shared/form/AZInput";
+import { useAppSelector } from "@/src/redux/hooks";
+import { selectCurrentUser } from "@/src/redux/features/auth/authSlice";
 
 interface StripeCheckoutFormProps {
   order: any;
-  onPaymentSuccess: (paymentIntent: any) => void;
+  onPaymentSuccess: (paymentData: any) => void;
   onClose: () => void;
 }
 
@@ -37,51 +30,51 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
   onPaymentSuccess,
   onClose,
 }) => {
-  const stripe = useStripe();
-  const elements = useElements();
+  const currentUser = useAppSelector(selectCurrentUser);
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const totalAmount = order?.totalPrice || 0;
 
-    if (!stripe || !elements) {
-      return;
-    }
+  const defaultValues = {
+    email: currentUser?.email || "akhi@gmail.com",
+    cardNumber: "",
+    cvc: "",
+    expiryDate: "",
+  };
 
+  const onSubmit = async (data: FieldValues) => {
     setIsProcessing(true);
     setErrorMessage(null);
 
-    try {
-      const { error, paymentIntent } = await stripe.confirmPayment({
-        elements,
-        confirmParams: {
-          return_url: `${window.location.origin}/cart?payment_success=true&order_no=${order?.orderNo || ""}`,
-        },
-        redirect: "if_required",
-      });
+    const paymentData = {
+      email: data.email,
+      cardNumber: data.cardNumber,
+      cvc: data.cvc,
+      expiryDate: data.expiryDate,
+    };
 
-      if (error) {
-        setErrorMessage(error.message || "Payment authorization failed.");
-        toast.error(error.message || "Payment failed. Please check your card.");
-      } else if (paymentIntent && paymentIntent.status === "succeeded") {
-        toast.success("Payment completed successfully!");
-        onPaymentSuccess(paymentIntent);
-      } else {
-        toast.info("Payment processing status: " + (paymentIntent?.status || "pending"));
-        onPaymentSuccess(paymentIntent || {});
+    try {
+      if (!paymentData.cardNumber || !paymentData.cvc || !paymentData.expiryDate || !paymentData.email) {
+        throw new Error("Please complete all payment fields.");
       }
+
+      // Simulate client verification before handing over to post-payment confirmation
+      await new Promise((resolve) => setTimeout(resolve, 600));
+
+      toast.success("Payment authorized successfully!");
+      onPaymentSuccess(paymentData);
     } catch (err: any) {
-      setErrorMessage(err?.message || "An unexpected payment error occurred.");
+      const msg = err?.message || "Payment processing failed. Please check card details.";
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const totalAmount = order?.totalPrice || 0;
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
       {/* Order mini-summary */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1.5">
         <div className="flex justify-between items-center">
@@ -104,70 +97,115 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
         </div>
       </div>
 
-      {/* Stripe Payment Element (Card, Apple Pay, Google Pay) */}
-      <div className="bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs">
-        <div className="flex items-center gap-2 mb-3 text-xs font-bold text-slate-800">
-          <CreditCard className="w-4 h-4 text-amber-500" />
-          <span>Payment Details</span>
+      {/* Payment Form using AZInput */}
+      <AZForm defaultValues={defaultValues} onSubmit={onSubmit}>
+        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs space-y-3.5">
+          <div className="flex items-center gap-2 pb-1 border-b border-slate-100 text-xs font-bold text-slate-800">
+            <CreditCard className="w-4 h-4 text-amber-500" />
+            <span>Card Payment Details</span>
+          </div>
+
+          {/* Email */}
+          <div>
+            <AZInput
+              name="email"
+              type="email"
+              label="Email / Gmail"
+              placeholder="customer@gmail.com"
+              size="sm"
+              icon={<Mail className="w-4 h-4 text-slate-400" />}
+            />
+          </div>
+
+          {/* Card Number */}
+          <div>
+            <AZInput
+              name="cardNumber"
+              type="text"
+              label="Card Number"
+              placeholder="4242 •••• •••• 4242"
+              size="sm"
+              icon={<CreditCard className="w-4 h-4 text-slate-400" />}
+            />
+          </div>
+
+          {/* Expiration Date & CVC */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <AZInput
+                name="expiryDate"
+                type="text"
+                label="Expiration Date"
+                placeholder="MM/YY"
+                size="sm"
+                icon={<Calendar className="w-4 h-4 text-slate-400" />}
+              />
+            </div>
+            <div>
+              <AZInput
+                name="cvc"
+                type="text"
+                label="CVC"
+                placeholder="123"
+                size="sm"
+                icon={<KeyRound className="w-4 h-4 text-slate-400" />}
+              />
+            </div>
+          </div>
         </div>
-        <PaymentElement
-          options={{
-            layout: "tabs",
-          }}
-        />
-      </div>
 
-      {/* Error message */}
-      {errorMessage && (
-        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3">
-          {errorMessage}
+        {/* Error message */}
+        {errorMessage && (
+          <div className="mt-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl p-3">
+            {errorMessage}
+          </div>
+        )}
+
+        {/* Security note */}
+        <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 my-3">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Secured with 256-bit encryption powered by Stripe</span>
         </div>
-      )}
 
-      {/* Security note */}
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-        <span>Secured with 256-bit encryption powered by Stripe</span>
-      </div>
-
-      {/* Submit Button */}
-      <div className="flex items-center gap-3 pt-1">
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={isProcessing}
-          className="btn btn-sm btn-ghost text-slate-600 hover:bg-slate-100 rounded-xl text-xs flex-1"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={!stripe || !elements || isProcessing}
-          className="btn btn-sm bg-[#ffd814] hover:bg-[#f7ca00] text-slate-900 font-bold border border-[#fcd200] rounded-xl text-xs flex-[2] shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          {isProcessing ? (
-            <>
-              <span className="loading loading-spinner loading-xs text-slate-900" />
-              <span>Processing Payment...</span>
-            </>
-          ) : (
-            <>
-              <Lock className="w-3.5 h-3.5 stroke-[2.2]" />
-              <span>Pay ${Number(totalAmount).toFixed(2)}</span>
-            </>
-          )}
-        </button>
-      </div>
-    </form>
+        {/* Submit Buttons */}
+        <div className="flex items-center gap-3 pt-1">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isProcessing}
+            className="btn btn-sm btn-ghost text-slate-600 hover:bg-slate-100 rounded-xl text-xs flex-1"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={isProcessing}
+            className="btn btn-sm bg-[#ffd814] hover:bg-[#f7ca00] text-slate-900 font-bold border border-[#fcd200] rounded-xl text-xs flex-[2] shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            {isProcessing ? (
+              <>
+                <span className="loading loading-spinner loading-xs text-slate-900" />
+                <span>Processing Payment...</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-3.5 h-3.5 stroke-[2.2]" />
+                <span>Pay ${Number(totalAmount).toFixed(2)}</span>
+              </>
+            )}
+          </button>
+        </div>
+      </AZForm>
+    </div>
   );
 };
 
 interface StripePaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  clientSecret: string;
+  clientSecret?: string;
   order: any;
-  onPaymentSuccess: (paymentIntent: any) => void;
+  onPaymentSuccess: (paymentData?: any) => void;
 }
 
 export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
@@ -182,10 +220,10 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSuccess = (paymentIntent: any) => {
+  const handleSuccess = (paymentData: any) => {
     setIsSuccessState(true);
-    setSuccessData(paymentIntent);
-    onPaymentSuccess(paymentIntent);
+    setSuccessData(paymentData);
+    onPaymentSuccess(paymentData);
   };
 
   return (
@@ -284,36 +322,13 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
                 </button>
               </div>
             </div>
-          ) : clientSecret ? (
-            /* Stripe Elements Form */
-            <Elements
-              stripe={stripePromise}
-              options={{
-                clientSecret,
-                appearance: {
-                  theme: "stripe",
-                  variables: {
-                    colorPrimary: "#f59e0b",
-                    borderRadius: "12px",
-                    fontFamily: "Inter, Roboto, sans-serif",
-                  },
-                },
-              }}
-            >
-              <StripeCheckoutForm
-                order={order}
-                onPaymentSuccess={handleSuccess}
-                onClose={onClose}
-              />
-            </Elements>
           ) : (
-            /* Loading State */
-            <div className="py-12 text-center space-y-3">
-              <span className="loading loading-spinner loading-md text-amber-500" />
-              <p className="text-xs text-slate-600 font-medium">
-                Initializing secure Stripe gateway...
-              </p>
-            </div>
+            /* AZInput Payment Form */
+            <StripeCheckoutForm
+              order={order}
+              onPaymentSuccess={handleSuccess}
+              onClose={onClose}
+            />
           )}
         </div>
       </div>

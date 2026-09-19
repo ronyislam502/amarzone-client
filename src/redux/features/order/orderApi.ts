@@ -5,17 +5,33 @@ import { TOrder } from "@/src/types/order";
 const orderApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     allOrders: builder.query({
-      query: ({ search, page, limit }) => {
+      query: (args?: {
+        search?: string;
+        page?: number | string;
+        limit?: number | string;
+        status?: string;
+        paymentStatus?: string;
+        sort?: string;
+      }) => {
         const params = new URLSearchParams();
 
-        if (search) {
-          params.append("searchTerm", search);
+        if (args?.search) {
+          params.append("searchTerm", args.search);
         }
-        if (page) {
-          params.append("page", page);
+        if (args?.status && args.status !== "ALL") {
+          params.append("status", args.status);
         }
-        if (limit) {
-          params.append("limit", limit);
+        if (args?.paymentStatus && args.paymentStatus !== "ALL") {
+          params.append("paymentStatus", args.paymentStatus);
+        }
+        if (args?.sort) {
+          params.append("sort", args.sort);
+        }
+        if (args?.page) {
+          params.append("page", String(args.page));
+        }
+        if (args?.limit !== undefined && args?.limit !== null) {
+          params.append("limit", String(args.limit));
         }
 
         return {
@@ -44,7 +60,10 @@ const orderApi = baseApi.injectEndpoints({
         page?: number | string;
         limit?: number | string;
         status?: string;
+        paymentStatus?: string;
         searchTerm?: string;
+        search?: string;
+        sort?: string;
         email?: string;
       }) => {
         const params = new URLSearchParams();
@@ -52,14 +71,20 @@ const orderApi = baseApi.injectEndpoints({
         if (args?.page) {
           params.append("page", String(args.page));
         }
-        if (args?.limit) {
+        if (args?.limit !== undefined && args?.limit !== null) {
           params.append("limit", String(args.limit));
         }
-        if (args?.status) {
+        if (args?.status && args.status !== "ALL") {
           params.append("status", args.status);
         }
-        if (args?.searchTerm) {
-          params.append("searchTerm", args.searchTerm);
+        if (args?.paymentStatus && args.paymentStatus !== "ALL") {
+          params.append("paymentStatus", args.paymentStatus);
+        }
+        if (args?.search || args?.searchTerm) {
+          params.append("searchTerm", args.search || args.searchTerm || "");
+        }
+        if (args?.sort) {
+          params.append("sort", args.sort);
         }
 
         return {
@@ -86,7 +111,7 @@ const orderApi = baseApi.injectEndpoints({
     }),
     singleOrder: builder.query({
       query: (id) => ({
-        url: `/orders/order/${id}`,
+        url: `/orders/${id}`,
         method: "GET",
       }),
       providesTags: ["order"],

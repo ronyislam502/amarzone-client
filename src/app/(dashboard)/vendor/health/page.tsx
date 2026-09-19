@@ -46,7 +46,7 @@ const VendorHealthPage = () => {
   const isRefreshing = isHealthFetching || isViolationsFetching || isManualRefreshing;
 
   return (
-    <div className="space-y-6 w-full max-w-7xl mx-auto pb-12 p-4 sm:p-6 text-slate-100">
+    <div className="space-y-6 w-full pb-10 text-slate-100">
       {/* 1. Breadcrumbs */}
       <HealthBread />
 

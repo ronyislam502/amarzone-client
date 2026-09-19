@@ -25,7 +25,15 @@ import AZInput from '../shared/form/AZInput';
 import Image from 'next/image';
 
 
+import { useRouter } from 'next/navigation';
+import { useCreateCustomerMutation, useCreateVendorMutation } from '@/src/redux/features/auth/authApi';
+import { toast } from 'react-toastify';
+
+
 export const SignUpForm = () => {
+    const router = useRouter();
+    const [createCustomer, { isLoading: isCustomerLoading }] = useCreateCustomerMutation();
+    const [createVendor, { isLoading: isVendorLoading }] = useCreateVendorMutation();
     const [role, setRole] = useState<'customer' | 'vendor'>('customer');
     const [showPassword, setShowPassword] = useState(false);
     const [showAddressFields, setShowAddressFields] = useState(false);
@@ -60,15 +68,72 @@ export const SignUpForm = () => {
 
 
     const onSubmit = async (data: FieldValues) => {
-        const address = {
-            street: data.street,
-            state: data.state,
-            postalCode: data.postalCode,
-            country: data.country,
+        if (role === 'customer') {
+            const customerData = {
+                password: data.password,
+                customer: {
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    address: {
+                        street: data.street || "",
+                        state: data.state || "",
+                        postalCode: data.postalCode || "",
+                        country: data.country || "",
+                    },
+                },
+            };
+
+            const formData = new FormData();
+            formData.append("data", JSON.stringify(customerData));
+            if (image) {
+                formData.append("image", image);
+            }
+
+            try {
+                const res = await createCustomer(formData).unwrap();
+                if (res?.success) {
+                    toast.success(res?.message || "Customer account created successfully!");
+                    router.push("/login");
+                }
+            } catch (err: any) {
+                toast.error(err?.data?.message || "Failed to create customer account");
+            }
+        } else {
+            const vendorData = {
+                password: data.password,
+                vendor: {
+                    name: data.name,
+                    email: data.email,
+                    phone: data.phone,
+                    address: {
+                        street: data.street,
+                        state: data.state,
+                        postalCode: data.postalCode,
+                        country: data.country,
+                    },
+                },
+            };
+
+            const formData = new FormData();
+            formData.append("data", JSON.stringify(vendorData));
+            if (logo) {
+                formData.append("logo", logo);
+            }
+            if (banner) {
+                formData.append("banner", banner);
+            }
+
+            try {
+                const res = await createVendor(formData).unwrap();
+                if (res?.success) {
+                    toast.success(res?.message || "Vendor account created successfully!");
+                    router.push("/login");
+                }
+            } catch (err: any) {
+                toast.error(err?.data?.message || "Failed to create vendor account");
+            }
         }
-
-        console.log("address")
-
     };
 
     return (

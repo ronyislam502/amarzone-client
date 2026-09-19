@@ -1,11 +1,16 @@
-import { Download, Sparkles, PlusCircle } from "lucide-react";
+import { Download, Sparkles, PlusCircle, Wand2 } from "lucide-react";
 
 export interface ProductsHeaderProps {
   onExportCsv?: () => void;
   onAddProduct?: () => void;
+  onOpenAiStudio?: () => void;
 }
 
-const ProductsHeader = ({ onExportCsv, onAddProduct }: ProductsHeaderProps) => {
+const ProductsHeader = ({
+  onExportCsv,
+  onAddProduct,
+  onOpenAiStudio,
+}: ProductsHeaderProps) => {
   return (
     <div className="card relative overflow-hidden bg-[#170d2f] shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl">
       {/* Top glowing accent border line */}
@@ -41,6 +46,16 @@ const ProductsHeader = ({ onExportCsv, onAddProduct }: ProductsHeaderProps) => {
 
         {/* Action Buttons */}
         <div className="flex flex-wrap items-center gap-3">
+          {onOpenAiStudio && (
+            <button
+              type="button"
+              onClick={onOpenAiStudio}
+              className="btn btn-sm gap-2 font-black border border-amber-400/40 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-400 hover:to-orange-400 text-amber-300 hover:text-slate-950 transition-all shadow-md shadow-amber-500/10 cursor-pointer rounded-xl"
+            >
+              <Wand2 className="w-4 h-4" />
+              <span>AI Content Studio</span>
+            </button>
+          )}
           {onExportCsv && (
             <button
               type="button"

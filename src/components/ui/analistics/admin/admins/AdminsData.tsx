@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   UserCheck,
   Eye,
@@ -12,7 +13,7 @@ import {
   Phone,
   Calendar,
   Shield,
-  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 import {
   useAllAdminsQuery,
@@ -26,6 +27,7 @@ import AdminDetailsModal from "./AdminDetailsModal";
 import UpdateAdminModal from "./UpdateAdminModal";
 import CreateAdminModal from "./CreateAdminModal";
 import { toast } from "react-toastify";
+import { useDebounce } from "@/src/components/utilities/Debaounce";
 
 export interface AdminsStatsData {
   totalAdmins: number;
@@ -39,21 +41,47 @@ interface AdminsDataProps {
   registerCreateHandler?: (handler: () => void) => void;
 }
 
-const initialFilters: AdminsFilterState = {
-  status: "",
-  role: "",
-  sort: "",
-};
+const LIMIT = 10;
 
 const AdminsData = ({
-  onStatsChange,
   registerExportHandler,
   registerCreateHandler,
 }: AdminsDataProps) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filters, setFilters] = useState<AdminsFilterState>(initialFilters);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // URL-driven query state
+  const page = Number(searchParams.get("page")) || 1;
+  const statusParam = searchParams.get("status") || "";
+  const roleParam = searchParams.get("role") || "";
+  const sortParam = searchParams.get("sort") || "";
+  const urlSearch = searchParams.get("search") || "";
+
+  // Local search input before debounce
+  const [searchTerm, setSearchTerm] = useState(urlSearch);
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  const updateUrl = useCallback(
+    (updates: Record<string, string | number | null>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") {
+          params.delete(key);
+        } else {
+          params.set(key, String(value));
+        }
+      });
+      router.push(`${pathname}?${params.toString()}`);
+    },
+    [router, pathname, searchParams]
+  );
+
+  useEffect(() => {
+    if (debouncedSearch.trim() !== urlSearch) {
+      updateUrl({ search: debouncedSearch.trim() || null, page: 1 });
+    }
+  }, [debouncedSearch, urlSearch, updateUrl]);
 
   // Modal states
   const [selectedViewAdmin, setSelectedViewAdmin] = useState<TAdmin | null>(null);
@@ -64,6 +92,15 @@ const AdminsData = ({
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const apiSort =
+    sortParam === "name_asc"
+      ? "name"
+      : sortParam === "name_desc"
+      ? "-name"
+      : sortParam === "oldest"
+      ? "createdAt"
+      : "-createdAt";
+
   // Queries & Mutations
   const {
     data: responseData,
@@ -73,91 +110,26 @@ const AdminsData = ({
     refetch,
     isFetching,
   } = useAllAdminsQuery({
-    search: searchTerm.trim() || undefined,
-    page,
-    limit,
+    search: urlSearch || undefined,
+    page: String(page),
+    limit: String(LIMIT),
+    role: roleParam || undefined,
+    status: statusParam || undefined,
+    sort: apiSort,
   });
 
   const [deleteAdmin] = useDeleteAdminMutation();
 
-  const rawAdmins: TAdmin[] = responseData?.data || [];
+  const admins: TAdmin[] = responseData?.data || [];
   const meta = responseData?.meta;
-
-  // Filter and sort locally
-  const admins = useMemo(() => {
-    let result = [...rawAdmins];
-
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      result = result.filter(
-        (a) =>
-          a.name?.toLowerCase().includes(q) ||
-          a.email?.toLowerCase().includes(q) ||
-          a.phone?.toLowerCase().includes(q)
-      );
-    }
-
-    if (filters.status === "active") {
-      result = result.filter((a) => !a.isDeleted);
-    } else if (filters.status === "inactive") {
-      result = result.filter((a) => a.isDeleted);
-    }
-
-    if (filters.role) {
-      result = result.filter((a) => {
-        const userRole =
-          typeof a.user === "object" ? a.user?.role?.toLowerCase() : "";
-        return userRole === filters.role.toLowerCase();
-      });
-    }
-
-    if (filters.sort === "name_asc") {
-      result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    } else if (filters.sort === "name_desc") {
-      result.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
-    } else if (filters.sort === "oldest") {
-      result.sort(
-        (a, b) =>
-          new Date(a.createdAt || "").getTime() -
-          new Date(b.createdAt || "").getTime()
-      );
-    }
-
-    return result;
-  }, [rawAdmins, searchTerm, filters]);
-
-  const onStatsChangeRef = useRef(onStatsChange);
-  useEffect(() => {
-    onStatsChangeRef.current = onStatsChange;
-  }, [onStatsChange]);
-
-  // Compute stats to emit upward
-  useEffect(() => {
-    if (!responseData?.data || !onStatsChangeRef.current) return;
-    const items = (responseData.data as TAdmin[]) || [];
-    const activeCount = items.filter((a) => !a.isDeleted).length;
-    const superAdminCount = items.filter((a) => {
-      const role =
-        typeof a.user === "object" ? a.user?.role?.toLowerCase() : "";
-      return role === "super_admin";
-    }).length;
-
-    onStatsChangeRef.current({
-      totalAdmins: meta?.total ?? items.length,
-      activeAdmins: activeCount,
-      superAdmins: superAdminCount,
-    });
-  }, [responseData?.data, meta?.total]);
 
   // Expose create modal handler to parent
   useEffect(() => {
-    if (registerCreateHandler) {
-      registerCreateHandler(() => setIsCreateModalOpen(true));
-    }
+    registerCreateHandler?.(() => setIsCreateModalOpen(true));
   }, [registerCreateHandler]);
 
   // CSV Export logic
-  const handleExportCsv = () => {
+  const handleExportCsv = useCallback(() => {
     if (!admins || admins.length === 0) return;
 
     const headers = [
@@ -198,18 +170,11 @@ const AdminsData = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleExportCsvRef = useRef(handleExportCsv);
-  useEffect(() => {
-    handleExportCsvRef.current = handleExportCsv;
   }, [admins]);
 
   useEffect(() => {
-    if (registerExportHandler) {
-      registerExportHandler(() => handleExportCsvRef.current());
-    }
-  }, [registerExportHandler]);
+    registerExportHandler?.(handleExportCsv);
+  }, [registerExportHandler, handleExportCsv]);
 
   const handleDeleteAdmin = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to suspend administrator account "${name}"?`)) {
@@ -223,6 +188,18 @@ const AdminsData = ({
     } catch (err: any) {
       toast.error(err?.data?.message || "Failed to suspend administrator account");
     }
+  };
+
+  const handleFilterChange = (newFilters: Partial<AdminsFilterState>) => {
+    updateUrl({
+      ...newFilters,
+      page: 1,
+    });
+  };
+
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    router.push(pathname);
   };
 
   // Table Columns Definition
@@ -249,27 +226,18 @@ const AdminsData = ({
                 </div>
               )}
             </div>
-            <div className="min-w-0 space-y-0.5">
-              <div
-                className="font-extrabold text-xs text-white line-clamp-1 hover:text-amber-400 transition-colors cursor-pointer"
-                onClick={() => {
-                  setSelectedViewAdmin(admin);
-                  setIsViewModalOpen(true);
-                }}
-              >
-                {admin.name}
-              </div>
-              <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                {isSuper ? (
-                  <span className="badge badge-warning badge-xs font-black text-slate-950 px-1.5 py-0.5 shadow">
-                    Super Admin
-                  </span>
-                ) : (
-                  <span className="badge badge-outline border-amber-400/40 text-amber-400 badge-xs font-bold px-1.5 py-0.5">
-                    Admin
+            <div className="space-y-0.5">
+              <div className="font-extrabold text-xs text-white flex items-center gap-1.5">
+                <span>{admin.name}</span>
+                {isSuper && (
+                  <span className="px-1.5 py-0.5 rounded bg-amber-400/15 border border-amber-400/30 text-amber-300 text-[9px] font-black uppercase tracking-wider">
+                    Super
                   </span>
                 )}
-                <span className="truncate max-w-[140px] text-slate-400">{admin.email}</span>
+              </div>
+              <div className="text-[10px] text-slate-400 flex items-center gap-1">
+                <Mail className="w-3 h-3 text-amber-400/80 shrink-0" />
+                <span className="truncate max-w-[150px]">{admin.email}</span>
               </div>
             </div>
           </div>
@@ -277,117 +245,130 @@ const AdminsData = ({
       },
     },
     {
-      header: "Contact Channels",
-      accessor: (admin) => (
-        <div className="space-y-1">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-200">
-            <Phone className="w-3 h-3 text-amber-400 shrink-0" />
-            <span className="truncate">{admin.phone || "No phone listed"}</span>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] text-slate-400">
-            <Mail className="w-3 h-3 text-slate-500 shrink-0" />
-            <a
-              href={`mailto:${admin.email}`}
-              className="text-amber-400/90 hover:underline truncate max-w-[140px]"
-            >
-              {admin.email}
-            </a>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Role & Privileges",
+      header: "Authorization & Role",
       accessor: (admin) => {
-        const role =
-          typeof admin.user === "object" ? admin.user?.role : undefined;
-        const isSuper = role === "super_admin" || role === "SUPER_ADMIN";
+        const roleStr =
+          typeof admin.user === "object"
+            ? admin.user?.role || "ADMIN"
+            : "ADMIN";
+        const isSuper =
+          roleStr === "super_admin" || roleStr === "SUPER_ADMIN";
 
         return (
-          <div className="space-y-0.5 text-xs">
-            <div className="flex items-center gap-1 font-bold">
+          <div className="flex items-center gap-2">
+            <div
+              className={`p-1.5 rounded-lg border shadow-sm ${
+                isSuper
+                  ? "bg-amber-400/10 border-amber-400/20 text-amber-400"
+                  : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+              }`}
+            >
               {isSuper ? (
-                <Shield className="w-3.5 h-3.5 text-amber-400" />
+                <ShieldAlert className="w-4 h-4" />
               ) : (
-                <ShieldCheck className="w-3.5 h-3.5 text-slate-400" />
+                <Shield className="w-4 h-4" />
               )}
-              <span className={isSuper ? "text-amber-400 font-black" : "text-slate-200 font-bold"}>
-                {isSuper ? "Super Administrator" : "Platform Administrator"}
-              </span>
             </div>
-            <div className="text-[10px] text-slate-400">
-              {isSuper ? "Full Root Access" : "Standard Operations Access"}
+            <div>
+              <div className="text-xs font-black text-white">
+                {isSuper ? "Super Administrator" : "Platform Admin"}
+              </div>
+              <div className="text-[10px] text-slate-400">
+                {isSuper ? "Full Root Privileges" : "Standard Operations"}
+              </div>
             </div>
           </div>
         );
       },
     },
     {
-      header: "Status",
-      accessor: (admin) =>
-        !admin.isDeleted ? (
-          <span className="badge badge-success badge-outline bg-success/10 border-success/30 text-success badge-sm font-bold gap-1">
-            <CheckCircle2 className="w-3 h-3" /> Active
-          </span>
-        ) : (
-          <span className="badge badge-error badge-outline bg-error/10 border-error/30 text-error badge-sm font-bold gap-1">
-            <AlertTriangle className="w-3 h-3" /> Suspended
-          </span>
-        ),
-    },
-    {
-      header: "Onboarded",
+      header: "Phone Contact",
       accessor: (admin) => (
-        <div className="flex items-center gap-1 text-[11px] text-slate-300">
-          <Calendar className="w-3 h-3 text-slate-500" />
-          <span>
-            {admin.createdAt
-              ? new Date(admin.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })
-              : "N/A"}
-          </span>
+        <div className="text-[11px] text-slate-300 flex items-center gap-1.5 font-medium">
+          <Phone className="w-3.5 h-3.5 text-amber-400/70 shrink-0" />
+          <span>{admin.phone || "No phone linked"}</span>
         </div>
       ),
+    },
+    {
+      header: "Security Status",
+      accessor: (admin) => {
+        const isSuspended = admin.isDeleted;
+        return (
+          <span
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border shadow-sm ${
+              !isSuspended
+                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                : "bg-rose-500/10 text-rose-400 border-rose-500/20"
+            }`}
+          >
+            {!isSuspended ? (
+              <>
+                <CheckCircle2 className="w-3 h-3" />
+                Active Staff
+              </>
+            ) : (
+              <>
+                <AlertTriangle className="w-3 h-3" />
+                Revoked / Off
+              </>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      header: "Onboarded Date",
+      accessor: (admin) => {
+        const dateStr = admin.createdAt
+          ? new Date(admin.createdAt).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })
+          : "N/A";
+
+        return (
+          <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5">
+            <Calendar className="w-3 h-3 text-slate-500 shrink-0" />
+            <span>{dateStr}</span>
+          </div>
+        );
+      },
     },
     {
       header: "Actions",
-      align: "right",
       accessor: (admin) => (
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center gap-2">
+          {/* Quick View Details */}
           <button
-            type="button"
-            title="View Profile Details"
             onClick={() => {
               setSelectedViewAdmin(admin);
               setIsViewModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs font-bold text-amber-400 gap-1 hover:bg-amber-400/10 border border-amber-400/20 hover:border-amber-400/40 rounded-lg cursor-pointer transition-all"
+            title="View Details"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200"
           >
             <Eye className="w-3.5 h-3.5" />
-            <span>View</span>
           </button>
 
+          {/* Quick Edit Admin */}
           <button
-            type="button"
-            title="Edit Profile"
             onClick={() => {
               setSelectedEditAdmin(admin);
               setIsEditModalOpen(true);
             }}
-            className="btn btn-ghost btn-xs font-bold text-sky-400 gap-1 hover:bg-sky-400/10 border border-sky-400/20 hover:border-sky-400/40 rounded-lg cursor-pointer transition-all"
+            title="Edit Administrator"
+            className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200"
           >
             <Edit2 className="w-3.5 h-3.5" />
-            <span>Edit</span>
           </button>
 
+          {/* Suspend / Delete Admin */}
           <button
-            type="button"
-            title="Suspend Administrator"
             onClick={() => handleDeleteAdmin(admin._id, admin.name)}
-            className="btn btn-ghost btn-xs font-bold text-rose-400 hover:bg-rose-500/10 border border-rose-500/20 hover:border-rose-500/40 rounded-lg cursor-pointer transition-all"
+            title="Revoke Privileges"
+            className="p-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 hover:border-rose-400/50 hover:bg-rose-500/20 text-rose-400 transition-all duration-200"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
@@ -396,24 +377,23 @@ const AdminsData = ({
     },
   ];
 
+  const currentFilters: AdminsFilterState = {
+    status: statusParam,
+    role: roleParam,
+    sort: sortParam,
+  };
+
   return (
     <div className="space-y-4">
       {/* Search & Filter Toolbar */}
       <AdminsFilterBar
-        filters={filters}
-        onFilterChange={(newFilters) => {
-          setFilters((prev) => ({ ...prev, ...newFilters }));
-          setPage(1);
-        }}
-        onReset={() => {
-          setFilters(initialFilters);
-          setSearchTerm("");
-          setPage(1);
-        }}
+        filters={currentFilters}
+        onFilterChange={handleFilterChange}
+        onReset={handleResetFilters}
       />
 
-      {/* Main Admins Directory Table Container */}
-      <div className="card relative overflow-hidden bg-[#170d2f] shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl [&_.input]:bg-[#120824] [&_.input]:border-white/15 [&_.input]:text-slate-200 [&_.input]:placeholder:text-slate-500 [&_.input:focus]:border-amber-400 [&_thead_th]:text-slate-300 [&_thead_th]:bg-white/[0.03] [&_thead_th]:border-b [&_thead_th]:border-white/10 [&_tbody_tr]:border-b [&_tbody_tr]:border-white/5 [&_tbody_tr:hover]:bg-white/[0.05] [&_tbody_tr]:text-slate-200 [&_.border-base-200]:!border-white/10 [&_.border-base-300]:!border-white/10 [&_.card-title]:!text-white [&_p]:!text-slate-300 [&_.select]:bg-[#120824] [&_.select]:border-white/15 [&_.select]:text-slate-200 [&_.select]:focus:border-amber-400 [&_.join-item.btn-outline]:bg-white/5 [&_.join-item.btn-outline]:border-white/15 [&_.join-item.btn-outline]:text-slate-200 [&_.join-item.btn-outline:hover]:bg-white/10 [&_.join-item.btn-primary]:bg-amber-400 [&_.join-item.btn-primary]:text-slate-950 [&_.join-item.btn-primary]:border-amber-400 [&_strong]:text-amber-400 [&_.btn-square.btn-ghost]:border-white/15 [&_.btn-square.btn-ghost]:bg-white/5 [&_.btn-square.btn-ghost]:text-amber-400 [&_.badge-primary]:bg-amber-400 [&_.badge-primary]:text-slate-950 [&_.badge-primary]:border-none">
+      {/* Main Table Card */}
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-4 sm:p-6">
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
 
@@ -426,8 +406,8 @@ const AdminsData = ({
 
         <div className="relative z-10">
           <AZTable
-            title="Administrative Staff Directory"
-            subtitle="Operational personnel, platform authorities, and verified administrative user credentials."
+            title="Administrator Roster"
+            subtitle="Platform security operators, system maintainers, and super administrators."
             badgeText={meta?.total ?? admins.length}
             icon={<UserCheck className="w-5 h-5 text-amber-400" />}
             className="!bg-transparent !shadow-none !border-none text-slate-100"
@@ -441,23 +421,16 @@ const AdminsData = ({
             onRefresh={refetch}
             isRefreshing={isFetching}
             searchValue={searchTerm}
-            onSearchChange={(val) => {
-              setSearchTerm(val);
-              setPage(1);
-            }}
+            onSearchChange={(val: string) => setSearchTerm(val)}
             searchPlaceholder="Search admins by name, email, phone..."
             emptyTitle="No Administrators Found"
             emptyMessage="No administrative accounts match your active filters or search query."
             emptyIcon={<UserCheck className="w-6 h-6 text-amber-400" />}
             pagination={{
               page,
-              limit,
+              limit: LIMIT,
               total: meta?.total ?? admins.length,
-              onPageChange: (p) => setPage(p),
-              onLimitChange: (l) => {
-                setLimit(l);
-                setPage(1);
-              },
+              onPageChange: (p) => updateUrl({ page: p }),
             }}
           />
         </div>

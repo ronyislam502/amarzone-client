@@ -11,13 +11,14 @@ import {
   Plus,
   X,
   CheckCircle2,
+  Wand2,
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateProductMutation } from '@/redux/features/product/productApi';
 import { useAllDepartmentsQuery } from '@/redux/features/department/departmentApi';
 import { useAllCategoriesQuery } from '@/redux/features/category/categoryApi';
 import { toast } from 'react-toastify';
-import { FieldValues } from 'react-hook-form';
+import { FieldValues, useForm } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 import AZForm from '../../../shared/form/AZFrom';
 import AZInput from '../../../shared/form/AZInput';
@@ -25,22 +26,44 @@ import AZSelect from '../../../shared/form/AZSelect';
 import { productSchema } from '@/src/schema/Product';
 import { TDepartment } from '@/src/types/department';
 import { TCategory } from '@/src/types/category';
-import { ChangeEvent, KeyboardEvent, useState, useMemo } from 'react';
+import { ChangeEvent, KeyboardEvent, useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
+import AiProductContentModal from './AiProductContentModal';
+import { TProductContentOutput } from '@/redux/features/ai/aiApi';
 
 export interface CreateProductFormProps {
   onSuccess?: () => void;
+  initialData?: Partial<TProductContentOutput> & {
+    department?: string;
+    category?: string;
+    brand?: string;
+  };
 }
 
-const CreateProduct = ({ onSuccess }: CreateProductFormProps) => {
+const CreateProduct = ({ onSuccess, initialData }: CreateProductFormProps) => {
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
-  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>(
+    initialData?.department || ''
+  );
   const [featureInput, setFeatureInput] = useState<string>('');
-  const [features, setFeatures] = useState<string[]>([]);
+  const [features, setFeatures] = useState<string[]>(
+    initialData?.bulletFeatures || []
+  );
   const [tagInput, setTagInput] = useState<string>('');
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(initialData?.tags || []);
   const [isBestSeller, setIsBestSeller] = useState<boolean>(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState<boolean>(false);
+
+  const methods = useForm({
+    resolver: zodResolver(productSchema),
+    defaultValues: {
+      title: initialData?.seoTitle || '',
+      brand: initialData?.brand || '',
+      department: initialData?.department || '',
+      category: initialData?.category || '',
+    },
+  });
 
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const { data: departmentsData, isLoading: isDeptLoading } = useAllDepartmentsQuery({
@@ -50,6 +73,46 @@ const CreateProduct = ({ onSuccess }: CreateProductFormProps) => {
     limit: 0,
   });
   const router = useRouter();
+
+  // Populate form if initialData arrives/changes
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.seoTitle) {
+        methods.setValue('title', initialData.seoTitle, { shouldValidate: true });
+      }
+      if (initialData.brand) {
+        methods.setValue('brand', initialData.brand, { shouldValidate: true });
+      }
+      if (initialData.department) {
+        methods.setValue('department', initialData.department, { shouldValidate: true });
+        setSelectedDepartment(initialData.department);
+      }
+      if (initialData.category) {
+        methods.setValue('category', initialData.category, { shouldValidate: true });
+      }
+      if (initialData.bulletFeatures && initialData.bulletFeatures.length > 0) {
+        setFeatures(initialData.bulletFeatures);
+      }
+      if (initialData.tags && initialData.tags.length > 0) {
+        setTags(initialData.tags);
+      }
+    }
+  }, [initialData, methods]);
+
+  const handleApplyAiContent = (content: TProductContentOutput) => {
+    if (content.seoTitle) {
+      methods.setValue('title', content.seoTitle, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+    if (content.bulletFeatures && content.bulletFeatures.length > 0) {
+      setFeatures(content.bulletFeatures);
+    }
+    if (content.tags && content.tags.length > 0) {
+      setTags(content.tags);
+    }
+  };
 
   const departments: TDepartment[] = departmentsData?.data || [];
   const allCategories: TCategory[] = categoriesData?.data || [];
@@ -191,9 +254,38 @@ const CreateProduct = ({ onSuccess }: CreateProductFormProps) => {
 
       {/* Form */}
       <AZForm
+        methods={methods}
         resolver={zodResolver(productSchema)}
         onSubmit={onSubmit}
       >
+        {/* AI Content Generator Hero Banner / Trigger */}
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-purple-500/10 border border-amber-400/30 flex items-center justify-between gap-3 shadow-lg mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-amber-400/20 text-amber-400 border border-amber-400/30 shrink-0">
+              <Sparkles className="w-4 h-4 animate-spin-slow" />
+            </div>
+            <div>
+              <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                <span>AI Product Content Assistant</span>
+                <span className="badge badge-warning text-[9px] font-extrabold px-1.5 py-0.5 text-slate-950">
+                  Smart Fill
+                </span>
+              </h4>
+              <p className="text-[11px] text-slate-400">
+                Generate SEO titles, bullet features, and discovery tags in 1 click.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsAiModalOpen(true)}
+            className="btn btn-xs sm:btn-sm gap-1.5 font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 border-0 rounded-xl shadow-md transition-all cursor-pointer shrink-0"
+          >
+            <Wand2 className="w-3.5 h-3.5" />
+            <span>Generate with AI</span>
+          </button>
+        </div>
+
         <div className="space-y-4">
           {/* Taxonomy: Department & Category */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -292,11 +384,19 @@ const CreateProduct = ({ onSuccess }: CreateProductFormProps) => {
 
           {/* Features Input & Badges */}
           <div className="space-y-1.5 pt-1">
-            <label className="label py-0">
+            <label className="label py-0 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
                 <ListCheck className="w-3.5 h-3.5 text-amber-400" />
                 Key Product Features
               </span>
+              <button
+                type="button"
+                onClick={() => setIsAiModalOpen(true)}
+                className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>AI Features</span>
+              </button>
             </label>
             <div className="flex gap-2">
               <input
@@ -344,11 +444,19 @@ const CreateProduct = ({ onSuccess }: CreateProductFormProps) => {
 
           {/* Tags Input & Badges */}
           <div className="space-y-1.5">
-            <label className="label py-0">
+            <label className="label py-0 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-300 flex items-center gap-1">
                 <Tag className="w-3.5 h-3.5 text-sky-400" />
                 Discovery Tags
               </span>
+              <button
+                type="button"
+                onClick={() => setIsAiModalOpen(true)}
+                className="text-[11px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>AI Tags</span>
+              </button>
             </label>
             <div className="flex gap-2">
               <input
@@ -424,6 +532,22 @@ const CreateProduct = ({ onSuccess }: CreateProductFormProps) => {
           </button>
         </div>
       </AZForm>
+
+      {/* AI Product Content Studio Modal */}
+      <AiProductContentModal
+        isOpen={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        initialValues={{
+          title: methods.watch('title') || '',
+          brand: methods.watch('brand') || '',
+          category:
+            allCategories.find((c) => c._id === methods.watch('category'))?.name ||
+            '',
+          features: features,
+          keywords: tags,
+        }}
+        onApply={handleApplyAiContent}
+      />
     </div>
   );
 };
