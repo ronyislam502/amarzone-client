@@ -9,6 +9,7 @@ import {
     Settings,
     Activity,
     MessageSquare,
+    ShieldAlert,
 } from "lucide-react";
 
 export const vendorSidebarItems = [
@@ -104,6 +105,12 @@ export const vendorSidebarItems = [
                 href: "/vendor/chat",
                 icon: MessageSquare,
                 iconClass: "text-primary",
+            },
+            {
+                label: "Store Disputes",
+                href: "/vendor/disputes",
+                icon: ShieldAlert,
+                iconClass: "text-rose-400",
             },
         ],
     },

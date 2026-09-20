@@ -9,6 +9,7 @@ import {
     MapPin,
     Bell,
     MessageSquare,
+    ShieldAlert,
 } from "lucide-react";
 
 export const customerSidebarItems = [
@@ -53,6 +54,16 @@ export const customerSidebarItems = [
                 href: "/customer/chat",
                 icon: MessageSquare,
                 iconClass: "text-primary",
+            },
+            {
+                label: "Disputes & Claims",
+                href: "/customer/disputes",
+                icon: ShieldAlert,
+                iconClass: "text-rose-400",
+                badge: {
+                    text: "Disputes",
+                    className: "badge-error",
+                },
             },
         ],
     },

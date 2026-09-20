@@ -1,4 +1,4 @@
-import { TResponseRedux } from "@/types/global";
+
 import { baseApi } from "../../api/baseApi";
 import { TDepartment } from "@/types/department";
 

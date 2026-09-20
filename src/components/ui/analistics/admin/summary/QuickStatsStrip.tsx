@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
   Star,
@@ -77,11 +78,19 @@ export const QuickStatsStrip: React.FC<QuickStatsStripProps> = ({
       </div>
 
       {/* Stat 3: Open Disputes & Fraud Alerts */}
-      <div className="p-4 rounded-2xl bg-[#170d2f] border border-white/10 shadow-xl flex items-center justify-between">
+      <Link
+        href="/admin/disputes"
+        className="p-4 rounded-2xl bg-[#170d2f] border border-white/10 hover:border-rose-400/50 transition-all shadow-xl flex items-center justify-between group cursor-pointer"
+      >
         <div className="space-y-0.5">
-          <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
-            Disputes & Fraud
-          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
+              Disputes & Fraud
+            </span>
+            <span className="text-[9px] text-rose-400 opacity-0 group-hover:opacity-100 transition">
+              View &rarr;
+            </span>
+          </div>
           <div
             className={`text-xl font-black font-mono ${
               openDisputes + fraudAlerts > 0 ? "text-rose-400" : "text-emerald-400"
@@ -96,7 +105,7 @@ export const QuickStatsStrip: React.FC<QuickStatsStripProps> = ({
           </p>
         </div>
         <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${
+          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110 ${
             openDisputes + fraudAlerts > 0
               ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
               : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
@@ -104,7 +113,7 @@ export const QuickStatsStrip: React.FC<QuickStatsStripProps> = ({
         >
           <ShieldAlert className="w-5 h-5" />
         </div>
-      </div>
+      </Link>
 
       {/* Stat 4: SLA Compliance Integrity */}
       <div className="p-4 rounded-2xl bg-[#170d2f] border border-white/10 shadow-xl flex items-center justify-between">

@@ -34,7 +34,7 @@ export const disputeApi = baseApi.injectEndpoints({
                 method: "POST",
                 body: data,
             }),
-            invalidatesTags: ["Disputes", "dashboard"],
+            invalidatesTags: ["Disputes", "dashboard", "order", "health"],
         }),
 
         getDisputeDecision: builder.query({
