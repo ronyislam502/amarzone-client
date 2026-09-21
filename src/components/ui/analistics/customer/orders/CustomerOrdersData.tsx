@@ -175,10 +175,10 @@ const CustomerOrdersData: React.FC = () => {
     sortBy === "oldest"
       ? "createdAt"
       : sortBy === "highest_amount"
-      ? "-totalPrice"
-      : sortBy === "lowest_amount"
-      ? "totalPrice"
-      : "-createdAt";
+        ? "-totalPrice"
+        : sortBy === "lowest_amount"
+          ? "totalPrice"
+          : "-createdAt";
 
   // Server-side query matching the CategoriesData pattern
   const {
@@ -231,10 +231,10 @@ const CustomerOrdersData: React.FC = () => {
       accessor: (order) => {
         const d = order.createdAt
           ? new Date(order.createdAt).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          })
           : "—";
 
         return (
@@ -490,8 +490,8 @@ const CustomerOrdersData: React.FC = () => {
             emptyIcon={<ShoppingBag className="w-8 h-8 text-slate-500" />}
             emptyAction={
               searchTerm ||
-              statusFilter !== "ALL" ||
-              paymentFilter !== "ALL" ? (
+                statusFilter !== "ALL" ||
+                paymentFilter !== "ALL" ? (
                 <button
                   type="button"
                   onClick={handleReset}
