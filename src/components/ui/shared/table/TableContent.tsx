@@ -16,7 +16,7 @@ const TableContent = <T,>({
 }: TTableContentProps<T>) => {
   return (
     <div className="overflow-x-auto pt-2">
-      <table className="table table-zebra w-full text-xs">
+      <table className="table  w-full text-xs">
         <DataTableHead columns={columns} />
         <TableBody
           data={data}

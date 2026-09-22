@@ -434,6 +434,12 @@ const OrdersData: React.FC<OrdersDataProps> = ({
             setIsDetailsModalOpen(false);
             setDetailsOrderId(null);
           }}
+          onManage={(ord) => {
+            setIsDetailsModalOpen(false);
+            setDetailsOrderId(null);
+            setSelectedOrder(ord);
+            setIsEditModalOpen(true);
+          }}
         />
       )}
     </>
@@ -449,9 +455,10 @@ const OrdersData: React.FC<OrdersDataProps> = ({
 interface OrderDetailsViewProps {
   orderId: string;
   onClose: () => void;
+  onManage?: (order: any) => void;
 }
 
-const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({ orderId, onClose }) => {
+const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({ orderId, onClose, onManage }) => {
   const { data: response, isLoading, isError, refetch } = useSingleOrderQuery(orderId, {
     refetchOnMountOrArgChange: true,
   });
@@ -920,11 +927,21 @@ const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({ orderId, onClose })
             </div>
 
             {/* Modal Footer */}
-            <div className="relative z-10 flex items-center justify-end p-4 border-t border-white/10 bg-white/[0.02]">
+            <div className="relative z-10 flex items-center justify-between p-4 border-t border-white/10 bg-white/[0.02]">
+              {onManage && order && (
+                <button
+                  type="button"
+                  onClick={() => onManage(order)}
+                  className="btn btn-sm gap-2 font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl border-none shadow-sm cursor-pointer"
+                >
+                  <Truck className="w-4 h-4" />
+                  <span>Update Tracking / Dispatch</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={onClose}
-                className="btn btn-sm btn-ghost text-slate-300 hover:text-white font-bold rounded-xl border border-white/10"
+                className="btn btn-sm btn-ghost text-slate-300 hover:text-white font-bold rounded-xl border border-white/10 ml-auto"
               >
                 Close
               </button>

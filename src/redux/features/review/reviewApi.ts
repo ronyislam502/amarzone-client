@@ -3,13 +3,35 @@ import { TResponseRedux } from "@/types/global";
 
 export const reviewApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    createReview: builder.mutation({
+    createProductReview: builder.mutation<
+      any,
+      { product: string; order: string; rating: number; title?: string; review: string }
+    >({
       query: (reviewData) => ({
-        url: "/reviews/create-review",
+        url: "/product-reviews/create-review",
         method: "POST",
         body: reviewData,
       }),
-      invalidatesTags: ["review", "product"],
+      invalidatesTags: ["review", "product", "order"],
+    }),
+    createServiceReview: builder.mutation<
+      any,
+      { customer: string; vendor: string; order: string; rating: number; title?: string; review: string }
+    >({
+      query: (reviewData) => ({
+        url: "/service-reviews/create-service-review",
+        method: "POST",
+        body: reviewData,
+      }),
+      invalidatesTags: ["review", "order"],
+    }),
+    createReview: builder.mutation({
+      query: (reviewData) => ({
+        url: "/product-reviews/create-review",
+        method: "POST",
+        body: reviewData,
+      }),
+      invalidatesTags: ["review", "product", "order"],
     }),
     allReviews: builder.query({
       query: (params) => {
@@ -75,6 +97,8 @@ export const reviewApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useCreateProductReviewMutation,
+  useCreateServiceReviewMutation,
   useCreateReviewMutation,
   useAllReviewsQuery,
   useProductReviewsQuery,

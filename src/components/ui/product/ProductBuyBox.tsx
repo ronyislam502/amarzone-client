@@ -277,19 +277,6 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
         </div>
       </div>
 
-      {/* Other Sellers Teaser */}
-      {totalSellers > 1 && (
-        <div className="border-t border-slate-200 pt-3 text-xs">
-          <span className="text-slate-600">Other sellers on Amarzone: </span>
-          <a
-            href="#other-sellers"
-            onClick={scrollToOtherSellers}
-            className="text-[#007185] hover:text-[#c7511f] font-semibold hover:underline"
-          >
-            Compare {totalSellers} offers
-          </a>
-        </div>
-      )}
     </div>
   );
 };

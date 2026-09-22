@@ -6,9 +6,10 @@ import { Search, ArrowUpDown, RotateCcw, RefreshCw } from "lucide-react";
 export type OrderStatusFilter =
   | "ALL"
   | "PENDING"
-  | "PROCESSING"
-  | "CONFIRMED"
+  | "UNSHIPPED"
   | "SHIPPED"
+  | "IN_TRANSIT"
+  | "OUT_OF_DELIVERY"
   | "DELIVERED"
   | "CANCELLED";
 
@@ -33,9 +34,10 @@ const STATUS_TABS: { label: string; value: OrderStatusFilter; dot: string }[] =
   [
     { label: "All", value: "ALL", dot: "bg-slate-400" },
     { label: "Pending", value: "PENDING", dot: "bg-amber-400" },
-    { label: "Processing", value: "PROCESSING", dot: "bg-yellow-400" },
-    { label: "Confirmed", value: "CONFIRMED", dot: "bg-sky-400" },
+    { label: "Unshipped", value: "UNSHIPPED", dot: "bg-purple-400" },
     { label: "Shipped", value: "SHIPPED", dot: "bg-cyan-400" },
+    { label: "In Transit", value: "IN_TRANSIT", dot: "bg-violet-400" },
+    { label: "Out for Delivery", value: "OUT_OF_DELIVERY", dot: "bg-sky-400" },
     { label: "Delivered", value: "DELIVERED", dot: "bg-emerald-400" },
     { label: "Cancelled", value: "CANCELLED", dot: "bg-red-400" },
   ];

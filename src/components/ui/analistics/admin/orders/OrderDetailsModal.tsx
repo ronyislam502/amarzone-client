@@ -29,6 +29,7 @@ import {
   Activity,
   Zap,
   MessageSquare,
+  Star,
 } from "lucide-react";
 import { TOrder } from "@/src/types/order";
 import { toast } from "react-toastify";
@@ -44,12 +45,16 @@ export interface OrderDetailsModalProps {
   order: TOrder | null;
   isOpen: boolean;
   onClose: () => void;
+  onOpenUpdate?: () => void;
+  onOpenReview?: (variantId?: string) => void;
 }
 
 export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
   order,
   isOpen,
   onClose,
+  onOpenUpdate,
+  onOpenReview,
 }) => {
   const router = useRouter();
   const currentUser = useAppSelector(selectCurrentUser);
@@ -170,10 +175,18 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
     switch (status?.toUpperCase()) {
       case "DELIVERED":
         return "badge-success text-slate-950 font-black";
+      case "OUT_OF_DELIVERY":
+        return "badge-info text-white font-bold";
+      case "IN_TRANSIT":
+        return "badge-secondary text-white font-bold";
       case "SHIPPED":
         return "badge-info text-white font-bold";
+      case "UNSHIPPED":
+        return "badge-warning text-slate-950 font-bold";
       case "PROCESSING":
       case "CONFIRMED":
+        return "badge-warning text-slate-950 font-bold";
+      case "REFUNDED":
         return "badge-warning text-slate-950 font-bold";
       case "CANCELLED":
         return "badge-error text-white font-bold";
@@ -326,6 +339,9 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                     <th className="py-2.5 px-3 text-center">Qty</th>
                     <th className="py-2.5 px-3 text-right">Unit Price</th>
                     <th className="py-2.5 px-3 text-right">Subtotal</th>
+                    {isCustomerUser && order.status?.toUpperCase() === "DELIVERED" && onOpenReview && (
+                      <th className="py-2.5 px-3 text-right">Review</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -376,12 +392,27 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                           <td className="py-2.5 px-3 text-right font-mono font-bold text-amber-400">
                             ${lineTotal.toFixed(2)}
                           </td>
+                          {isCustomerUser && order.status?.toUpperCase() === "DELIVERED" && onOpenReview && (
+                            <td className="py-2.5 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const vId = typeof item.variant === "object" ? item.variant?._id : item.variant;
+                                  onOpenReview(vId ? String(vId) : undefined);
+                                }}
+                                className="btn btn-xs font-bold text-amber-400 hover:bg-amber-400/10 border border-amber-400/30 rounded-lg gap-1 cursor-pointer transition-all"
+                              >
+                                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                                <span>Review</span>
+                              </button>
+                            </td>
+                          )}
                         </tr>
                       );
                     })
                   ) : (
                     <tr>
-                      <td colSpan={4} className="text-center py-4 text-slate-400">
+                      <td colSpan={isCustomerUser && order.status?.toUpperCase() === "DELIVERED" ? 5 : 4} className="text-center py-4 text-slate-400">
                         No product lines recorded for this order.
                       </td>
                     </tr>
@@ -690,7 +721,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
         {/* Modal Footer */}
         <div className="relative z-10 flex items-center justify-between p-4 border-t border-white/10 bg-white/[0.02]">
-          <div>
+          <div className="flex items-center gap-2">
             {isCustomerUser && (
               <button
                 type="button"
@@ -704,6 +735,17 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                   <MessageSquare className="w-4 h-4" />
                 )}
                 <span>Message Store Vendor</span>
+              </button>
+            )}
+
+            {!isCustomerUser && onOpenUpdate && (
+              <button
+                type="button"
+                onClick={onOpenUpdate}
+                className="btn btn-sm gap-2 font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl border-none shadow-sm cursor-pointer"
+              >
+                <Truck className="w-4 h-4" />
+                <span>Update Tracking / Dispatch</span>
               </button>
             )}
           </div>

@@ -1,3 +1,5 @@
+import { TInventory } from "./inventory";
+
 export type TAttribute = {
     type: string
     value: string
@@ -12,5 +14,6 @@ export type TVariant = {
     images: string[]
     isPrivateLevel: boolean
     isDeleted: boolean
+    inventory?: TInventory[]
     _id: string
 }

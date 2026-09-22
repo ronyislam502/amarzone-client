@@ -22,7 +22,10 @@ import {
   AlertCircle,
   Clock,
   RotateCcw,
+  Truck,
 } from "lucide-react";
+import Modal from "../../../shared/Modal";
+import UpdateOrder from "../../vendor/orders/UpdateOrder";
 import { toast } from "react-toastify";
 
 export interface OrdersDataProps {
@@ -47,6 +50,7 @@ export const OrdersData: React.FC<OrdersDataProps> = ({
   // Selected Order for Modal Details
   const [selectedOrder, setSelectedOrder] = useState<TOrder | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   // Convert sort key to Mongoose sort string for QueryBuilder
   const sortParam =
@@ -347,6 +351,19 @@ export const OrdersData: React.FC<OrdersDataProps> = ({
             <span>Details</span>
           </button>
 
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedOrder(order);
+              setIsUpdateModalOpen(true);
+            }}
+            className="btn btn-ghost btn-xs font-bold text-cyan-400 gap-1 hover:bg-cyan-400/10 border border-cyan-400/20 hover:border-cyan-400/40 rounded-xl cursor-pointer transition-all"
+            title="Assign tracking and dispatch order"
+          >
+            <Truck className="w-3 h-3" />
+            <span>Dispatch</span>
+          </button>
+
           {order.invoiceUrl && (
             <a
               href={order.invoiceUrl}
@@ -446,7 +463,33 @@ export const OrdersData: React.FC<OrdersDataProps> = ({
           setIsDetailsModalOpen(false);
           setSelectedOrder(null);
         }}
+        onOpenUpdate={() => {
+          setIsDetailsModalOpen(false);
+          setIsUpdateModalOpen(true);
+        }}
       />
+
+      {/* Dispatch & Tracking Update Modal */}
+      <Modal
+        isOpen={isUpdateModalOpen}
+        onClose={() => {
+          setIsUpdateModalOpen(false);
+          setSelectedOrder(null);
+        }}
+        size="md"
+        className="!bg-[#170d2f] !border-white/10 text-slate-100 shadow-2xl relative overflow-hidden rounded-3xl"
+      >
+        {selectedOrder && (
+          <UpdateOrder
+            order={selectedOrder}
+            onSuccess={() => {
+              setIsUpdateModalOpen(false);
+              setSelectedOrder(null);
+              refetch();
+            }}
+          />
+        )}
+      </Modal>
     </>
   );
 };

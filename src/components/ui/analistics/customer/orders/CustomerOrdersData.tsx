@@ -20,7 +20,10 @@ import {
   AlertCircle,
   MessageSquare,
   Loader2,
+  Star,
 } from "lucide-react";
+import CreateProductReviewModal from "./CreateProductReviewModal";
+import CreateServiceReviewModal from "./CreateServiceReviewModal";
 import { useMyOrdersQuery } from "@/src/redux/features/order/orderApi";
 import { useCreateConversationMutation } from "@/src/redux/features/chat/chatApi";
 import { TOrder } from "@/src/types/order";
@@ -44,6 +47,18 @@ const getOrderStatusCell = (status: string) => {
         <CheckCircle2 className="w-3 h-3" /> Delivered
       </span>
     );
+  if (s === "OUT_OF_DELIVERY")
+    return (
+      <span className="badge badge-info text-white font-bold badge-sm gap-1">
+        <Truck className="w-3 h-3" /> Out for Delivery
+      </span>
+    );
+  if (s === "IN_TRANSIT")
+    return (
+      <span className="badge badge-secondary text-white font-bold badge-sm gap-1">
+        <Truck className="w-3 h-3" /> In Transit
+      </span>
+    );
   if (s === "SHIPPED")
     return (
       <span className="badge badge-info text-white font-bold badge-sm gap-1">
@@ -54,12 +69,6 @@ const getOrderStatusCell = (status: string) => {
     return (
       <span className="badge badge-warning text-slate-950 font-bold badge-sm">
         Unshipped
-      </span>
-    );
-  if (s === "OUT_OF_DELIVERY")
-    return (
-      <span className="badge badge-info text-white font-bold badge-sm gap-1">
-        <Truck className="w-3 h-3" /> Out for Delivery
       </span>
     );
   if (s === "REFUNDED")
@@ -125,6 +134,12 @@ const CustomerOrdersData: React.FC = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<TOrder | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Review modal state
+  const [reviewOrder, setReviewOrder] = useState<TOrder | null>(null);
+  const [reviewVariantId, setReviewVariantId] = useState<string | undefined>(undefined);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [isServiceReviewModalOpen, setIsServiceReviewModalOpen] = useState(false);
 
   const handleMessageVendor = async (order: TOrder, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -393,6 +408,38 @@ const CustomerOrdersData: React.FC = () => {
             <span>Details</span>
           </button>
 
+          {order.status?.toUpperCase() === "DELIVERED" && (
+            <div className="flex gap-1.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setReviewOrder(order);
+                  const firstV = order.products?.[0]?.variant;
+                  const vId = typeof firstV === "object" ? firstV?._id : firstV;
+                  setReviewVariantId(vId ? String(vId) : undefined);
+                  setIsReviewModalOpen(true);
+                }}
+                title="Rate and review this product"
+                className="btn btn-ghost btn-xs font-bold text-amber-400 gap-1 hover:bg-amber-400/10 border border-amber-400/20 hover:border-amber-400/40 rounded-xl cursor-pointer transition-all px-2"
+              >
+                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                <span className="hidden xl:inline">Product</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setReviewOrder(order);
+                  setIsServiceReviewModalOpen(true);
+                }}
+                title="Rate and review the seller's service"
+                className="btn btn-ghost btn-xs font-bold text-indigo-400 gap-1 hover:bg-indigo-400/10 border border-indigo-400/20 hover:border-indigo-400/40 rounded-xl cursor-pointer transition-all px-2"
+              >
+                <Store className="w-3 h-3" />
+                <span className="hidden xl:inline">Service</span>
+              </button>
+            </div>
+          )}
+
           {order.invoiceUrl && (
             <a
               href={order.invoiceUrl}
@@ -519,6 +566,35 @@ const CustomerOrdersData: React.FC = () => {
           setIsModalOpen(false);
           setSelectedOrder(null);
         }}
+        onOpenReview={(variantId) => {
+          setReviewOrder(selectedOrder);
+          setReviewVariantId(variantId);
+          setIsReviewModalOpen(true);
+        }}
+      />
+
+      {/* Product Review Modal */}
+      <CreateProductReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => {
+          setIsReviewModalOpen(false);
+          setReviewOrder(null);
+          setReviewVariantId(undefined);
+        }}
+        order={reviewOrder}
+        initialProductId={reviewVariantId}
+        onSuccess={() => refetch()}
+      />
+
+      {/* Service Review Modal */}
+      <CreateServiceReviewModal
+        isOpen={isServiceReviewModalOpen}
+        onClose={() => {
+          setIsServiceReviewModalOpen(false);
+          if (!isReviewModalOpen) setReviewOrder(null);
+        }}
+        order={reviewOrder}
+        onSuccess={() => refetch()}
       />
     </>
   );

@@ -4,9 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSingleProductQuery } from "@/redux/features/product/productApi";
-import { useGetInventoryByAsinQuery } from "@/redux/features/inventory/inventoryApi";
 import { useVariantReviewsQuery } from "@/redux/features/review/reviewApi";
 import { TProduct, TVariant } from "@/types/product";
+import { TInventory } from "@/types/inventory";
 import {
   ProductBreadcrumbs,
   ProductImageGallery,
@@ -45,27 +45,32 @@ export default function SingleProductPage() {
   const [selectedVariant, setSelectedVariant] = useState<TVariant | null>(null);
 
   useEffect(() => {
-    if (product?.variants && product.variants.length > 0 && !selectedVariant) {
-      setSelectedVariant(product.variants[0]);
+    if (product?.variants && product.variants.length > 0) {
+      const belongs = selectedVariant && product.variants.some((v) => v._id === selectedVariant._id);
+      if (!belongs) {
+        setSelectedVariant(product.variants[0]);
+      }
     }
   }, [product, selectedVariant]);
 
   const activeVariant: TVariant | undefined =
-    selectedVariant || (product?.variants && product.variants[0]);
+    (selectedVariant && product?.variants?.find((v) => v._id === selectedVariant._id)) ||
+    selectedVariant ||
+    (product?.variants && product.variants[0]);
 
-  // 2. Fetch Inventory / Sellers by selected variant's ASIN
-  const activeAsin = activeVariant?.asin || "";
-  const {
-    data: inventoryResponse,
-    isLoading: isLoadingInventory,
-  } = useGetInventoryByAsinQuery(activeAsin, {
-    skip: !activeAsin,
-  });
+  // 2. Extract sellers and vendors based on currently selected product variant
+  const sellers: TInventory[] = (activeVariant?.inventory || []).filter(
+    (inv: TInventory) => inv?.seller && inv.seller.isStock !== false
+  );
 
-  const inventoryData = inventoryResponse?.data;
-  const buyBoxWinner = inventoryData?.buyBoxWinner || null;
-  const totalSellers = inventoryData?.totalSellers || 0;
-  const sellers = inventoryData?.sellers || [];
+  // Buy Box winner for the selected variant
+  const buyBoxWinner: TInventory | null =
+    sellers.find((l) => l.seller?.isBuyBoxWinner) ||
+    (sellers.length > 0
+      ? [...sellers].sort((a, b) => (a.seller?.price ?? 0) - (b.seller?.price ?? 0))[0]
+      : null);
+
+  const totalSellers = sellers.length;
 
   // 3. Fetch Variant Reviews by selected variant's ID
   const activeVariantId = activeVariant?._id || "";
@@ -236,8 +241,18 @@ export default function SingleProductPage() {
                 totalSellers={totalSellers}
                 product={product}
                 selectedVariant={activeVariant}
-                isLoadingInventory={isLoadingInventory}
+                isLoadingInventory={isLoadingProduct}
               />
+
+              {/* Multi-Vendor Comparison: Other Sellers on Amarzone */}
+              {sellers.length > 1 && (
+                <ProductSellerOffers
+                  sellers={sellers}
+                  buyBoxWinnerId={buyBoxWinner?._id}
+                  product={product}
+                  selectedVariant={activeVariant}
+                />
+              )}
 
               {/* AI Product Assistant Advisor Card */}
               <div className="mt-4 p-4 rounded-2xl bg-[#170d2f] text-white border border-amber-400/25 shadow-lg space-y-3 relative overflow-hidden">
@@ -318,14 +333,6 @@ export default function SingleProductPage() {
         {/* Product Editorial Description */}
         <ProductDescriptionSection product={product} />
 
-        {/* Multi-Vendor Comparison: Other Sellers on Amarzone */}
-        {sellers.length > 0 && (
-          <ProductSellerOffers
-            sellers={sellers}
-            buyBoxWinnerId={buyBoxWinner?._id}
-            product={product}
-          />
-        )}
 
         {/* Bottom Section: Customer Reviews & Rating Breakdown */}
         <ProductReviewSection

@@ -182,7 +182,13 @@ export const OrderStageCell: React.FC<OrderStageCellProps> = ({ order, onOpenTra
           ) : (
             <currentStageInfo.icon className="w-3 h-3" />
           )}
-          {currentStageInfo.badgeText}
+          {order.status === "IN_TRANSIT"
+            ? "In Transit"
+            : order.status === "OUT_OF_DELIVERY"
+            ? "Out for Delivery"
+            : order.status === "SHIPPED"
+            ? "Shipped"
+            : currentStageInfo.badgeText}
         </span>
       </div>
 
@@ -348,13 +354,29 @@ export const OrderLiveTrackingModal: React.FC<OrderLiveTrackingModalProps> = ({
               </div>
               <div className="text-lg sm:text-xl font-black text-white flex items-center gap-2">
                 <currentStageInfo.icon className="w-5 h-5 text-emerald-400" />
-                <span>{isTerminal ? terminalType : currentStageInfo.label}</span>
+                <span>
+                  {isTerminal
+                    ? terminalType
+                    : order.status === "IN_TRANSIT"
+                    ? "In Transit"
+                    : order.status === "OUT_OF_DELIVERY"
+                    ? "Out for Delivery"
+                    : order.status === "SHIPPED"
+                    ? "Shipped"
+                    : currentStageInfo.label}
+                </span>
               </div>
               <p className="text-slate-300 text-[11px] leading-relaxed max-w-md">
                 {isTerminal
                   ? terminalType === "CANCELLED"
                     ? "This order was cancelled and inventory was returned to stock."
                     : "Payment for this order was refunded."
+                  : order.status === "IN_TRANSIT"
+                  ? "Package is currently in carrier transit between hub facilities toward your regional center."
+                  : order.status === "OUT_OF_DELIVERY"
+                  ? "Courier dispatch rider is out for delivery to your destination address today."
+                  : order.status === "SHIPPED"
+                  ? "Package has been dispatched by vendor with assigned tracking number."
                   : currentStageInfo.description}
               </p>
             </div>
