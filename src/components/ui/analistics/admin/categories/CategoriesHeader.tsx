@@ -1,4 +1,4 @@
-import { Download, Sparkles, FolderTree } from "lucide-react";
+import { Download, Sparkles } from "lucide-react";
 
 export interface CategoriesHeaderProps {
     onExportCsv?: () => void;
@@ -6,7 +6,7 @@ export interface CategoriesHeaderProps {
 
 const CategoriesHeader = ({ onExportCsv }: CategoriesHeaderProps) => {
     return (
-        <div className="card relative overflow-hidden bg-[#170d2f] shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl">
+        <div className="card relative overflow-hidden bg-dashboard-category shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl">
             {/* Top glowing accent border line */}
             <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
 

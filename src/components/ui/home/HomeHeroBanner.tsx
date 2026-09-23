@@ -10,7 +10,7 @@ export const HomeHeroBanner: React.FC = () => {
         <section aria-label="Featured Promotions & Deals" className="w-full">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
                 {/* Main Hero Card (8 cols) */}
-                <div className="lg:col-span-8 relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1e3d] via-[#004f9a] to-[#0071dc] text-white p-6 sm:p-10 lg:p-12 flex flex-col justify-between shadow-md min-h-[360px] sm:min-h-[420px]">
+                <div className="lg:col-span-8 relative overflow-hidden rounded-3xl  from-[#0c1e3d] via-[#004f9a] to-[#0071dc] text-white p-6 sm:p-10 lg:p-12 flex flex-col justify-between shadow-md">
                     {/* Background glow orbs */}
                     <div className="absolute -top-20 -right-20 w-80 h-80 bg-amber-400/20 rounded-full blur-3xl pointer-events-none" />
                     <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl pointer-events-none" />
@@ -70,7 +70,7 @@ export const HomeHeroBanner: React.FC = () => {
                 {/* Secondary Promo Tiles (4 cols) */}
                 <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-4 sm:gap-6">
                     {/* Secondary Tile 1: Pet Healthcare & Wellness */}
-                    <div className="flex-1 relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-600/5 border border-amber-200/60 p-6 flex flex-col justify-between shadow-sm min-h-[190px]">
+                    <div className="flex-1 relative overflow-hidden rounded-3xl  from-amber-500/15 via-orange-500/10 to-amber-600/5 border border-amber-200/60 p-6 flex flex-col justify-between shadow-sm">
                         <div>
                             <span className="badge badge-warning font-black text-[10px] tracking-wider uppercase mb-2">
                                 Top Trending
@@ -94,7 +94,7 @@ export const HomeHeroBanner: React.FC = () => {
                     </div>
 
                     {/* Secondary Tile 2: Multi-Vendor Storefronts */}
-                    <div className="flex-1 relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-blue-600/5 border border-indigo-200/60 p-6 flex flex-col justify-between shadow-sm min-h-[190px]">
+                    <div className="flex-1 relative overflow-hidden rounded-3xl  from-indigo-500/15 via-purple-500/10 to-blue-600/5 border border-indigo-200/60 p-6 flex flex-col justify-between shadow-sm">
                         <div>
                             <span className="badge badge-primary font-black text-[10px] tracking-wider uppercase mb-2">
                                 Direct From Makers

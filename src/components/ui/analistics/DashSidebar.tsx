@@ -146,7 +146,7 @@ export const DashboardSidebar = ({ children }: TDynamicSidebarProps) => {
             {/* Sidebar Drawer Container */}
             <div className="drawer-side z-40">
                 <label htmlFor="dashboard-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
-                <aside className="w-80 min-h-full bg-[#0c1021] text-slate-100 flex flex-col justify-between border-r border-white/10 shadow-2xl font-sans antialiased">
+                <aside className="w-80 min-h-full bg-dashboard-sidebar text-slate-100 flex flex-col justify-between border-r border-white/10 shadow-2xl font-sans antialiased">
                     {/* Inner Content Wrapper */}
                     <div className="flex flex-col justify-between h-full p-4">
                         <div className="w-full flex flex-col">

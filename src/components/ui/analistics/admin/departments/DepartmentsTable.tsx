@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import TableSkeleton from "../../../shared/skeleton/TableSkeleton";
-import Departments from "@/src/app/(dashboard)/admin/departments/page";
+import DepartmentsData from "./DepartmentsData";
 
 const DepartmentsTable = () => {
   return (
     <Suspense fallback={<TableSkeleton columns={4} rows={5} showAvatar={false} title="Business Departments" />}>
-      <Departments />
+      <DepartmentsData />
     </Suspense>
   );
 };

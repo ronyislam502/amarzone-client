@@ -21,6 +21,7 @@ import {
 import { TCustomer } from "@/types/customer";
 import { TColumn } from "@/src/types/table";
 import AZTable from "../../../shared/AZTable";
+import { TABLE_CARD_CN } from "@/src/lib/tableStyles";
 import CustomersFilterBar, { CustomersFilterState } from "./CustomersFilterBar";
 import CustomerDetailsModal from "./CustomerDetailsModal";
 import UpdateCustomerModal from "./UpdateCustomerModal";
@@ -361,7 +362,7 @@ const CustomersData = ({
       />
 
       {/* Main Table Card */}
-      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-4 sm:p-6">
+      <div className={`${TABLE_CARD_CN} p-4 sm:p-6`}>
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
 

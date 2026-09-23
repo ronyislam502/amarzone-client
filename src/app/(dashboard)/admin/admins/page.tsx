@@ -5,9 +5,10 @@ import AdminsBread from "@/src/components/ui/analistics/admin/admins/AdminsBread
 import AdminsHeader from "@/src/components/ui/analistics/admin/admins/AdminsHeader";
 import AdminsStats from "@/src/components/ui/analistics/admin/admins/AdminsStats";
 import AdminsData from "@/src/components/ui/analistics/admin/admins/AdminsData";
+import TableSkeleton from "@/src/components/ui/shared/skeleton/TableSkeleton";
 import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi";
 
-function AdminsPageContent() {
+export default function AdminsPage() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
   const [createHandler, setCreateHandler] = useState<(() => void) | null>(null);
 
@@ -47,18 +48,12 @@ function AdminsPageContent() {
       />
 
       {/* Interactive Admins Data Table with Filters & Modals */}
-      <AdminsData
-        registerExportHandler={(handler) => setExportHandler(() => handler)}
-        registerCreateHandler={(handler) => setCreateHandler(() => handler)}
-      />
+      <Suspense fallback={<TableSkeleton columns={6} rows={5} showAvatar={true} title="System Administrators" />}>
+        <AdminsData
+          registerExportHandler={(handler) => setExportHandler(() => handler)}
+          registerCreateHandler={(handler) => setCreateHandler(() => handler)}
+        />
+      </Suspense>
     </div>
-  );
-}
-
-export default function AdminsPage() {
-  return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading administrators...</div>}>
-      <AdminsPageContent />
-    </Suspense>
   );
 }

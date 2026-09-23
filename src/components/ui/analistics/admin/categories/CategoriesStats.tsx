@@ -16,7 +16,7 @@ const CategoriesStats = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* Stat 1: Total Categories */}
-      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-5">
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-dashboard-category border border-white/10 shadow-2xl p-5">
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
         {/* Ambient background glow */}
@@ -39,7 +39,7 @@ const CategoriesStats = ({
       </div>
 
       {/* Stat 2: Active Departments */}
-      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-5">
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-dashboard-category border border-white/10 shadow-2xl p-5">
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent pointer-events-none z-20" />
         {/* Ambient background glow */}
@@ -62,7 +62,7 @@ const CategoriesStats = ({
       </div>
 
       {/* Stat 3: Linked Products */}
-      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-5">
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-dashboard-category border border-white/10 shadow-2xl p-5">
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-indigo-400/60 to-transparent pointer-events-none z-20" />
         {/* Ambient background glow */}
@@ -85,7 +85,7 @@ const CategoriesStats = ({
       </div>
 
       {/* Stat 4: Taxonomy Status */}
-      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 shadow-2xl p-5">
+      <div className="card relative overflow-hidden rounded-2xl sm:rounded-3xl bg-dashboard-category border border-white/10 shadow-2xl p-5">
         {/* Top glowing accent border line */}
         <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-purple-400/60 to-transparent pointer-events-none z-20" />
         {/* Ambient background glow */}
