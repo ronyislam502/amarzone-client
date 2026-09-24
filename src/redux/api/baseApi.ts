@@ -9,7 +9,6 @@ import {
 import { logout, setUser } from "../features/auth/authSlice";
 import { RootState } from "../store";
 import { toast } from "react-toastify";
-import Cookies from "js-cookie";
 
 export const url = "http://localhost:9000";
 
@@ -34,12 +33,12 @@ const baseQueryWithRefreshToken: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
 
   // Global error handled removed to allow component-level handling
-  if (result?.error?.status === 404) {
-    toast.error((result.error.data as { message: string }).message);
-  }
-  if (result?.error?.status === 403) {
-    toast.error((result.error.data as { message: string }).message);
-  }
+  // if (result?.error?.status === 404) {
+  //   toast.error((result.error.data as { message: string }).message);
+  // }
+  // if (result?.error?.status === 403) {
+  //   toast.error((result.error.data as { message: string }).message);
+  // }
 
   if (result?.error?.status === 401) {
     //* Send Refresh
