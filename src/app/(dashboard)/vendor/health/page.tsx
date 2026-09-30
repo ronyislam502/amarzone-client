@@ -13,6 +13,7 @@ import {
   useGetMyViolationsQuery,
 } from "@/src/redux/features/health/healthApi";
 import { AlertCircle, RefreshCw, ShieldAlert } from "lucide-react";
+import { VendorHealthSkeleton } from "@/src/components/ui/shared/skeleton";
 
 const VendorHealthPage = () => {
   const {
@@ -60,18 +61,7 @@ const VendorHealthPage = () => {
 
       {/* Loading Skeleton */}
       {isHealthLoading ? (
-        <div className="space-y-6 animate-pulse">
-          <div className="h-64 bg-[#170d2f]/70 border border-white/10 rounded-2xl" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-44 bg-[#170d2f]/70 border border-white/10 rounded-2xl"
-              />
-            ))}
-          </div>
-          <div className="h-56 bg-[#170d2f]/70 border border-white/10 rounded-2xl" />
-        </div>
+        <VendorHealthSkeleton />
       ) : healthError ? (
         /* Error fallback banner */
         <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">

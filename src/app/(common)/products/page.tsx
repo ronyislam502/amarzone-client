@@ -38,6 +38,7 @@ import {
   extractProductPriceInfo,
   getProductThumbnail,
 } from "@/components/ui/home/homeUtils";
+import { ProductGridSkeleton } from "@/src/components/ui/shared/skeleton";
 
 const LIMIT = 24;
 
@@ -425,22 +426,6 @@ const ProductListCard: React.FC<{ product: TProduct }> = ({ product }) => {
   );
 };
 
-// ─── Skeleton Loader ─────────────────────────────────────────────────────────
-const GridSkeleton = () => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-    {Array.from({ length: 12 }).map((_, i) => (
-      <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden animate-pulse">
-        <div className="aspect-square bg-slate-100" />
-        <div className="p-3.5 space-y-2">
-          <div className="h-3 bg-slate-100 rounded-lg w-1/3" />
-          <div className="h-4 bg-slate-100 rounded-lg w-5/6" />
-          <div className="h-3 bg-slate-100 rounded-lg w-2/3" />
-          <div className="h-6 bg-slate-100 rounded-lg w-1/2 mt-2" />
-        </div>
-      </div>
-    ))}
-  </div>
-);
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function AllProductsPage() {
@@ -904,7 +889,7 @@ export default function AllProductsPage() {
 
             {/* Products Grid / List */}
             {isLoading ? (
-              <GridSkeleton />
+              <ProductGridSkeleton count={12} gridClassName="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4" />
             ) : isError ? (
               <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border border-slate-200 space-y-4">
                 <Package className="w-12 h-12 text-slate-300" />

@@ -7,6 +7,7 @@ import ProductsStats from "@/src/components/ui/analistics/admin/products/Product
 import ProductsData from "@/src/components/ui/analistics/admin/products/ProductsData";
 import AiProductContentModal from "@/src/components/ui/analistics/admin/products/AiProductContentModal";
 import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi";
+import { TableSkeleton } from "@/src/components/ui/shared/skeleton";
 
 function ProductsPageContent() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
@@ -30,9 +31,11 @@ function ProductsPageContent() {
 
       {/* Hero Header & Primary Actions */}
       <ProductsHeader
-        onOpenAiStudio={() => setIsAiStudioOpen(true)}
+        onOpenAiStudio={() => {
+          if (createHandler) createHandler();
+          else setIsAiStudioOpen(true);
+        }}
         onExportCsv={exportHandler ? () => exportHandler() : undefined}
-        onAddProduct={createHandler ? () => createHandler() : undefined}
       />
 
       {/* KPI Stats Overview Cards */}
@@ -45,24 +48,20 @@ function ProductsPageContent() {
 
       {/* Interactive Products Directory Table with Filters & Modals */}
       <ProductsData
+        onProductCreated={refetchStats}
         registerExportHandler={(fn: () => void) => setExportHandler(() => fn)}
         registerCreateHandler={(fn: (initData?: any) => void) =>
           setCreateHandler(() => fn)
         }
       />
 
-      {/* Standalone AI Product Content Studio Modal */}
+      {/* Unified AI Product Content Studio & Catalog Creator Modal */}
       <AiProductContentModal
         isOpen={isAiStudioOpen}
         onClose={() => setIsAiStudioOpen(false)}
-        onCreateWithContent={(content, seed) => {
+        onSuccess={() => {
           setIsAiStudioOpen(false);
-          if (createHandler) {
-            createHandler({
-              ...content,
-              brand: seed.brand,
-            });
-          }
+          refetchStats();
         }}
       />
     </div>
@@ -71,7 +70,16 @@ function ProductsPageContent() {
 
 export default function ProductsPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading products catalog...</div>}>
+    <Suspense
+      fallback={
+        <TableSkeleton
+          columns={6}
+          rows={5}
+          showAvatar={true}
+          title="Products Catalog"
+        />
+      }
+    >
       <ProductsPageContent />
     </Suspense>
   );

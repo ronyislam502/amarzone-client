@@ -7,7 +7,7 @@ export interface VendorsHeaderProps {
 }
 
 const VendorsHeader = ({
-  onExportCsv,
+
   onRefresh,
   isRefreshing = false,
 }: VendorsHeaderProps) => {
@@ -59,17 +59,6 @@ const VendorsHeader = ({
                 }`}
               />
               <span>Refresh</span>
-            </button>
-          )}
-
-          {onExportCsv && (
-            <button
-              type="button"
-              onClick={onExportCsv}
-              className="btn btn-outline btn-sm gap-2 font-bold border-amber-400/40 text-amber-400 hover:bg-amber-400 hover:text-slate-950 transition-all shadow-sm cursor-pointer rounded-xl"
-            >
-              <Download className="w-4 h-4" />
-              <span>Export CSV</span>
             </button>
           )}
         </div>

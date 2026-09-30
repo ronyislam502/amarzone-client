@@ -40,6 +40,7 @@ import {
 import { useCreateConversationMutation } from "@/src/redux/features/chat/chatApi";
 import { useAppSelector } from "@/src/redux/hooks";
 import { selectCurrentUser } from "@/src/redux/features/auth/authSlice";
+import { AiScanSkeleton } from "@/src/components/ui/shared/skeleton";
 
 export interface OrderDetailsModalProps {
   order: TOrder | null;
@@ -155,12 +156,12 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
 
   const formattedCreatedDate = order.createdAt
     ? new Date(order.createdAt).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    })
     : "N/A";
 
   const shippedDateStr = order.shippedDate
@@ -516,23 +517,21 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-400 font-semibold uppercase tracking-wider">Risk Score</span>
-                    <span className={`font-black text-lg font-mono ${
-                      fraudResult.riskScore >= 80 ? "text-rose-400" :
-                      fraudResult.riskScore >= 60 ? "text-orange-400" :
-                      fraudResult.riskScore >= 40 ? "text-amber-400" : "text-emerald-400"
-                    }`}>
+                    <span className={`font-black text-lg font-mono ${fraudResult.riskScore >= 80 ? "text-rose-400" :
+                        fraudResult.riskScore >= 60 ? "text-orange-400" :
+                          fraudResult.riskScore >= 40 ? "text-amber-400" : "text-emerald-400"
+                      }`}>
                       {fraudResult.riskScore}<span className="text-slate-500 text-xs font-normal">/100</span>
                     </span>
                   </div>
                   {/* Progress bar */}
                   <div className="h-3 w-full bg-white/10 rounded-full overflow-hidden border border-white/5">
                     <div
-                      className={`h-full rounded-full transition-all duration-700 ${
-                        fraudResult.riskScore >= 80 ? "bg-gradient-to-r from-rose-600 to-red-500" :
-                        fraudResult.riskScore >= 60 ? "bg-gradient-to-r from-orange-500 to-amber-500" :
-                        fraudResult.riskScore >= 40 ? "bg-gradient-to-r from-amber-400 to-yellow-400" :
-                        "bg-gradient-to-r from-emerald-500 to-teal-500"
-                      }`}
+                      className={`h-full rounded-full transition-all duration-700 ${fraudResult.riskScore >= 80 ? "bg-gradient-to-r from-rose-600 to-red-500" :
+                          fraudResult.riskScore >= 60 ? "bg-gradient-to-r from-orange-500 to-amber-500" :
+                            fraudResult.riskScore >= 40 ? "bg-gradient-to-r from-amber-400 to-yellow-400" :
+                              "bg-gradient-to-r from-emerald-500 to-teal-500"
+                        }`}
                       style={{ width: `${fraudResult.riskScore}%` }}
                     />
                   </div>
@@ -545,39 +544,35 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
                 {/* Risk Level + Action Cards */}
                 <div className="grid grid-cols-2 gap-3">
                   {/* Risk Level */}
-                  <div className={`p-3.5 rounded-2xl border ${
-                    fraudResult.riskLevel === "CRITICAL" ? "bg-rose-500/10 border-rose-500/30" :
-                    fraudResult.riskLevel === "HIGH" ? "bg-orange-500/10 border-orange-500/30" :
-                    fraudResult.riskLevel === "MEDIUM" ? "bg-amber-500/10 border-amber-500/30" :
-                    "bg-emerald-500/10 border-emerald-500/30"
-                  } space-y-1`}>
+                  <div className={`p-3.5 rounded-2xl border ${fraudResult.riskLevel === "CRITICAL" ? "bg-rose-500/10 border-rose-500/30" :
+                      fraudResult.riskLevel === "HIGH" ? "bg-orange-500/10 border-orange-500/30" :
+                        fraudResult.riskLevel === "MEDIUM" ? "bg-amber-500/10 border-amber-500/30" :
+                          "bg-emerald-500/10 border-emerald-500/30"
+                    } space-y-1`}>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Risk Level</span>
-                    <div className={`flex items-center gap-1.5 font-black text-base ${
-                      fraudResult.riskLevel === "CRITICAL" ? "text-rose-400" :
-                      fraudResult.riskLevel === "HIGH" ? "text-orange-400" :
-                      fraudResult.riskLevel === "MEDIUM" ? "text-amber-400" : "text-emerald-400"
-                    }`}>
+                    <div className={`flex items-center gap-1.5 font-black text-base ${fraudResult.riskLevel === "CRITICAL" ? "text-rose-400" :
+                        fraudResult.riskLevel === "HIGH" ? "text-orange-400" :
+                          fraudResult.riskLevel === "MEDIUM" ? "text-amber-400" : "text-emerald-400"
+                      }`}>
                       {fraudResult.riskLevel === "LOW" ? <ShieldCheck className="w-4 h-4" /> :
-                       fraudResult.riskLevel === "MEDIUM" ? <Activity className="w-4 h-4" /> :
-                       <ShieldAlert className="w-4 h-4" />}
+                        fraudResult.riskLevel === "MEDIUM" ? <Activity className="w-4 h-4" /> :
+                          <ShieldAlert className="w-4 h-4" />}
                       {fraudResult.riskLevel}
                     </div>
                   </div>
 
                   {/* Recommended Action */}
-                  <div className={`p-3.5 rounded-2xl border ${
-                    fraudResult.recommendedAction === "BLOCK" ? "bg-rose-500/10 border-rose-500/30" :
-                    fraudResult.recommendedAction === "REVIEW" ? "bg-amber-500/10 border-amber-500/30" :
-                    "bg-emerald-500/10 border-emerald-500/30"
-                  } space-y-1`}>
+                  <div className={`p-3.5 rounded-2xl border ${fraudResult.recommendedAction === "BLOCK" ? "bg-rose-500/10 border-rose-500/30" :
+                      fraudResult.recommendedAction === "REVIEW" ? "bg-amber-500/10 border-amber-500/30" :
+                        "bg-emerald-500/10 border-emerald-500/30"
+                    } space-y-1`}>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Recommended Action</span>
-                    <div className={`flex items-center gap-1.5 font-black text-base ${
-                      fraudResult.recommendedAction === "BLOCK" ? "text-rose-400" :
-                      fraudResult.recommendedAction === "REVIEW" ? "text-amber-400" : "text-emerald-400"
-                    }`}>
+                    <div className={`flex items-center gap-1.5 font-black text-base ${fraudResult.recommendedAction === "BLOCK" ? "text-rose-400" :
+                        fraudResult.recommendedAction === "REVIEW" ? "text-amber-400" : "text-emerald-400"
+                      }`}>
                       {fraudResult.recommendedAction === "ALLOW" ? <CheckCircle2 className="w-4 h-4" /> :
-                       fraudResult.recommendedAction === "REVIEW" ? <Zap className="w-4 h-4" /> :
-                       <XCircle className="w-4 h-4" />}
+                        fraudResult.recommendedAction === "REVIEW" ? <Zap className="w-4 h-4" /> :
+                          <XCircle className="w-4 h-4" />}
                       {fraudResult.recommendedAction}
                     </div>
                   </div>
@@ -621,14 +616,7 @@ export const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
             )}
 
             {/* Loading skeleton */}
-            {isFraudLoading && (
-              <div className="p-6 space-y-3 border-t border-white/10 animate-pulse">
-                <div className="h-4 bg-white/10 rounded-lg w-3/4" />
-                <div className="h-3 bg-white/10 rounded-lg w-1/2" />
-                <div className="h-16 bg-white/10 rounded-xl w-full" />
-                <div className="h-3 bg-white/10 rounded-lg w-2/3" />
-              </div>
-            )}
+            {isFraudLoading && <AiScanSkeleton />}
           </div>
 
           {/* Shipping & Delivery Schedules */}

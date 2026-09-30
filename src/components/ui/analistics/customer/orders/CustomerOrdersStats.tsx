@@ -8,6 +8,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { TOrder } from "@/src/types/order";
+import { StatsCardSkeleton } from "@/src/components/ui/shared/skeleton";
 
 interface CustomerOrdersStatsProps {
   orders: TOrder[];
@@ -95,14 +96,11 @@ const CustomerOrdersStats: React.FC<CustomerOrdersStatsProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div
-            key={i}
-            className="rounded-2xl bg-[#170d2f] border border-white/10 p-5 h-[110px] animate-pulse"
-          />
-        ))}
-      </div>
+      <StatsCardSkeleton
+        count={6}
+        gridClassName="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"
+        cardHeightClassName="h-[110px]"
+      />
     );
   }
 

@@ -14,6 +14,7 @@ import { ConciseChartsRow } from "@/src/components/ui/analistics/admin/summary/C
 import { RecentOrdersTable } from "@/src/components/ui/analistics/admin/summary/RecentOrdersTable";
 import { RecentNotificationsWidget } from "@/src/components/ui/analistics/admin/summary/RecentNotificationsWidget";
 import { AiDashboardInsightsWidget } from "@/src/components/ui/ai/AiDashboardInsightsWidget";
+import { DashboardOverviewSkeleton } from "@/src/components/ui/shared/skeleton";
 
 const AdminDashboard: React.FC = () => {
   const [selectedRange, setSelectedRange] = useState<TDashboardDateRange>("30_days");
@@ -46,28 +47,7 @@ const AdminDashboard: React.FC = () => {
       />
 
       {/* Loading Skeleton */}
-      {isLoading && (
-        <div className="space-y-6 animate-pulse">
-          <div className="h-44 rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="h-28 rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10"
-              />
-            ))}
-          </div>
-          <div className="h-28 rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-48 rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10"
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {isLoading && <DashboardOverviewSkeleton />}
 
       {/* Error Retry Banner */}
       {isError && !isLoading && (

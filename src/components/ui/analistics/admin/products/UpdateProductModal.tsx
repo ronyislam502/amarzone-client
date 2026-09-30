@@ -200,10 +200,18 @@ const UpdateProductModal = ({
                 : undefined,
             features: product.features,
             keywords: product.tags,
+            imageUrl: product.thumbnail || undefined,
           }}
           onApply={(content) => {
-            if (content.seoTitle) {
-              methods.setValue("title", content.seoTitle, {
+            const finalTitle = content.seoTitle || content.title;
+            if (finalTitle) {
+              methods.setValue("title", finalTitle, {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+            }
+            if (content.brand) {
+              methods.setValue("brand", content.brand, {
                 shouldValidate: true,
                 shouldDirty: true,
               });

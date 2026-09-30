@@ -31,6 +31,12 @@ import { selectCurrentUser } from "@/src/redux/features/auth/authSlice";
 import { useMyOrdersQuery } from "@/src/redux/features/order/orderApi";
 import { TOrder } from "@/src/types/order";
 import { OrderDetailsModal } from "@/src/components/ui/analistics/admin/orders/OrderDetailsModal";
+import {
+  StatsCardSkeleton,
+  OrderListSkeleton,
+  OrderSummarySkeleton,
+  NotificationListSkeleton,
+} from "@/src/components/ui/shared/skeleton";
 
 /* ─────────────────────────────────────────────────────────── */
 /*  Helpers                                                    */
@@ -287,16 +293,7 @@ const QuickStats = ({
   }, [orders]);
 
   if (isLoading) {
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div
-            key={i}
-            className="h-[100px] rounded-2xl bg-[#170d2f] border border-white/10 animate-pulse"
-          />
-        ))}
-      </div>
-    );
+    return <StatsCardSkeleton count={5} />;
   }
 
   return (
@@ -371,14 +368,7 @@ const ActiveOrders = ({
       </div>
 
       {isLoading ? (
-        <div className="p-4 space-y-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-16 rounded-xl bg-white/5 animate-pulse"
-            />
-          ))}
-        </div>
+        <OrderListSkeleton count={3} itemHeightClassName="h-16" />
       ) : active.length === 0 ? (
         <div className="py-12 text-center space-y-2">
           <div className="w-12 h-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto text-slate-600">
@@ -536,14 +526,7 @@ const RecentOrders = ({
       </div>
 
       {isLoading ? (
-        <div className="p-4 space-y-3">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div
-              key={i}
-              className="h-14 rounded-xl bg-white/5 animate-pulse"
-            />
-          ))}
-        </div>
+        <OrderListSkeleton count={5} itemHeightClassName="h-14" />
       ) : recent.length === 0 ? (
         <div className="py-12 text-center">
           <p className="text-sm text-slate-400">No orders yet.</p>
@@ -728,9 +711,7 @@ const OrderStatusSummary = ({
 
       <div className="p-5 space-y-3">
         {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-8 rounded-lg bg-white/5 animate-pulse" />
-          ))
+          <OrderSummarySkeleton barsCount={4} className="space-y-3" />
         ) : total === 0 ? (
           <p className="text-xs text-slate-500 text-center py-4">
             No orders yet.
@@ -838,11 +819,7 @@ const RecentNotifications = ({
       </div>
 
       {isLoading && notifications.length === 0 ? (
-        <div className="p-4 space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-12 rounded-xl bg-white/5 animate-pulse" />
-          ))}
-        </div>
+        <NotificationListSkeleton count={4} />
       ) : shown.length === 0 ? (
         <div className="py-10 text-center space-y-2">
           <Bell className="w-8 h-8 text-slate-600 mx-auto" />

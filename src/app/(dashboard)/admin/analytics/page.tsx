@@ -29,6 +29,7 @@ import { AdminPieChart } from "@/src/components/ui/analistics/admin/overview/Adm
 import { AdminBarChart } from "@/src/components/ui/analistics/admin/overview/AdminBarChart";
 import { AdminTopPerformance } from "@/src/components/ui/analistics/admin/overview/AdminTopPerformance";
 import { AdminDeepAnalytics } from "@/src/components/ui/analistics/admin/overview/AdminDeepAnalytics";
+import { DashboardAnalyticsSkeleton } from "@/src/components/ui/shared/skeleton";
 
 const AdminAnalystics: React.FC = () => {
     const [selectedRange, setSelectedRange] = useState<TDashboardDateRange>("30_days");
@@ -138,22 +139,7 @@ const AdminAnalystics: React.FC = () => {
             />
 
             {/* Loading Skeleton */}
-            {isLoading && (
-                <div className="space-y-6 animate-pulse">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[1, 2, 3, 4].map((i) => (
-                            <div
-                                key={i}
-                                className="h-32 rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10 p-5"
-                            />
-                        ))}
-                    </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div className="h-80 rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10" />
-                        <div className="h-80 rounded-2xl sm:rounded-3xl bg-[#170d2f] border border-white/10" />
-                    </div>
-                </div>
-            )}
+            {isLoading && <DashboardAnalyticsSkeleton />}
 
             {/* Error Retry Banner */}
             {isError && !isLoading && (

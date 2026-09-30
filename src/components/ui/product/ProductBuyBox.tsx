@@ -19,6 +19,7 @@ import { useAppDispatch } from "@/src/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { BadgeSkeleton } from "@/src/components/ui/shared/skeleton";
 
 interface ProductBuyBoxProps {
   buyBoxListing: TInventory | null;
@@ -173,7 +174,7 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
       {/* Stock Status */}
       <div>
         {isLoadingInventory ? (
-          <div className="h-5 w-24 bg-slate-100 animate-pulse rounded" />
+          <BadgeSkeleton widthClassName="w-24" heightClassName="h-5" />
         ) : isStock ? (
           <div className="space-y-0.5">
             <span className="text-base font-bold text-[#007600] flex items-center gap-1">

@@ -23,6 +23,7 @@ import { toast } from "react-toastify";
 import { useModerateReviewMutation } from "@/redux/features/ai/aiApi";
 import { useAppSelector } from "@/src/redux/hooks";
 import { selectCurrentUser } from "@/src/redux/features/auth/authSlice";
+import { ReviewListSkeleton } from "@/src/components/ui/shared/skeleton";
 
 interface ProductReviewSectionProps {
   reviews?: TReview[];
@@ -391,18 +392,7 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({
           </div>
 
           {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="space-y-2 p-4 bg-slate-50 rounded-xl animate-pulse"
-                >
-                  <div className="h-4 bg-slate-200 rounded w-1/4" />
-                  <div className="h-3 bg-slate-200 rounded w-1/2" />
-                  <div className="h-12 bg-slate-200 rounded w-full" />
-                </div>
-              ))}
-            </div>
+            <ReviewListSkeleton count={3} />
           ) : filteredReviews.length === 0 ? (
             <div className="p-8 text-center bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
               <p className="text-slate-700 font-medium text-sm">

@@ -6,7 +6,6 @@ import {
   ShoppingBag,
   Eye,
   Edit2,
-  PlusCircle,
   CheckCircle2,
   Layers,
   Building2,
@@ -21,8 +20,7 @@ import { TProduct } from "@/src/types/product";
 import { TColumn } from "@/src/types/table";
 import AZTable from "../../../shared/AZTable";
 import { TABLE_CARD_CN } from "@/src/lib/tableStyles";
-import Modal from "../../../shared/Modal";
-import CreateProduct from "./CreateProductModal";
+import AiProductContentModal from "./AiProductContentModal";
 import UpdateProductModal from "./UpdateProductModal";
 import ProductDetailsModal from "./ProductDetailsModal";
 import CreateVariantModal from "./CreateVariantModal";
@@ -38,6 +36,7 @@ export interface ProductsStatsData {
 
 export interface ProductsDataProps {
   onStatsChange?: (stats: ProductsStatsData) => void;
+  onProductCreated?: () => void;
   registerExportHandler?: (handler: () => void) => void;
   registerCreateHandler?: (handler: (initialData?: any) => void) => void;
 }
@@ -45,6 +44,7 @@ export interface ProductsDataProps {
 const LIMIT = 10;
 
 const ProductsData: React.FC<ProductsDataProps> = ({
+  onProductCreated,
   registerExportHandler,
   registerCreateHandler,
 }) => {
@@ -411,16 +411,6 @@ const ProductsData: React.FC<ProductsDataProps> = ({
             searchValue={searchTerm}
             onSearchChange={(val) => setSearchTerm(val)}
             searchPlaceholder="Search by title, brand, tags..."
-            headerActions={
-              <button
-                type="button"
-                onClick={() => setIsCreateModalOpen(true)}
-                className="btn btn-sm gap-2 font-black shadow-lg shadow-amber-500/20 cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 border-0 transition-all rounded-xl"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>Add Product</span>
-              </button>
-            }
             emptyTitle="No Products Found"
             emptyMessage="There are currently no products matching your active search or filters."
             emptyIcon={<ShoppingBag className="w-6 h-6 text-amber-400" />}
@@ -434,26 +424,21 @@ const ProductsData: React.FC<ProductsDataProps> = ({
         </div>
       </div>
 
-      {/* REUSABLE CREATE PRODUCT MODAL */}
-      <Modal
+      {/* UNIFIED AI CONTENT STUDIO & CREATE PRODUCT MODAL */}
+      <AiProductContentModal
         isOpen={isCreateModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false);
           setCreateInitialData(null);
         }}
-        size="lg"
-        className="!bg-[#170d2f] !border-white/10 text-slate-100 shadow-2xl relative overflow-hidden rounded-3xl"
-      >
-        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
-        <CreateProduct
-          initialData={createInitialData}
-          onSuccess={() => {
-            setIsCreateModalOpen(false);
-            setCreateInitialData(null);
-            refetch();
-          }}
-        />
-      </Modal>
+        initialValues={createInitialData}
+        onSuccess={() => {
+          setIsCreateModalOpen(false);
+          setCreateInitialData(null);
+          refetch();
+          if (onProductCreated) onProductCreated();
+        }}
+      />
 
       {/* REUSABLE UPDATE PRODUCT MODAL */}
       <UpdateProductModal

@@ -2,10 +2,12 @@
 import { baseApi } from "@/redux/api/baseApi";
 
 export interface TProductContentInput {
-  title: string;
-  category: string;
-  brand: string;
-  features: string[] | string;
+  title?: string;
+  category?: string;
+  brand?: string;
+  features?: string[] | string;
+  imageUrl?: string;
+  image?: string;
   specifications?: Record<string, any> | Array<{ key: string; value: string }>;
   targetAudience?: string;
   tone?: string;
@@ -13,13 +15,22 @@ export interface TProductContentInput {
 }
 
 export interface TProductContentOutput {
-  seoTitle: string;
-  seoDescription: string;
+  title?: string;
+  brand?: string;
+  features?: string[];
+  bulletFeatures: string[];
+  tags: string[];
+  suggestedDepartment?: string;
+  suggestedCategory?: string;
   shortDescription: string;
   longDescription: string;
-  bulletFeatures: string[];
+  seoTitle: string;
+  seoDescription: string;
   keywords: string[];
-  tags: string[];
+  imageUrl?: string;
+  department?: string;
+  category?: string;
+  description?: string;
 }
 
 export interface TShoppingAssistantInput {
@@ -129,7 +140,7 @@ export const aiApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     generateProductContent: builder.mutation<
       { success: boolean; message: string; data: TProductContentOutput },
-      TProductContentInput
+      TProductContentInput | FormData
     >({
       query: (payload) => ({
         url: "/ai/product-content",

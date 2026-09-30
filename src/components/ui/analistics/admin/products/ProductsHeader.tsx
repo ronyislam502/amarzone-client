@@ -1,14 +1,12 @@
-import { Download, Sparkles, PlusCircle, Wand2 } from "lucide-react";
+import { Download, Sparkles, Wand2 } from "lucide-react";
 
 export interface ProductsHeaderProps {
   onExportCsv?: () => void;
-  onAddProduct?: () => void;
   onOpenAiStudio?: () => void;
 }
 
 const ProductsHeader = ({
   onExportCsv,
-  onAddProduct,
   onOpenAiStudio,
 }: ProductsHeaderProps) => {
   return (
@@ -50,10 +48,10 @@ const ProductsHeader = ({
             <button
               type="button"
               onClick={onOpenAiStudio}
-              className="btn btn-sm gap-2 font-black border border-amber-400/40 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-400 hover:to-orange-400 text-amber-300 hover:text-slate-950 transition-all shadow-md shadow-amber-500/10 cursor-pointer rounded-xl"
+              className="btn btn-sm gap-2 font-black shadow-lg shadow-amber-500/25 cursor-pointer bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 border-0 transition-all rounded-xl"
             >
               <Wand2 className="w-4 h-4" />
-              <span>AI Content Studio</span>
+              <span>AI Content Studio and Create Product</span>
             </button>
           )}
           {onExportCsv && (
@@ -64,16 +62,6 @@ const ProductsHeader = ({
             >
               <Download className="w-4 h-4" />
               <span>Export CSV</span>
-            </button>
-          )}
-          {onAddProduct && (
-            <button
-              type="button"
-              onClick={onAddProduct}
-              className="btn btn-sm gap-2 font-black shadow-lg shadow-amber-500/20 cursor-pointer bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 border-0 transition-all rounded-xl"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Add Product</span>
             </button>
           )}
         </div>
