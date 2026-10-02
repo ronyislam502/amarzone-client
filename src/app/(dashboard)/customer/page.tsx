@@ -36,7 +36,7 @@ import {
   OrderListSkeleton,
   OrderSummarySkeleton,
   NotificationListSkeleton,
-} from "@/src/components/ui/shared/skeleton";
+} from "@/src/components/ui/skeleton";
 
 /* ─────────────────────────────────────────────────────────── */
 /*  Helpers                                                    */

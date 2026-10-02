@@ -9,7 +9,7 @@ import CustomerProfileHeader from "./CustomerProfileHeader";
 import CustomerProfileStats from "./CustomerProfileStats";
 import CustomerProfileDetails from "./CustomerProfileDetails";
 import CustomerProfileEditModal from "./CustomerProfileEditModal";
-import CustomerProfileSkeleton from "./CustomerProfileSkeleton";
+import { CustomerProfileSkeleton } from "@/src/components/ui/skeleton";
 
 const CustomerProfileContainer = () => {
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] =

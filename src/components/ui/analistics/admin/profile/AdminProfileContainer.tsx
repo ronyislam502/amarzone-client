@@ -9,7 +9,7 @@ import AdminProfileHeader from "./AdminProfileHeader";
 import AdminProfileStats from "./AdminProfileStats";
 import AdminProfileDetails from "./AdminProfileDetails";
 import AdminProfileEditModal from "./AdminProfileEditModal";
-import AdminProfileSkeleton from "./AdminProfileSkeleton";
+import { AdminProfileSkeleton } from "@/src/components/ui/skeleton";
 
 const AdminProfileContainer = () => {
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] =

@@ -19,7 +19,7 @@ import { useAppDispatch } from "@/src/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import { BadgeSkeleton } from "@/src/components/ui/shared/skeleton";
+import { BadgeSkeleton } from "@/src/components/ui/skeleton";
 
 interface ProductBuyBoxProps {
   buyBoxListing: TInventory | null;

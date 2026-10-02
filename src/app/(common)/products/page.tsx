@@ -38,7 +38,7 @@ import {
   extractProductPriceInfo,
   getProductThumbnail,
 } from "@/components/ui/home/homeUtils";
-import { ProductGridSkeleton } from "@/src/components/ui/shared/skeleton";
+import { ProductGridSkeleton } from "@/src/components/ui/skeleton";
 
 const LIMIT = 24;
 

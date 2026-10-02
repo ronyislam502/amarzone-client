@@ -9,7 +9,7 @@ import VendorProfileHeader from "./VendorProfileHeader";
 import VendorProfileStats from "./VendorProfileStats";
 import VendorProfileDetails from "./VendorProfileDetails";
 import VendorProfileEditModal from "./VendorProfileEditModal";
-import VendorProfileSkeleton from "./VendorProfileSkeleton";
+import { VendorProfileSkeleton } from "@/src/components/ui/skeleton";
 
 const VendorProfileContainer = () => {
   const [isEditStoreModalOpen, setIsEditStoreModalOpen] =

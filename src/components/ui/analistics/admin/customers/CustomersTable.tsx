@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import TableSkeleton from "../../../shared/skeleton/TableSkeleton";
+import { TableSkeleton } from "@/src/components/ui/skeleton";
 import CustomersPage from "@/src/app/(dashboard)/admin/customers/page";
 
 const CustomersTable = () => {

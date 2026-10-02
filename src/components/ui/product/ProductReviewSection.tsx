@@ -23,7 +23,7 @@ import { toast } from "react-toastify";
 import { useModerateReviewMutation } from "@/redux/features/ai/aiApi";
 import { useAppSelector } from "@/src/redux/hooks";
 import { selectCurrentUser } from "@/src/redux/features/auth/authSlice";
-import { ReviewListSkeleton } from "@/src/components/ui/shared/skeleton";
+import { ReviewListSkeleton } from "@/src/components/ui/skeleton";
 
 interface ProductReviewSectionProps {
   reviews?: TReview[];

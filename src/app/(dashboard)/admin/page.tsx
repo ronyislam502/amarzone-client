@@ -14,7 +14,7 @@ import { ConciseChartsRow } from "@/src/components/ui/analistics/admin/summary/C
 import { RecentOrdersTable } from "@/src/components/ui/analistics/admin/summary/RecentOrdersTable";
 import { RecentNotificationsWidget } from "@/src/components/ui/analistics/admin/summary/RecentNotificationsWidget";
 import { AiDashboardInsightsWidget } from "@/src/components/ui/ai/AiDashboardInsightsWidget";
-import { DashboardOverviewSkeleton } from "@/src/components/ui/shared/skeleton";
+import { DashboardOverviewSkeleton } from "@/src/components/ui/skeleton";
 
 const AdminDashboard: React.FC = () => {
   const [selectedRange, setSelectedRange] = useState<TDashboardDateRange>("30_days");
@@ -130,17 +130,19 @@ const AdminDashboard: React.FC = () => {
               statsData.ordersAnalytics?.ordersPerDay?.map((d) => ({
                 label: d.date,
                 value: d.count,
-              }))
+              })) ||
+              []
             }
             revenueData={
               statsData.charts?.revenueChart ||
               statsData.ordersAnalytics?.revenuePerDay?.map((d) => ({
                 label: d.date,
                 value: d.revenue,
-              }))
+              })) ||
+              []
             }
-            orderStatusData={statsData.charts?.orderStatusPieChart}
-            categorySalesData={statsData.charts?.categorySalesChart}
+            orderStatusData={statsData.charts?.orderStatusPieChart || []}
+            categorySalesData={statsData.charts?.categorySalesChart || []}
           />
 
           {/* 7. Recent Orders & Recent Notifications Dual Hub */}

@@ -13,7 +13,7 @@ import SplitCategorySpotlight from "@/src/components/ui/home/SplitCategorySpotli
 import FeaturedProductsSection from "@/src/components/ui/home/FeaturedProductsSection";
 import CreatorVideoShowcase from "@/src/components/ui/home/CreatorVideoShowcase";
 import DepartmentSpotlight from "@/src/components/ui/home/DepartmentSpotlight";
-import HomeLoadingSkeleton from "@/src/components/ui/home/HomeLoadingSkeleton";
+import { HomeLoadingSkeleton } from "@/src/components/ui/skeleton";
 
 const HomePage: React.FC = () => {
     // Fetch live products from backend API (router.get("/", ProductControllers.allProducts))

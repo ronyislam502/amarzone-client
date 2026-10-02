@@ -13,7 +13,7 @@ import {
   useGetMyViolationsQuery,
 } from "@/src/redux/features/health/healthApi";
 import { AlertCircle, RefreshCw, ShieldAlert } from "lucide-react";
-import { VendorHealthSkeleton } from "@/src/components/ui/shared/skeleton";
+import { VendorHealthSkeleton } from "@/src/components/ui/skeleton";
 
 const VendorHealthPage = () => {
   const {

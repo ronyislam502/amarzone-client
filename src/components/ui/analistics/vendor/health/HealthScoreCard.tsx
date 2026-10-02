@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { TAccountHealthStatus } from "@/src/types/health";
+import { RadialGaugeChart } from "@/src/components/ui/charts/RadialGaugeChart";
 
 interface HealthScoreCardProps {
   score?: number;
@@ -114,78 +115,27 @@ const HealthScoreCard: React.FC<HealthScoreCardProps> = ({
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* Left: Interactive Radial Gauge */}
         <div className="lg:col-span-4 flex flex-col items-center justify-center">
-          <div className="relative w-52 h-52 flex items-center justify-center">
-            {/* SVG Circular Progress Meter */}
-            <svg className="w-full h-full transform -rotate-135" viewBox="0 0 160 160">
-              <defs>
-                <linearGradient id="healthy-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#10b981" />
-                  <stop offset="100%" stopColor="#34d399" />
-                </linearGradient>
-                <linearGradient id="at-risk-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#fbbf24" />
-                </linearGradient>
-                <linearGradient id="critical-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#ea580c" />
-                  <stop offset="100%" stopColor="#fb923c" />
-                </linearGradient>
-                <linearGradient id="suspended-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#e11d48" />
-                  <stop offset="100%" stopColor="#f43f5e" />
-                </linearGradient>
-              </defs>
-
-              {/* Background Track (270 degree arc) */}
-              <circle
-                cx="80"
-                cy="80"
-                r={radius}
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.08)"
-                strokeWidth="12"
-                strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
-                strokeLinecap="round"
-              />
-
-              {/* Foreground Animated Value Arc */}
-              <circle
-                cx="80"
-                cy="80"
-                r={radius}
-                fill="none"
-                stroke={`url(#${theme.gradientId})`}
-                strokeWidth="12"
-                strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                className="transition-all duration-1000 ease-out"
-              />
-            </svg>
-
-            {/* Inner Center Score Display */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none">
-              <span className="text-xs uppercase font-extrabold tracking-widest text-slate-400">
-                Score
+          <RadialGaugeChart
+            value={normalizedScore}
+            maxValue={1000}
+            size={208}
+            strokeWidth={14}
+            gradientFrom={theme.fromColor}
+            gradientTo={theme.toColor}
+            title="Score"
+            subtitle="of 1000 Max"
+            valueFormatter={(v) => (
+              <span className={theme.color}>{v}</span>
+            )}
+            badge={
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border ${theme.bgBadge}`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                {status}
               </span>
-              <span className={`text-4xl sm:text-5xl font-black tracking-tight ${theme.color}`}>
-                {normalizedScore}
-              </span>
-              <span className="text-[11px] font-semibold text-slate-400">
-                of 1000 Max
-              </span>
-            </div>
-          </div>
-
-          {/* Quick status pill under gauge */}
-          <div className="mt-2 text-center">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black border ${theme.bgBadge}`}
-            >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              {status}
-            </span>
-          </div>
+            }
+          />
         </div>
 
         {/* Right: Comprehensive Standing Details & Tier Progress */}

@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import TableSkeleton from "../../../shared/skeleton/TableSkeleton";
+import { TableSkeleton } from "@/src/components/ui/skeleton";
 import VendorOrders from "@/src/app/(dashboard)/vendor/orders/page";
 
 const OrdersTable = () => {

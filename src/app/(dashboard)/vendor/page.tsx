@@ -31,6 +31,7 @@ import { useMyOrdersQuery } from "@/src/redux/features/order/orderApi";
 import { useGetMyInventoryQuery } from "@/src/redux/features/inventory/inventoryApi";
 import { useGetMyHealthQuery } from "@/src/redux/features/health/healthApi";
 import { AiDashboardInsightsWidget } from "@/src/components/ui/ai/AiDashboardInsightsWidget";
+import { BarChart } from "@/src/components/ui/charts/BarChart";
 
 const VendorDashboard: React.FC = () => {
   const user = useAppSelector(selectCurrentUser);
@@ -367,24 +368,19 @@ const VendorDashboard: React.FC = () => {
             </div>
 
             {/* Compact Mini Bar Chart */}
-            <div className="pt-6 pb-2 grid grid-cols-7 gap-2 items-end h-40">
-              {recent7Days.map((item, idx) => {
-                const heightPct = Math.max(8, (item.count / maxDailyCount) * 100);
-                return (
-                  <div key={idx} className="flex flex-col items-center gap-2 h-full justify-end group">
-                    <span className="text-[10px] font-black text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {item.count}
-                    </span>
-                    <div className="w-full max-w-[28px] bg-black/40 rounded-lg p-0.5 border border-white/5 flex items-end h-24">
-                      <div
-                        className="w-full bg-gradient-to-t from-emerald-500 to-teal-400 rounded-md transition-all duration-500 group-hover:from-emerald-400 group-hover:to-teal-300"
-                        style={{ height: `${heightPct}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] font-bold text-slate-400">{item.day}</span>
-                  </div>
-                );
-              })}
+            <div className="pt-2 pb-2">
+              <BarChart
+                data={recent7Days.map((item) => ({
+                  id: item.day,
+                  label: item.day,
+                  value: item.count,
+                }))}
+                layout="vertical"
+                containerCard={false}
+                colorGradient="from-emerald-500 to-teal-400"
+                height={140}
+                unitLabel="orders"
+              />
             </div>
           </div>
 

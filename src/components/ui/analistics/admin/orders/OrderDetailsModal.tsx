@@ -40,7 +40,7 @@ import {
 import { useCreateConversationMutation } from "@/src/redux/features/chat/chatApi";
 import { useAppSelector } from "@/src/redux/hooks";
 import { selectCurrentUser } from "@/src/redux/features/auth/authSlice";
-import { AiScanSkeleton } from "@/src/components/ui/shared/skeleton";
+import { AiScanSkeleton } from "@/src/components/ui/skeleton";
 
 export interface OrderDetailsModalProps {
   order: TOrder | null;

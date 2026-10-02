@@ -9,4 +9,4 @@ export { ProductDetailsTable } from "./ProductDetailsTable";
 export { ProductDescriptionSection } from "./ProductDescriptionSection";
 export { ProductSellerOffers } from "./ProductSellerOffers";
 export { ProductReviewSection } from "./ProductReviewSection";
-export { ProductPageSkeleton } from "./ProductPageSkeleton";
+export { ProductPageSkeleton } from "@/src/components/ui/skeleton";

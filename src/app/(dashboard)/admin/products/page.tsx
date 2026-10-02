@@ -7,7 +7,7 @@ import ProductsStats from "@/src/components/ui/analistics/admin/products/Product
 import ProductsData from "@/src/components/ui/analistics/admin/products/ProductsData";
 import AiProductContentModal from "@/src/components/ui/analistics/admin/products/AiProductContentModal";
 import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi";
-import { TableSkeleton } from "@/src/components/ui/shared/skeleton";
+import { TableSkeleton } from "@/src/components/ui/skeleton";
 
 function ProductsPageContent() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);

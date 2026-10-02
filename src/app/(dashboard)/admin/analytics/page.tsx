@@ -29,7 +29,7 @@ import { AdminPieChart } from "@/src/components/ui/analistics/admin/overview/Adm
 import { AdminBarChart } from "@/src/components/ui/analistics/admin/overview/AdminBarChart";
 import { AdminTopPerformance } from "@/src/components/ui/analistics/admin/overview/AdminTopPerformance";
 import { AdminDeepAnalytics } from "@/src/components/ui/analistics/admin/overview/AdminDeepAnalytics";
-import { DashboardAnalyticsSkeleton } from "@/src/components/ui/shared/skeleton";
+import { DashboardAnalyticsSkeleton } from "@/src/components/ui/skeleton";
 
 const AdminAnalystics: React.FC = () => {
     const [selectedRange, setSelectedRange] = useState<TDashboardDateRange>("30_days");

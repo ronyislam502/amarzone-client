@@ -8,7 +8,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { TOrder } from "@/src/types/order";
-import { StatsCardSkeleton } from "@/src/components/ui/shared/skeleton";
+import { StatsCardSkeleton } from "@/src/components/ui/skeleton";
 
 interface CustomerOrdersStatsProps {
   orders: TOrder[];
