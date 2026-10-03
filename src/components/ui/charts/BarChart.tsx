@@ -1,14 +1,44 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useSyncExternalStore } from "react";
 import { BarChart3, Info } from "lucide-react";
+
+const emptySubscribe = () => () => {};
+const useIsMounted = () =>
+  useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+import {
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+
+// Export built-in Recharts components for flexibility
+export {
+  RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  RechartsTooltip,
+  ResponsiveContainer,
+  Cell,
+};
 
 export interface TBarChartItem {
   id?: string | number;
   label: string;
   value: number;
-  secondaryLabel?: string; // e.g. "units sold" or "5 orders"
-  meta?: string | number; // e.g. "5 orders"
+  secondaryLabel?: string;
+  meta?: string | number;
   color?: string;
   gradient?: string;
   badgeNumber?: number;
@@ -57,6 +87,15 @@ export interface BarChartProps {
   className?: string;
 }
 
+const DEFAULT_GRADIENT_PALETTES = [
+  { start: "#8b5cf6", end: "#ec4899" }, // purple to pink
+  { start: "#06b6d4", end: "#3b82f6" }, // cyan to blue
+  { start: "#10b981", end: "#14b8a6" }, // emerald to teal
+  { start: "#f59e0b", end: "#fbbf24" }, // amber
+  { start: "#6366f1", end: "#a855f7" }, // indigo to purple
+  { start: "#f43f5e", end: "#fb7185" }, // rose
+];
+
 export const BarChart: React.FC<BarChartProps> = ({
   data = [],
   tabs,
@@ -81,6 +120,8 @@ export const BarChart: React.FC<BarChartProps> = ({
   emptyMessage = "No ranking or category records found in the active timeframe.",
   className = "",
 }) => {
+  const isMounted = useIsMounted();
+
   const hasTabs = Array.isArray(tabs) && tabs.length > 0;
   const initialTabKey = defaultTab || (hasTabs ? tabs[0].key : "");
   const [internalTab, setInternalTab] = useState<string>(initialTabKey);
@@ -95,37 +136,44 @@ export const BarChart: React.FC<BarChartProps> = ({
     onTabChange?.(key);
   };
 
-  // Determine active raw points
   const rawItems = useMemo(() => {
     if (activeTabConfig) return activeTabConfig.data || [];
     return data || [];
   }, [activeTabConfig, data]);
 
-  // Determine layout: from active tab config or prop or fallback to horizontal
-  const activeLayout =
-    activeTabConfig?.layout || customLayout || "horizontal";
-
-  // Max value calculation for relative bars
-  const maxVal = useMemo(() => {
-    if (customMaxVal !== undefined && customMaxVal > 0) return customMaxVal;
-    if (rawItems.length === 0) return 1;
-    return Math.max(...rawItems.map((d) => d.value), 1);
-  }, [rawItems, customMaxVal]);
+  const activeLayout = activeTabConfig?.layout || customLayout || "horizontal";
+  const parsedGradient = useMemo(() => {
+    const grad = customGradient || activeTabConfig?.colorGradient;
+    if (!grad) return null;
+    if (grad.includes("emerald") || grad.includes("teal"))
+      return { start: "#10b981", end: "#14b8a6" };
+    if (grad.includes("amber"))
+      return { start: "#f59e0b", end: "#fbbf24" };
+    if (grad.includes("purple") || grad.includes("pink"))
+      return { start: "#8b5cf6", end: "#ec4899" };
+    if (grad.includes("cyan") || grad.includes("blue"))
+      return { start: "#06b6d4", end: "#3b82f6" };
+    return null;
+  }, [customGradient, activeTabConfig?.colorGradient]);
 
   const valueFormatter =
     customValFormatter ||
     activeTabConfig?.valueFormatter ||
     ((v: number) => `${v.toLocaleString()} ${unitLabel || ""}`.trim());
 
-  // Default gradients depending on mode
-  const gradientClass =
-    customGradient ||
-    activeTabConfig?.colorGradient ||
-    (activeLayout === "vertical"
-      ? "from-amber-500/30 via-amber-400/80 to-amber-300"
-      : "from-cyan-500 via-blue-400 to-emerald-400");
-
   const hasData = rawItems.length > 0;
+
+  // Chart height calculations
+  const calculatedHeight = useMemo(() => {
+    if (height) return typeof height === "number" ? height : parseInt(height, 10) || 260;
+    if (activeLayout === "horizontal") {
+      const perBar = compact ? 36 : 46;
+      return Math.max(compact ? 160 : 220, rawItems.length * perBar + 40);
+    }
+    return compact ? 180 : 260;
+  }, [height, activeLayout, compact, rawItems.length]);
+
+  const uniqueId = React.useId().replace(/:/g, "_");
 
   const content = (
     <>
@@ -161,15 +209,19 @@ export const BarChart: React.FC<BarChartProps> = ({
                     <BarChart3 className="w-4 h-4" />
                   </span>
                 )}
-                <h2 className={`${compact ? "text-xs font-black text-white" : "text-base sm:text-lg font-black text-white tracking-tight"}`}>
+                <h2
+                  className={`${
+                    compact
+                      ? "text-xs font-black text-white"
+                      : "text-base sm:text-lg font-black text-white tracking-tight"
+                  }`}
+                >
                   {title || (activeTabConfig ? activeTabConfig.label : "Performance Rankings")}
                 </h2>
               </div>
             )}
             {subtitle && (
-              <p className="text-xs text-slate-400 mt-1 max-w-xl">
-                {subtitle}
-              </p>
+              <p className="text-xs text-slate-400 mt-1 max-w-xl">{subtitle}</p>
             )}
           </div>
 
@@ -204,7 +256,7 @@ export const BarChart: React.FC<BarChartProps> = ({
       )}
 
       {/* Content Area */}
-      <div className="relative z-10 mt-4 flex-1">
+      <div className="relative z-10 mt-4 flex-1 w-full min-w-0">
         {!hasData ? (
           <div className="flex flex-col items-center justify-center py-14 text-center text-slate-400 space-y-2">
             <Info className="w-7 h-7 text-purple-400/60" />
@@ -213,121 +265,258 @@ export const BarChart: React.FC<BarChartProps> = ({
               {activeTabConfig?.emptyMessage || emptyMessage}
             </div>
           </div>
+        ) : !isMounted ? (
+          <div
+            className="w-full flex items-center justify-center bg-white/[0.02] rounded-xl animate-pulse"
+            style={{ height: calculatedHeight }}
+          >
+            <div className="text-xs text-slate-500">Loading chart...</div>
+          </div>
         ) : activeLayout === "horizontal" ? (
-          /* Horizontal Progress Bar Ranking Meters */
-          <div className={`${compact ? "space-y-2.5" : "space-y-3.5"}`}>
-            {rawItems.map((item, index) => {
-              const percentage = Math.max((item.value / maxVal) * 100, 4);
-              const itemGradient = item.gradient || gradientClass;
-
-              if (compact) {
-                return (
-                  <div key={item.id ?? item.label ?? index} className="space-y-1">
-                    <div className="flex items-center justify-between text-[11px]">
-                      <span className="font-extrabold text-slate-200 truncate max-w-[160px]">
-                        {item.label}
-                      </span>
-                      <span className="font-mono font-bold text-amber-400 text-[10px]">
-                        {valueFormatter(item.value)}
-                      </span>
-                    </div>
-                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full bg-gradient-to-r ${itemGradient} rounded-full`}
-                        style={{ width: `${percentage}%` }}
-                      />
-                    </div>
-                  </div>
-                );
-              }
-
-              return (
-                <div
-                  key={item.id ?? item.label ?? index}
-                  className="p-3 rounded-2xl bg-[#120824]/60 border border-white/5 hover:border-white/15 transition-all space-y-2"
+          /* Recharts Horizontal Bar Chart (vertical layout in recharts) */
+          <div className="w-full" style={{ height: calculatedHeight }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart
+                layout="vertical"
+                data={rawItems}
+                margin={{
+                  top: 5,
+                  right: compact ? 15 : 30,
+                  left: compact ? 0 : 15,
+                  bottom: 5,
+                }}
+              >
+                <defs>
+                  {rawItems.map((item, idx) => {
+                    const pal =
+                      parsedGradient ||
+                      DEFAULT_GRADIENT_PALETTES[
+                        idx % DEFAULT_GRADIENT_PALETTES.length
+                      ];
+                    return (
+                      <linearGradient
+                        key={`hgrad-${idx}`}
+                        id={`barGrad_h_${uniqueId}_${idx}`}
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="0"
+                      >
+                        <stop offset="0%" stopColor={pal.start} />
+                        <stop offset="100%" stopColor={pal.end} />
+                      </linearGradient>
+                    );
+                  })}
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  horizontal={false}
+                  stroke="rgba(255, 255, 255, 0.06)"
+                />
+                <XAxis
+                  type="number"
+                  stroke="#94a3b8"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
+                  domain={[0, customMaxVal ? customMaxVal : "auto"]}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  stroke="#cbd5e1"
+                  fontSize={compact ? 10 : 11}
+                  tickLine={false}
+                  axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
+                  width={compact ? 70 : 110}
+                  tick={({ x, y, payload }) => {
+                    const idx = rawItems.findIndex(
+                      (item) => item.label === payload.value
+                    );
+                    const item = rawItems[idx];
+                    const badge = item?.badgeNumber ?? idx + 1;
+                    const truncated =
+                      payload.value.length > 14
+                        ? `${payload.value.slice(0, 13)}…`
+                        : payload.value;
+                    return (
+                      <g transform={`translate(${x},${y})`}>
+                        <text
+                          x={-8}
+                          y={3}
+                          textAnchor="end"
+                          fill="#cbd5e1"
+                          fontSize={compact ? 10 : 11}
+                          fontWeight={600}
+                        >
+                          {showRankBadges ? `#${badge} ${truncated}` : truncated}
+                        </text>
+                      </g>
+                    );
+                  }}
+                />
+                <RechartsTooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload || !payload.length) return null;
+                    const item = payload[0].payload as TBarChartItem;
+                    return (
+                      <div className="bg-[#120824]/95 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-2xl space-y-1 min-w-[150px]">
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          {item.badgeNumber !== undefined && (
+                            <span className="text-[10px] text-cyan-300 font-mono">
+                              #{item.badgeNumber}
+                            </span>
+                          )}
+                          <span>{item.label}</span>
+                        </div>
+                        <div className="text-sm font-black font-mono text-amber-400">
+                          {valueFormatter(item.value)}
+                        </div>
+                        {item.secondaryLabel && (
+                          <div className="text-[10px] text-slate-400">
+                            {item.secondaryLabel}
+                          </div>
+                        )}
+                        {item.meta && (
+                          <div className="text-[10px] text-purple-300 font-mono">
+                            {item.meta}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }}
+                  cursor={{ fill: "rgba(255, 255, 255, 0.04)" }}
+                />
+                <Bar
+                  dataKey="value"
+                  radius={[0, 6, 6, 0]}
+                  maxBarSize={compact ? 18 : 26}
+                  animationDuration={800}
                 >
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      {showRankBadges && (
-                        <span className="w-5 h-5 rounded-md bg-white/5 border border-white/10 text-cyan-300 font-mono text-[10px] font-black flex items-center justify-center shrink-0">
-                          #{item.badgeNumber ?? index + 1}
-                        </span>
-                      )}
-                      <span className="font-extrabold text-slate-100 truncate max-w-[180px] sm:max-w-[280px]">
-                        {item.label}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-3 font-mono">
-                      {item.meta && (
-                        <span className="text-[11px] text-slate-400 hidden sm:inline">
-                          {item.meta}
-                        </span>
-                      )}
-                      <span className="font-black text-amber-400">
-                        {valueFormatter(item.value)}
-                      </span>
-                      {item.secondaryLabel && (
-                        <span className="text-[10px] text-slate-400">
-                          {item.secondaryLabel}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Meter Bar */}
-                  <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
-                    <div
-                      className={`h-full rounded-full bg-gradient-to-r ${itemGradient} shadow-sm transition-all duration-500`}
-                      style={{ width: `${percentage}%` }}
+                  {rawItems.map((item, idx) => (
+                    <Cell
+                      key={`cell-${idx}`}
+                      fill={item.color || `url(#barGrad_h_${uniqueId}_${idx})`}
                     />
-                  </div>
-                </div>
-              );
-            })}
+                  ))}
+                </Bar>
+              </RechartsBarChart>
+            </ResponsiveContainer>
           </div>
         ) : (
-          /* Vertical Column Bars */
-          <div className="space-y-4">
-            <div
-              className={`flex items-end justify-between gap-2 pt-6 px-2 ${
-                height ? "" : "h-56"
-              }`}
-              style={height ? { height } : undefined}
-            >
-              {rawItems.map((item, idx) => {
-                const heightPct = Math.max((item.value / maxVal) * 100, 6);
-                const itemGradient = item.gradient || gradientClass;
-
-                return (
-                  <div
-                    key={item.id ?? item.label ?? idx}
-                    className="flex-1 flex flex-col items-center gap-2 h-full justify-end group"
-                  >
-                    {/* Tooltip on hover */}
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono font-black text-amber-400 bg-[#120824] px-2 py-0.5 rounded border border-white/15 whitespace-nowrap shadow-lg">
-                      {valueFormatter(item.value)}
-                    </div>
-
-                    {/* Bar Column */}
-                    <div className="w-full max-w-[42px] h-full flex items-end justify-center">
-                      <div
-                        className={`w-full rounded-t-xl bg-gradient-to-t ${itemGradient} group-hover:brightness-110 transition-all duration-300 shadow-lg relative`}
-                        style={{ height: `${heightPct}%` }}
+          /* Recharts Vertical Column Chart (horizontal layout in recharts) */
+          <div className="w-full" style={{ height: calculatedHeight }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsBarChart
+                layout="horizontal"
+                data={rawItems}
+                margin={{
+                  top: 10,
+                  right: 15,
+                  left: compact ? -15 : -5,
+                  bottom: compact ? 0 : 10,
+                }}
+              >
+                <defs>
+                  {rawItems.map((item, idx) => {
+                    const pal =
+                      parsedGradient ||
+                      DEFAULT_GRADIENT_PALETTES[
+                        idx % DEFAULT_GRADIENT_PALETTES.length
+                      ];
+                    return (
+                      <linearGradient
+                        key={`vgrad-${idx}`}
+                        id={`barGrad_v_${uniqueId}_${idx}`}
+                        x1="0"
+                        y1="1"
+                        x2="0"
+                        y2="0"
                       >
-                        {/* Top glowing cap */}
-                        <div className="absolute top-0 inset-x-0 h-1 rounded-t-xl bg-white/70" />
+                        <stop offset="0%" stopColor={pal.start} stopOpacity={0.6} />
+                        <stop offset="100%" stopColor={pal.end} />
+                      </linearGradient>
+                    );
+                  })}
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="rgba(255, 255, 255, 0.06)"
+                />
+                <XAxis
+                  dataKey="label"
+                  stroke="#94a3b8"
+                  fontSize={compact ? 10 : 11}
+                  tickLine={false}
+                  axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
+                  interval={0}
+                  tick={({ x, y, payload }) => {
+                    const truncated =
+                      payload.value.length > 8
+                        ? `${payload.value.slice(0, 7)}…`
+                        : payload.value;
+                    return (
+                      <text
+                        x={x}
+                        y={Number(y) + 12}
+                        textAnchor="middle"
+                        fill="#94a3b8"
+                        fontSize={compact ? 10 : 11}
+                      >
+                        {truncated}
+                      </text>
+                    );
+                  }}
+                />
+                <YAxis
+                  type="number"
+                  stroke="#94a3b8"
+                  fontSize={10}
+                  tickLine={false}
+                  axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
+                  domain={[0, customMaxVal ? customMaxVal : "auto"]}
+                  tickFormatter={(val) =>
+                    val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toString()
+                  }
+                />
+                <RechartsTooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload || !payload.length) return null;
+                    const item = payload[0].payload as TBarChartItem;
+                    return (
+                      <div className="bg-[#120824]/95 backdrop-blur-md border border-white/20 p-2.5 rounded-xl shadow-2xl space-y-1">
+                        <div className="text-xs font-bold text-white">
+                          {item.label}
+                        </div>
+                        <div className="text-xs font-black font-mono text-amber-400">
+                          {valueFormatter(item.value)}
+                        </div>
+                        {item.secondaryLabel && (
+                          <div className="text-[10px] text-slate-400">
+                            {item.secondaryLabel}
+                          </div>
+                        )}
                       </div>
-                    </div>
-
-                    {/* Label */}
-                    <span className="text-[10px] font-mono font-bold text-slate-400 group-hover:text-white truncate max-w-[48px]">
-                      {item.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  }}
+                  cursor={{ fill: "rgba(255, 255, 255, 0.04)" }}
+                />
+                <Bar
+                  dataKey="value"
+                  radius={[6, 6, 0, 0]}
+                  maxBarSize={compact ? 24 : 38}
+                  animationDuration={800}
+                >
+                  {rawItems.map((item, idx) => (
+                    <Cell
+                      key={`cell-${idx}`}
+                      fill={item.color || `url(#barGrad_v_${uniqueId}_${idx})`}
+                    />
+                  ))}
+                </Bar>
+              </RechartsBarChart>
+            </ResponsiveContainer>
           </div>
         )}
       </div>

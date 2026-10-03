@@ -7,20 +7,18 @@ import { useSingleProductQuery } from "@/redux/features/product/productApi";
 import { useVariantReviewsQuery } from "@/redux/features/review/reviewApi";
 import { TProduct, TVariant } from "@/types/product";
 import { TInventory } from "@/types/inventory";
-import {
-  ProductBreadcrumbs,
-  ProductImageGallery,
-  ProductHeaderInfo,
-  ProductPriceBlock,
-  ProductVariantSelector,
-  ProductFeaturesList,
-  ProductBuyBox,
-  ProductDetailsTable,
-  ProductDescriptionSection,
-  ProductSellerOffers,
-  ProductReviewSection,
-  ProductPageSkeleton,
-} from "@/components/ui/product";
+import { ProductBreadcrumbs } from "@/components/ui/product/ProductBreadcrumbs";
+import { ProductImageGallery } from "@/components/ui/product/ProductImageGallery";
+import { ProductHeaderInfo } from "@/components/ui/product/ProductHeaderInfo";
+import { ProductPriceBlock } from "@/components/ui/product/ProductPriceBlock";
+import { ProductVariantSelector } from "@/components/ui/product/ProductVariantSelector";
+import { ProductFeaturesList } from "@/components/ui/product/ProductFeaturesList";
+import { ProductBuyBox } from "@/components/ui/product/ProductBuyBox";
+import { ProductDetailsTable } from "@/components/ui/product/ProductDetailsTable";
+import { ProductDescriptionSection } from "@/components/ui/product/ProductDescriptionSection";
+import { ProductSellerOffers } from "@/components/ui/product/ProductSellerOffers";
+import { ProductReviewSection } from "@/components/ui/product/ProductReviewSection";
+import { ProductPageSkeleton } from "@/components/ui/product/ProductPageSkeleton";
 import { AlertTriangle, ArrowLeft, ShoppingCart, Zap, Sparkles, ChevronRight } from "lucide-react";
 import { useAppDispatch } from "@/src/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";

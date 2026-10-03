@@ -1,6 +1,28 @@
 "use client";
 
-import React from "react";
+import React, { useId, useSyncExternalStore } from "react";
+
+const emptySubscribe = () => () => {};
+const useIsMounted = () =>
+  useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+import {
+  RadialBarChart as RechartsRadialBarChart,
+  RadialBar,
+  PolarAngleAxis,
+  ResponsiveContainer,
+} from "recharts";
+
+// Export built-in Recharts components for direct use
+export {
+  RechartsRadialBarChart,
+  RadialBar,
+  PolarAngleAxis,
+  ResponsiveContainer,
+};
 
 export interface RadialGaugeChartProps {
   value: number;
@@ -31,19 +53,28 @@ export const RadialGaugeChart: React.FC<RadialGaugeChartProps> = ({
   valueFormatter = (v) => v,
   className = "",
 }) => {
+  const isMounted = useIsMounted();
+
   const normalizedValue = Math.max(0, Math.min(maxValue, value));
-  const percent = maxValue > 0 ? (normalizedValue / maxValue) * 100 : 0;
+  const rawId = useId();
+  const gradId = `gaugeGrad_${rawId.replace(/:/g, "_")}`;
 
-  const radius = (size - strokeWidth) / 2 - 4;
-  const center = size / 2;
-  const circumference = 2 * Math.PI * radius;
-  const arcRatio = arcDegree / 360;
+  // Start and end angle calculation for centered arc
+  // A 270 degree arc has a 90 degree opening at the bottom.
+  // In Cartesian/SVG polar: bottom is 270 (or -90). Opening from 225 deg to 315 deg (or -45 deg).
+  const startAngle = 180 + (360 - arcDegree) / 2;
+  const endAngle = startAngle - arcDegree;
 
-  // Arc length and offset
-  const arcLength = circumference * arcRatio;
-  const strokeDashoffset = arcLength - (percent / 100) * arcLength;
+  const data = [
+    {
+      name: title,
+      value: normalizedValue,
+      fill: `url(#${gradId})`,
+    },
+  ];
 
-  const gradId = React.useId();
+  const outerRadius = Math.max(10, size / 2 - 4);
+  const innerRadius = Math.max(5, outerRadius - strokeWidth);
 
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
@@ -51,46 +82,47 @@ export const RadialGaugeChart: React.FC<RadialGaugeChartProps> = ({
         className="relative flex items-center justify-center select-none"
         style={{ width: size, height: size }}
       >
-        <svg
-          className="w-full h-full transform -rotate-135"
-          viewBox={`0 0 ${size} ${size}`}
-        >
-          <defs>
-            <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={gradientFrom} />
-              <stop offset="100%" stopColor={gradientTo} />
-            </linearGradient>
-          </defs>
-
-          {/* Background Track Arc */}
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.08)"
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${arcLength} ${circumference}`}
-            strokeLinecap="round"
+        {!isMounted ? (
+          <div
+            className="w-full h-full rounded-full bg-white/[0.03] animate-pulse flex items-center justify-center"
+            style={{ width: size, height: size }}
           />
-
-          {/* Foreground Value Arc */}
-          <circle
-            cx={center}
-            cy={center}
-            r={radius}
-            fill="none"
-            stroke={`url(#${gradId})`}
-            strokeWidth={strokeWidth}
-            strokeDasharray={`${arcLength} ${circumference}`}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-1000 ease-out"
-          />
-        </svg>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <RechartsRadialBarChart
+              cx="50%"
+              cy="50%"
+              innerRadius={innerRadius}
+              outerRadius={outerRadius}
+              barSize={strokeWidth}
+              data={data}
+              startAngle={startAngle}
+              endAngle={endAngle}
+            >
+              <defs>
+                <linearGradient id={gradId} x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor={gradientFrom} />
+                  <stop offset="100%" stopColor={gradientTo} />
+                </linearGradient>
+              </defs>
+              <PolarAngleAxis
+                type="number"
+                domain={[0, maxValue]}
+                angleAxisId={0}
+                tick={false}
+              />
+              <RadialBar
+                background={{ fill: "rgba(255, 255, 255, 0.08)" }}
+                dataKey="value"
+                cornerRadius={strokeWidth / 2}
+                animationDuration={900}
+              />
+            </RechartsRadialBarChart>
+          </ResponsiveContainer>
+        )}
 
         {/* Center Display */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 pointer-events-none">
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-2 pointer-events-none select-none">
           {title && (
             <span className="text-[10px] uppercase font-extrabold tracking-widest text-slate-400">
               {title}

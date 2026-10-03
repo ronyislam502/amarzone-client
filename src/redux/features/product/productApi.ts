@@ -13,6 +13,10 @@ export const productApi = baseApi.injectEndpoints({
         if (params?.department) queryParams.append("department", params.department);
         if (params?.brand) queryParams.append("brand", params.brand);
         if (params?.sort) queryParams.append("sort", params.sort);
+        if (params?.minPrice !== undefined && params?.minPrice !== "") queryParams.append("minPrice", String(params.minPrice));
+        if (params?.maxPrice !== undefined && params?.maxPrice !== "") queryParams.append("maxPrice", String(params.maxPrice));
+        if (params?.minRating !== undefined && params?.minRating !== "") queryParams.append("minRating", String(params.minRating));
+        if (params?.inStock) queryParams.append("inStock", "true");
 
         return {
           url: `/products?${queryParams.toString()}`,
