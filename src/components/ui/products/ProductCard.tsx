@@ -142,6 +142,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         vendorId,
         inStock: priceInfo.inStock,
         stockNote: priceInfo.inStock ? "In Stock" : "Out of Stock",
+        shippingTime: (seller as any)?.shippingTime || 2,
+        attributes: firstVariant?.attributes || [],
+        isSelected: true,
       })
     );
 
@@ -174,7 +177,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   // Determine active badge: custom badge > rollback > discount percentage
   const displayBadge =
     badgeLabel ||
-    (isRollback || product.isBestSeller ? "Best Seller" : null);
+    (isRollback ? "Rollback" : product.isBestSeller ? "Best Seller" : null);
 
   // ──────────────────────────────────────────────────────────────────────────
   // LIST VIEW LAYOUT

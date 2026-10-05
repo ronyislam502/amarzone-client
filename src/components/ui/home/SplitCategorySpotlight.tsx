@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Tv, Sparkles } from "lucide-react";
 import { TProduct } from "@/src/types/product";
-import ProductCard from "./ProductCard";
+import { ProductCard } from "@/src/components/ui/products/ProductCard";
 
 interface SplitCategorySpotlightProps {
     products: TProduct[];

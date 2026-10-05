@@ -18,7 +18,7 @@ import { ProductDetailsTable } from "@/components/ui/product/ProductDetailsTable
 import { ProductDescriptionSection } from "@/components/ui/product/ProductDescriptionSection";
 import { ProductSellerOffers } from "@/components/ui/product/ProductSellerOffers";
 import { ProductReviewSection } from "@/components/ui/product/ProductReviewSection";
-import { ProductPageSkeleton } from "@/components/ui/product/ProductPageSkeleton";
+import { ProductPageSkeleton } from "@/src/components/ui/skeleton";
 import { AlertTriangle, ArrowLeft, ShoppingCart, Zap, Sparkles, ChevronRight } from "lucide-react";
 import { useAppDispatch } from "@/src/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";

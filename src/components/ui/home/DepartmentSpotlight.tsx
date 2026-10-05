@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { HeartPulse, ArrowRight, CheckCircle2 } from "lucide-react";
 import { TProduct } from "@/src/types/product";
-import ProductCard from "./ProductCard";
+import { ProductCard } from "@/src/components/ui/products/ProductCard";
 
 interface DepartmentSpotlightProps {
     products: TProduct[];

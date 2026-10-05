@@ -1,7 +1,7 @@
 "use client";
 
 import { TTableProps } from "@/src/types/table";
-import TableSkeleton from "./skeleton/TableSkeleton";
+import { TableSkeleton } from "@/src/components/ui/skeleton";
 import TableContent from "./table/TableContent";
 import TableEmpty from "./table/TableEmpty";
 import TableError from "./table/TableError";

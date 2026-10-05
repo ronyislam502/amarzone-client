@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Sparkles, ArrowRight, Layers } from "lucide-react";
 import { TProduct } from "@/src/types/product";
-import ProductCard from "./ProductCard";
+import { ProductCard } from "@/src/components/ui/products/ProductCard";
 
 interface FeaturedProductsSectionProps {
     products: TProduct[];

@@ -5,58 +5,88 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Tag } from "lucide-react";
 import { TProduct } from "@/src/types/product";
+import { TDepartment } from "@/types/department";
+import { useAllDepartmentsQuery } from "@/redux/features/department/departmentApi";
+import { slugify, matchesSlug } from "@/utils/slug";
 import { extractProductPriceInfo, getProductThumbnail } from "./homeUtils";
 
 interface RollbacksBentoGridProps {
     products: TProduct[];
 }
 
-interface ColumnTileConfig {
-    title: string;
-    subtitle: string;
-    filterParam?: string;
-    badgeColor?: string;
-}
+const DEPARTMENT_SUBTITLES: Record<string, string> = {
+    "electronics": "Laptops, audio & smart tech",
+    "home-and-kitchen": "Cookware, dining & living",
+    "home-kitchen": "Cookware, dining & living",
+    "pet-supplies": "Nutrition, beds & healthcare",
+    "fashion": "Apparel, footwear & skincare",
+    "beauty": "Skincare, cosmetics & wellness",
+    "grocery": "Pantry, snacks & essentials",
+    "toys": "Games, puzzles & action figures",
+    "sports": "Fitness, outdoor & recreation",
+    "baby": "Strollers, nursery & essentials",
+    "health": "Vitamins, first-aid & monitors",
+    "automotive": "Parts, tools & car care",
+    "jewelry": "Watches, rings & accessories",
+};
 
-const COLUMN_CONFIGS: ColumnTileConfig[] = [
-    {
-        title: "Tech & electronics",
-        subtitle: "Laptops, audio & wearables",
-        filterParam: "electronics",
-    },
-    {
-        title: "Kitchen & dining",
-        subtitle: "Cookware, blenders & coffee",
-        filterParam: "home",
-    },
-    {
-        title: "Pet supplies & care",
-        subtitle: "Nutrition, beds & healthcare",
-        filterParam: "pets",
-    },
-    {
-        title: "Fashion & beauty",
-        subtitle: "Apparel, footwear & skincare",
-        filterParam: "fashion",
-    },
-    {
-        title: "Deals under $25",
-        subtitle: "Pantry, organizers & gadgets",
-        filterParam: "under-25",
-    },
-];
+const getDepartmentSubtitle = (name: string, slug: string): string => {
+    return (
+        DEPARTMENT_SUBTITLES[slug] ||
+        DEPARTMENT_SUBTITLES[slug.replace(/-and-/g, "-")] ||
+        `Curated rollbacks & essentials in ${name}`
+    );
+};
 
 export const RollbacksBentoGrid: React.FC<RollbacksBentoGridProps> = ({ products }) => {
-    // Partition products across the 5 columns (4 items per column = 20 items)
-    const getColumnProducts = (colIndex: number): TProduct[] => {
+    // Fetch live department data from the database
+    const { data: deptResponse, isLoading: isLoadingDepts } = useAllDepartmentsQuery({
+        limit: 100,
+    });
+
+    const departments: TDepartment[] = (deptResponse as any)?.data || [];
+
+    // Display up to 5 departments in the signature 5-column bento grid
+    const displayDepartments = departments.slice(0, 5);
+
+    // Partition / filter products belonging to each department (4 items per tile = 2x2 grid)
+    const getDepartmentProducts = (dept: TDepartment, index: number): TProduct[] => {
         if (!products || products.length === 0) return [];
-        const start = (colIndex * 4) % products.length;
-        const slice = products.slice(start, start + 4);
-        if (slice.length < 4 && products.length > 0) {
-            // wrap around if needed
-            return [...slice, ...products.slice(0, 4 - slice.length)];
+
+        // 1. Prioritize products matching this department by id or name
+        const deptProducts = products.filter((p) => {
+            const pDept = p.department;
+            if (!pDept) return false;
+            if (typeof pDept === "object" && pDept !== null) {
+                return (
+                    pDept._id === dept._id ||
+                    matchesSlug(pDept.name, dept.name) ||
+                    matchesSlug(pDept.name, slugify(dept.name))
+                );
+            }
+            return pDept === dept._id;
+        });
+
+        if (deptProducts.length >= 4) {
+            return deptProducts.slice(0, 4);
         }
-        return slice;
+
+        // 2. Fill remaining slots from products array to ensure complete 2x2 presentation
+        const remaining = 4 - deptProducts.length;
+        const startIndex = (index * 4) % products.length;
+        const fillers: TProduct[] = [];
+
+        for (let i = 0; i < products.length && fillers.length < remaining; i++) {
+            const candidate = products[(startIndex + i) % products.length];
+            if (
+                !deptProducts.some((p) => p._id === candidate._id) &&
+                !fillers.some((p) => p._id === candidate._id)
+            ) {
+                fillers.push(candidate);
+            }
+        }
+
+        return [...deptProducts, ...fillers];
     };
 
     return (
@@ -81,7 +111,7 @@ export const RollbacksBentoGrid: React.FC<RollbacksBentoGridProps> = ({ products
                 </div>
 
                 <Link
-                    href="/#flash-deals"
+                    href="/products"
                     className="inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#0071dc] hover:underline"
                 >
                     <span>View all deals</span>
@@ -91,81 +121,106 @@ export const RollbacksBentoGrid: React.FC<RollbacksBentoGridProps> = ({ products
 
             {/* 5-Column Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                {COLUMN_CONFIGS.map((config, colIdx) => {
-                    const colProducts = getColumnProducts(colIdx);
+                {isLoadingDepts && displayDepartments.length === 0
+                    ? Array.from({ length: 5 }).map((_, idx) => (
+                          <div
+                              key={idx}
+                              className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs flex flex-col justify-between animate-pulse"
+                          >
+                              <div className="space-y-2">
+                                  <div className="h-4 bg-slate-200 rounded-md w-3/4" />
+                                  <div className="h-3 bg-slate-100 rounded-md w-1/2" />
+                              </div>
+                              <div className="grid grid-cols-2 gap-2.5 my-3.5">
+                                  {Array.from({ length: 4 }).map((_, pIdx) => (
+                                      <div key={pIdx} className="bg-slate-100 rounded-xl aspect-square" />
+                                  ))}
+                              </div>
+                              <div className="pt-2 border-t border-slate-100">
+                                  <div className="h-3 bg-slate-200 rounded-md w-1/3" />
+                              </div>
+                          </div>
+                      ))
+                    : displayDepartments.map((dept, colIdx) => {
+                          const deptSlug = slugify(dept.name);
+                          const subtitle = getDepartmentSubtitle(dept.name, deptSlug);
+                          const deptHref = `/${deptSlug}`;
+                          const colProducts = getDepartmentProducts(dept, colIdx);
 
-                    return (
-                        <div
-                            key={config.title}
-                            className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between"
-                        >
-                            {/* Card Header */}
-                            <div>
-                                <h3 className="text-sm font-black text-slate-900 leading-tight">
-                                    {config.title}
-                                </h3>
-                                <p className="text-[11px] text-slate-500 mt-0.5">
-                                    {config.subtitle}
-                                </p>
-                            </div>
+                          return (
+                              <div
+                                  key={dept._id || dept.name}
+                                  className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-2xs hover:shadow-md transition-shadow duration-200 flex flex-col justify-between"
+                              >
+                                  {/* Card Header */}
+                                  <div>
+                                      <Link href={deptHref} className="group/header block">
+                                          <h3 className="text-sm font-black text-slate-900 leading-tight group-hover/header:text-[#0071dc] transition-colors">
+                                              {dept.name}
+                                          </h3>
+                                          <p className="text-[11px] text-slate-500 mt-0.5">
+                                              {subtitle}
+                                          </p>
+                                      </Link>
+                                  </div>
 
-                            {/* 2x2 Mini Product Grid */}
-                            <div className="grid grid-cols-2 gap-2.5 my-3.5">
-                                {colProducts.map((prod) => {
-                                    const priceInfo = extractProductPriceInfo(prod);
-                                    const thumbnail = getProductThumbnail(prod);
+                                  {/* 2x2 Mini Product Grid */}
+                                  <div className="grid grid-cols-2 gap-2.5 my-3.5">
+                                      {colProducts.map((prod) => {
+                                          const priceInfo = extractProductPriceInfo(prod);
+                                          const thumbnail = getProductThumbnail(prod);
 
-                                    return (
-                                        <Link
-                                            key={prod._id}
-                                            href={`/products/${prod._id}`}
-                                            className="group flex flex-col items-start bg-slate-50/60 hover:bg-slate-100/70 rounded-xl p-2 transition-colors"
-                                        >
-                                            <div className="relative w-full aspect-square mb-1.5 rounded-lg bg-white p-1 overflow-hidden flex items-center justify-center">
-                                                <Image
-                                                    src={thumbnail}
-                                                    alt={prod.title}
-                                                    fill
-                                                    sizes="(max-width: 640px) 40vw, (max-width: 1024px) 20vw, 10vw"
-                                                    className="object-contain group-hover:scale-105 transition-transform duration-200"
-                                                    loading="lazy"
-                                                />
-                                            </div>
+                                          return (
+                                              <Link
+                                                  key={prod._id}
+                                                  href={`/products/${prod._id}`}
+                                                  className="group flex flex-col items-start bg-slate-50/60 hover:bg-slate-100/70 rounded-xl p-2 transition-colors"
+                                              >
+                                                  <div className="relative w-full aspect-square mb-1.5 rounded-lg bg-white p-1 overflow-hidden flex items-center justify-center">
+                                                      <Image
+                                                          src={thumbnail}
+                                                          alt={prod.title}
+                                                          fill
+                                                          sizes="(max-width: 640px) 40vw, (max-width: 1024px) 20vw, 10vw"
+                                                          className="object-contain group-hover:scale-105 transition-transform duration-200"
+                                                          loading="lazy"
+                                                      />
+                                                  </div>
 
-                                            {/* Price */}
-                                            <div className="flex items-baseline gap-1">
-                                                <span className="text-xs font-black text-slate-900">
-                                                    ${priceInfo.price.toFixed(2)}
-                                                </span>
-                                                {priceInfo.originalPrice > priceInfo.price && (
-                                                    <span className="text-[10px] text-slate-400 line-through">
-                                                        ${priceInfo.originalPrice.toFixed(0)}
-                                                    </span>
-                                                )}
-                                            </div>
+                                                  {/* Price */}
+                                                  <div className="flex items-baseline gap-1">
+                                                      <span className="text-xs font-black text-slate-900">
+                                                          ${priceInfo.price.toFixed(2)}
+                                                      </span>
+                                                      {priceInfo.originalPrice > priceInfo.price && (
+                                                          <span className="text-[10px] text-slate-400 line-through">
+                                                              ${priceInfo.originalPrice.toFixed(0)}
+                                                          </span>
+                                                      )}
+                                                  </div>
 
-                                            {/* Title Snippet */}
-                                            <span className="text-[10px] text-slate-600 truncate w-full group-hover:text-[#0071dc]">
-                                                {prod.title}
-                                            </span>
-                                        </Link>
-                                    );
-                                })}
-                            </div>
+                                                  {/* Title Snippet */}
+                                                  <span className="text-[10px] text-slate-600 truncate w-full group-hover:text-[#0071dc]">
+                                                      {prod.title}
+                                                  </span>
+                                              </Link>
+                                          );
+                                      })}
+                                  </div>
 
-                            {/* Footer Link */}
-                            <div className="pt-1 border-t border-slate-100">
-                                <Link
-                                    href={`/?department=${config.filterParam}`}
-                                    className="inline-flex items-center gap-1 text-xs font-bold text-[#0071dc] hover:underline"
-                                >
-                                    <span>Shop all</span>
-                                    <ArrowRight className="w-3 h-3" />
-                                </Link>
-                            </div>
-                        </div>
-                    );
-                })}
+                                  {/* Footer Link */}
+                                  <div className="pt-1 border-t border-slate-100">
+                                      <Link
+                                          href={deptHref}
+                                          className="inline-flex items-center gap-1 text-xs font-bold text-[#0071dc] hover:underline"
+                                      >
+                                          <span>Shop all</span>
+                                          <ArrowRight className="w-3 h-3" />
+                                      </Link>
+                                  </div>
+                              </div>
+                          );
+                      })}
             </div>
         </section>
     );

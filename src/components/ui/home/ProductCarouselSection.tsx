@@ -4,7 +4,7 @@ import React, { useRef } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight, Zap, Sparkles } from "lucide-react";
 import { TProduct } from "@/src/types/product";
-import ProductCard from "./ProductCard";
+import { ProductCard } from "@/src/components/ui/products/ProductCard";
 
 interface ProductCarouselSectionProps {
     id?: string;
