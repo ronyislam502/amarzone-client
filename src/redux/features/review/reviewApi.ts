@@ -74,10 +74,21 @@ export const reviewApi = baseApi.injectEndpoints({
       },
     }),
     vendorReviews: builder.query({
-      query: (vendorId: string) => ({
-        url: `/reviews/vendor/${vendorId}`,
-        method: "GET",
-      }),
+      query: (args: string | { vendorId: string; params?: Record<string, any> }) => {
+        const vendorId = typeof args === "string" ? args : args.vendorId;
+        const params = typeof args === "object" ? args.params : undefined;
+        const queryParams = new URLSearchParams();
+        if (params?.searchTerm) queryParams.append("searchTerm", params.searchTerm);
+        if (params?.page) queryParams.append("page", String(params.page));
+        if (params?.limit) queryParams.append("limit", String(params.limit));
+        if (params?.rating) queryParams.append("rating", String(params.rating));
+        if (params?.sort) queryParams.append("sort", params.sort);
+        const qs = queryParams.toString();
+        return {
+          url: `/service-reviews/vendor/${vendorId}${qs ? `?${qs}` : ""}`,
+          method: "GET",
+        };
+      },
       providesTags: ["review"],
     }),
     variantReviews: builder.query({

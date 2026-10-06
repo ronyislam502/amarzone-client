@@ -23,7 +23,7 @@ const vendorApi = baseApi.injectEndpoints({
 
     singleVendor: builder.query({
       query: (id: string) => ({
-        url: `/vendors/single/${id}`,
+        url: `/vendors/vendor/${id}`,
         method: "GET",
       }),
       providesTags: ["vendor"],

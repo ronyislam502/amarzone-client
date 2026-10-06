@@ -1,13 +1,14 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { TInventory } from "@/types/inventory";
 import { TProduct, TVariant } from "@/types/product";
 import { Award, CheckCircle2, ChevronRight, Store, Truck, Clock, X } from "lucide-react";
 import { useAppDispatch } from "@/src/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";
 import { toast } from "react-toastify";
-
+import { getActualVendorId } from "@/data/vendors";
 
 interface ProductSellerOffersProps {
   sellers: TInventory[];
@@ -159,6 +160,10 @@ export const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
                   (buyBoxWinnerId && listing._id === buyBoxWinnerId) ||
                   seller.isBuyBoxWinner;
                 const vendorName = seller.vendor?.name || "Amarzone Verified Seller";
+                const rawVendorId =
+                  seller.vendor?._id ||
+                  (typeof seller.vendor === "string" ? seller.vendor : undefined);
+                const vendorId = rawVendorId ? getActualVendorId(rawVendorId) : undefined;
                 const price = seller.price;
                 const isStock = seller.isStock && seller.quantity > 0;
 
@@ -218,7 +223,20 @@ export const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
                             <tr>
                               <td className="py-0.5 align-top w-[70px] text-slate-500">Sold by</td>
                               <td className="py-0.5 align-top text-[#007185] hover:text-[#c7511f] hover:underline cursor-pointer">
-                                {vendorName}
+                                {vendorId ? (
+                                  <Link
+                                    href={`/vendors/${vendorId}`}
+                                    className="hover:underline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setIsDrawerOpen(false);
+                                    }}
+                                  >
+                                    {vendorName}
+                                  </Link>
+                                ) : (
+                                  vendorName
+                                )}
                               </td>
                             </tr>
                           </tbody>

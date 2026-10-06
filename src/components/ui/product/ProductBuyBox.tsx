@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import {
   MapPin,
   Lock,
@@ -20,6 +21,7 @@ import { addToCart } from "@/redux/features/order/orderSlice";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { BadgeSkeleton } from "@/src/components/ui/skeleton";
+import { getActualVendorId } from "@/data/vendors";
 
 interface ProductBuyBoxProps {
   buyBoxListing: TInventory | null;
@@ -51,6 +53,12 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
   const availableQty = seller?.quantity ?? 10;
   const maxSelectableQty = Math.min(Math.max(availableQty, 1), 10);
   const vendorName = seller?.vendor?.name || product?.brand || "Amarzone Direct";
+  const rawVendorId =
+    seller?.vendor?._id ||
+    (typeof seller?.vendor === "string" ? seller.vendor : undefined) ||
+    (product.author as any)?._id ||
+    (product.author as any)?.id;
+  const vendorId = rawVendorId ? getActualVendorId(rawVendorId) : undefined;
   const fulfillmentBy = seller?.fulfillmentBy || "Amarzone Logistics";
   const shippingTime = seller?.shippingTime || 2;
 
@@ -260,9 +268,19 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
 
         <div className="grid grid-cols-2 text-slate-500">
           <span>Sold by</span>
-          <span className="text-[#007185] hover:text-[#c7511f] font-semibold hover:underline cursor-pointer truncate">
-            {vendorName}
-          </span>
+          {vendorId ? (
+            <Link
+              href={`/vendors/${vendorId}`}
+              className="text-[#007185] hover:text-[#c7511f] font-semibold hover:underline cursor-pointer truncate"
+              title={`Visit ${vendorName} Storefront`}
+            >
+              {vendorName}
+            </Link>
+          ) : (
+            <span className="text-[#007185] hover:text-[#c7511f] font-semibold hover:underline cursor-pointer truncate">
+              {vendorName}
+            </span>
+          )}
         </div>
 
         <div className="grid grid-cols-2 text-slate-500">

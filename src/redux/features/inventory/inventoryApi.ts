@@ -55,12 +55,33 @@ const inventoryApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["inventory"],
     }),
+    getVendorInventory: builder.query({
+      query: (args: string | { id: string; params?: { search?: string; searchTerm?: string; sort?: string; page?: number | string; limit?: number | string } }) => {
+        const vendorId = typeof args === "string" ? args : args.id;
+        const params = typeof args === "object" ? args.params : undefined;
+        const queryParams = new URLSearchParams();
+        if (params?.searchTerm) queryParams.append("searchTerm", params.searchTerm);
+        else if (params?.search) queryParams.append("searchTerm", params.search);
+        if (params?.sort) queryParams.append("sort", params.sort);
+        if (params?.page) queryParams.append("page", String(params.page));
+        if (params?.limit !== undefined && params?.limit !== null)
+          queryParams.append("limit", String(params.limit));
+
+        const qs = queryParams.toString();
+        return {
+          url: `/inventories/ven-inventory/${vendorId}${qs ? `?${qs}` : ""}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["inventory"],
+    }),
   }),
 });
 
 export const {
   useGetInventoryByAsinQuery,
   useGetMyInventoryQuery,
+  useGetVendorInventoryQuery,
   useListInventoryProductMutation,
   useUpdateInventoryPriceMutation,
   useUpdateInventoryQuantityMutation,
