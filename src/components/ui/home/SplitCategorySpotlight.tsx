@@ -6,9 +6,10 @@ import Link from "next/link";
 import { ArrowRight, Tv, Sparkles } from "lucide-react";
 import { TProduct } from "@/src/types/product";
 import { ProductCard } from "@/src/components/ui/products/ProductCard";
+import { useHomeProducts } from "./homeUtils";
 
 interface SplitCategorySpotlightProps {
-    products: TProduct[];
+    products?: TProduct[];
     title?: string;
     bannerTitle?: string;
     bannerSubtitle?: string;
@@ -18,7 +19,7 @@ interface SplitCategorySpotlightProps {
 }
 
 export const SplitCategorySpotlight: React.FC<SplitCategorySpotlightProps> = ({
-    products,
+    products: propProducts,
     title = "Host game day with ease",
     bannerTitle = "Touchdowns, blockbusters & high-fidelity sound",
     bannerSubtitle = "Upgrade your entertainment hub with ultra-crisp displays, Dolby soundbars, and quick-bite appliances.",
@@ -26,6 +27,10 @@ export const SplitCategorySpotlight: React.FC<SplitCategorySpotlightProps> = ({
     bannerLink = "/?department=electronics",
     reverse = false,
 }) => {
+    const { products: allProducts } = useHomeProducts(propProducts);
+    const products = (propProducts && propProducts.length > 0)
+        ? propProducts
+        : allProducts.slice(12, 15);
     const displayProducts = products.slice(0, 3);
 
     return (
@@ -53,9 +58,8 @@ export const SplitCategorySpotlight: React.FC<SplitCategorySpotlightProps> = ({
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
                 {/* Lifestyle Banner Side (4 Columns) */}
                 <div
-                    className={`lg:col-span-4 rounded-3xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#020617] text-white shadow-md ${
-                        reverse ? "lg:order-last" : ""
-                    }`}
+                    className={`lg:col-span-4 rounded-3xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden bg-gradient-to-br from-[#1e293b] via-[#0f172a] to-[#020617] text-white shadow-md ${reverse ? "lg:order-last" : ""
+                        }`}
                 >
                     <div className="relative z-10 space-y-3">
                         <span className="inline-flex items-center gap-1.5 bg-[#0071dc] text-white text-[11px] font-black px-3 py-1 rounded-full uppercase tracking-wider">
@@ -89,13 +93,26 @@ export const SplitCategorySpotlight: React.FC<SplitCategorySpotlightProps> = ({
                 {/* Product Cards Side (8 Columns, 3 Cards) */}
                 <div className="lg:col-span-8">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 h-full">
-                        {displayProducts.map((prod) => (
-                            <ProductCard
-                                key={prod._id}
-                                product={prod}
-                                className="h-full"
-                            />
-                        ))}
+                        {displayProducts.length > 0
+                            ? displayProducts.map((prod) => (
+                                  <ProductCard
+                                      key={prod._id}
+                                      product={prod}
+                                      className="h-full"
+                                  />
+                              ))
+                            : Array.from({ length: 3 }).map((_, idx) => (
+                                  <div
+                                      key={idx}
+                                      className="bg-white rounded-2xl border border-slate-200 p-4 shadow-2xs h-full min-h-[300px] animate-pulse flex flex-col justify-between"
+                                  >
+                                      <div className="w-full aspect-square bg-slate-100 rounded-xl" />
+                                      <div className="space-y-2 mt-3">
+                                          <div className="h-4 bg-slate-200 rounded-md w-3/4" />
+                                          <div className="h-4 bg-slate-200 rounded-md w-1/3" />
+                                      </div>
+                                  </div>
+                              ))}
                     </div>
                 </div>
             </div>

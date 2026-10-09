@@ -5,12 +5,15 @@ import Link from "next/link";
 import { HeartPulse, ArrowRight, CheckCircle2 } from "lucide-react";
 import { TProduct } from "@/src/types/product";
 import { ProductCard } from "@/src/components/ui/products/ProductCard";
+import { useHomeProducts } from "./homeUtils";
 
 interface DepartmentSpotlightProps {
-    products: TProduct[];
+    products?: TProduct[];
 }
 
-export const DepartmentSpotlight: React.FC<DepartmentSpotlightProps> = ({ products }) => {
+export const DepartmentSpotlight: React.FC<DepartmentSpotlightProps> = ({ products: propProducts }) => {
+    const { products: allProducts } = useHomeProducts(propProducts);
+    const products = (propProducts && propProducts.length > 0) ? propProducts : allProducts;
     // Find products belonging to Pet Supplies or prominent department
     const petDepartmentProducts = useMemo(() => {
         const matching = products.filter(

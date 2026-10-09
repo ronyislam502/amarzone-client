@@ -1,4 +1,5 @@
 import { TProduct } from "@/src/types/product";
+import { useAllProductsQuery } from "@/src/redux/features/product/productApi";
 
 export interface ProductPriceInfo {
     price: number;
@@ -97,4 +98,27 @@ export const formatWalmartPrice = (price: number) => {
     const fixed = price.toFixed(2);
     const [dollars, cents] = fixed.split(".");
     return { dollars, cents };
+};
+
+/**
+ * Shared hook for home page components to retrieve catalog products.
+ * Leverages RTK Query caching and automatic request deduplication across sections.
+ */
+export const useHomeProducts = (initialProducts?: TProduct[]) => {
+    const hasInitial = Array.isArray(initialProducts) && initialProducts.length > 0;
+    const { data: apiResponse, isLoading, isError, refetch } = useAllProductsQuery(
+        { limit: 40 },
+        { skip: hasInitial }
+    );
+
+    const products: TProduct[] = hasInitial
+        ? (initialProducts as TProduct[])
+        : (apiResponse as any)?.data || [];
+
+    return {
+        products,
+        isLoading: hasInitial ? false : isLoading,
+        isError: hasInitial ? false : isError,
+        refetch,
+    };
 };

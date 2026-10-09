@@ -5,13 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Pause, Play, ArrowRight } from "lucide-react";
 import { TProduct } from "@/src/types/product";
-import { extractProductPriceInfo, getProductThumbnail } from "./homeUtils";
+import { extractProductPriceInfo, getProductThumbnail, useHomeProducts } from "./homeUtils";
 
 interface HomeHeroCarouselProps {
-    products: TProduct[];
+    products?: TProduct[];
 }
 
-export const HomeHeroCarousel: React.FC<HomeHeroCarouselProps> = ({ products }) => {
+export const HomeHeroCarousel: React.FC<HomeHeroCarouselProps> = ({ products: propProducts }) => {
+    const { products: allProducts } = useHomeProducts(propProducts);
+    const products = (propProducts && propProducts.length > 0) ? propProducts : allProducts;
     const [currentSlide, setCurrentSlide] = useState<number>(0);
     const [isPlaying, setIsPlaying] = useState<boolean>(true);
 
@@ -174,9 +176,8 @@ export const HomeHeroCarousel: React.FC<HomeHeroCarouselProps> = ({ products }) 
                             type="button"
                             onClick={() => setCurrentSlide(idx)}
                             aria-label={`Go to slide ${idx + 1}`}
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                                currentSlide === idx ? "w-8 bg-slate-900" : "w-2 bg-slate-300 hover:bg-slate-400"
-                            }`}
+                            className={`h-2 rounded-full transition-all duration-300 ${currentSlide === idx ? "w-8 bg-slate-900" : "w-2 bg-slate-300 hover:bg-slate-400"
+                                }`}
                         />
                     ))}
                 </div>

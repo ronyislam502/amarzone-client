@@ -1,12 +1,12 @@
-"use client";
-
-import React from "react";
-import { useParams } from "next/navigation";
 import { ProductsPage } from "@/src/components/ui/products/ReusableProductsPage";
 
-export default function DepartmentPage() {
-  const params = useParams();
-  const departmentSlug = (params?.department as string) || "";
+interface DepartmentPageProps {
+  params: Promise<{ department: string }>;
+}
+
+export default async function DepartmentPage({ params }: DepartmentPageProps) {
+  const resolvedParams = await params;
+  const departmentSlug = resolvedParams?.department || "";
 
   return (
     <ProductsPage

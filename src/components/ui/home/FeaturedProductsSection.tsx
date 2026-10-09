@@ -4,12 +4,15 @@ import React, { useState, useMemo } from "react";
 import { Sparkles, ArrowRight, Layers } from "lucide-react";
 import { TProduct } from "@/src/types/product";
 import { ProductCard } from "@/src/components/ui/products/ProductCard";
+import { useHomeProducts } from "./homeUtils";
 
 interface FeaturedProductsSectionProps {
-    products: TProduct[];
+    products?: TProduct[];
 }
 
-export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = ({ products }) => {
+export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = ({ products: propProducts }) => {
+    const { products: allProducts } = useHomeProducts(propProducts);
+    const products = (propProducts && propProducts.length > 0) ? propProducts : allProducts;
     const [activeCategory, setActiveCategory] = useState<string>("all");
 
     // Extract dynamic unique categories from the product list
@@ -55,11 +58,10 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
                     <button
                         type="button"
                         onClick={() => setActiveCategory("all")}
-                        className={`btn btn-sm rounded-full text-xs font-bold transition-all ${
-                            activeCategory === "all"
+                        className={`btn btn-sm rounded-full text-xs font-bold transition-all ${activeCategory === "all"
                                 ? "bg-[#0071dc] text-white hover:bg-[#005bb5] shadow-xs"
                                 : "btn-ghost text-slate-600 hover:bg-slate-100"
-                        }`}
+                            }`}
                     >
                         All Items
                     </button>
@@ -68,11 +70,10 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
                             key={catName}
                             type="button"
                             onClick={() => setActiveCategory(catName)}
-                            className={`btn btn-sm rounded-full text-xs font-bold whitespace-nowrap transition-all ${
-                                activeCategory === catName
+                            className={`btn btn-sm rounded-full text-xs font-bold whitespace-nowrap transition-all ${activeCategory === catName
                                     ? "bg-[#0071dc] text-white hover:bg-[#005bb5] shadow-xs"
                                     : "btn-ghost text-slate-600 hover:bg-slate-100"
-                            }`}
+                                }`}
                         >
                             {catName}
                         </button>

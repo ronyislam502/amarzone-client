@@ -26,7 +26,7 @@ import Pagination from "@/src/components/ui/shared/Pagination";
 import { ReusableProductsPageProps } from "./types";
 import { ProductCard } from "./ProductCard";
 import { ProductFilterSidebar } from "./ProductFilterSidebar";
-import { ProductsHeader } from "./ProductsHeader";
+// import { ProductsHeader } from "./ProductsHeader";
 import { ProductsToolbar } from "./ProductsToolbar";
 
 const DEFAULT_LIMIT = 24;
@@ -286,7 +286,7 @@ function ReusableProductsPageContent({
   return (
     <main className={`min-h-screen bg-slate-50/60 text-slate-900 ${className}`}>
       {/* ── Products Header (Banner + Breadcrumbs + Category Chips) ─────────── */}
-      <ProductsHeader
+      {/* <ProductsHeader
         mode={mode}
         departmentSlug={departmentSlug}
         categorySlug={categorySlug}
@@ -298,7 +298,7 @@ function ReusableProductsPageContent({
         subtitle={subtitle}
         badge={badge}
         totalProductsCount={total}
-      />
+      /> */}
 
       {/* ── Main Catalog Content (Sidebar + Toolbar + Products Grid) ────────── */}
       <div className="max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-10 py-8">

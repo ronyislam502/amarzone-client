@@ -5,13 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Sparkles, CreditCard, Flame, ShieldCheck } from "lucide-react";
 import { TProduct } from "@/src/types/product";
-import { extractProductPriceInfo, getProductThumbnail } from "./homeUtils";
+import { extractProductPriceInfo, getProductThumbnail, useHomeProducts } from "./homeUtils";
 
 interface BentoPromoShowcaseProps {
     products?: TProduct[];
 }
 
-export const BentoPromoShowcase: React.FC<BentoPromoShowcaseProps> = ({ products = [] }) => {
+export const BentoPromoShowcase: React.FC<BentoPromoShowcaseProps> = ({ products: propProducts }) => {
+    const { products: allProducts } = useHomeProducts(propProducts);
+    const products = (propProducts && propProducts.length > 0) ? propProducts : allProducts;
     const previewProducts = products.slice(0, 4);
 
     return (

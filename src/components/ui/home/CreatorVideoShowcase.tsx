@@ -5,10 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Play, Sparkles, ShoppingBag, Eye } from "lucide-react";
 import { TProduct } from "@/src/types/product";
-import { extractProductPriceInfo, getProductThumbnail } from "./homeUtils";
+import { extractProductPriceInfo, getProductThumbnail, useHomeProducts } from "./homeUtils";
 
 interface CreatorVideoShowcaseProps {
-    products: TProduct[];
+    products?: TProduct[];
 }
 
 interface VideoCreatorItem {
@@ -50,7 +50,12 @@ const CREATORS: VideoCreatorItem[] = [
     },
 ];
 
-export const CreatorVideoShowcase: React.FC<CreatorVideoShowcaseProps> = ({ products }) => {
+export const CreatorVideoShowcase: React.FC<CreatorVideoShowcaseProps> = ({ products: propProducts }) => {
+    const { products: allProducts } = useHomeProducts(propProducts);
+    const products = (propProducts && propProducts.length > 0)
+        ? propProducts
+        : allProducts.slice(27, 33);
+
     return (
         <section aria-label="Featured Creator Videos and Social Trends" className="w-full select-none">
             {/* Header */}
@@ -83,7 +88,7 @@ export const CreatorVideoShowcase: React.FC<CreatorVideoShowcaseProps> = ({ prod
             {/* Video Cards Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {CREATORS.map((item, idx) => {
-                    const linkedProduct = products[idx % products.length];
+                    const linkedProduct = products && products.length > 0 ? products[idx % products.length] : null;
                     const priceInfo = linkedProduct ? extractProductPriceInfo(linkedProduct) : null;
                     const thumbnail = linkedProduct ? getProductThumbnail(linkedProduct) : "";
 

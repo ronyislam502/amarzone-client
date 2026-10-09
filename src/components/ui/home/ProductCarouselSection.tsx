@@ -1,10 +1,18 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight, Zap, Sparkles } from "lucide-react";
+import Autoplay from "embla-carousel-autoplay";
 import { TProduct } from "@/src/types/product";
 import { ProductCard } from "@/src/components/ui/products/ProductCard";
+import { useHomeProducts } from "./homeUtils";
+import {
+    Carousel,
+    CarouselContent,
+    CarouselItem,
+    type CarouselApi,
+} from "@/src/components/ui/carousel";
 
 interface ProductCarouselSectionProps {
     id?: string;
@@ -12,7 +20,7 @@ interface ProductCarouselSectionProps {
     subtitle?: string;
     badgeText?: string;
     badgeIcon?: "zap" | "sparkles" | "deal";
-    products: TProduct[];
+    products?: TProduct[];
     viewAllLink?: string;
     isRollback?: boolean;
     showCountdown?: boolean;
@@ -24,12 +32,23 @@ export const ProductCarouselSection: React.FC<ProductCarouselSectionProps> = ({
     subtitle,
     badgeText,
     badgeIcon = "zap",
-    products,
+    products: propProducts,
     viewAllLink = "/#featured-catalog",
     isRollback = false,
     showCountdown = false,
 }) => {
-    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const { products: allProducts } = useHomeProducts(propProducts);
+    const products = (propProducts && propProducts.length > 0)
+        ? propProducts
+        : id === "best-sellers"
+        ? allProducts.slice(15, 27)
+        : allProducts.slice(0, 12);
+
+    const [api, setApi] = useState<CarouselApi>();
+    const plugin = useRef(
+        Autoplay({ delay: 3000, stopOnInteraction: false })
+    );
+
     const [timeLeft, setTimeLeft] = React.useState({ hours: 7, minutes: 34, seconds: 22 });
 
     React.useEffect(() => {
@@ -46,12 +65,12 @@ export const ProductCarouselSection: React.FC<ProductCarouselSectionProps> = ({
     }, [showCountdown]);
 
     const scroll = (direction: "left" | "right") => {
-        if (!scrollContainerRef.current) return;
-        const offset = direction === "left" ? -460 : 460;
-        scrollContainerRef.current.scrollBy({
-            left: offset,
-            behavior: "smooth",
-        });
+        if (!api) return;
+        if (direction === "left") {
+            api.scrollPrev();
+        } else {
+            api.scrollNext();
+        }
     };
 
     if (!products || products.length === 0) {
@@ -127,26 +146,35 @@ export const ProductCarouselSection: React.FC<ProductCarouselSectionProps> = ({
                 </div>
             </div>
 
-            {/* Horizontal Scroll Track */}
-            <div
-                ref={scrollContainerRef}
-                className="flex items-stretch gap-3.5 overflow-x-auto scroll-smooth no-scrollbar pb-3 pt-1"
-                style={{ scrollSnapType: "x mandatory" }}
+            {/* Embla Carousel Track */}
+            <Carousel
+                setApi={setApi}
+                plugins={[plugin.current]}
+                opts={{
+                    align: "start",
+                    loop: true,
+                }}
+                className="w-full"
+                onMouseEnter={plugin.current.stop}
+                onMouseLeave={plugin.current.reset}
             >
-                {products.map((product) => (
-                    <div
-                        key={product._id}
-                        className="flex-shrink-0 w-[220px] sm:w-[250px] lg:w-[270px]"
-                        style={{ scrollSnapAlign: "start" }}
-                    >
-                        <ProductCard
-                            product={product}
-                            isRollback={isRollback}
-                            className="h-full"
-                        />
-                    </div>
-                ))}
-            </div>
+                <CarouselContent className="-ml-3.5 pb-3 pt-1">
+                    {products.map((product) => (
+                        <CarouselItem
+                            key={product._id}
+                            className="pl-3.5 basis-auto"
+                        >
+                            <div className="w-[220px] sm:w-[250px] lg:w-[270px] h-full">
+                                <ProductCard
+                                    product={product}
+                                    isRollback={isRollback}
+                                    className="h-full"
+                                />
+                            </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+            </Carousel>
         </section>
     );
 };
