@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useSingleProductQuery } from "@/redux/features/product/productApi";
 import { useVariantReviewsQuery } from "@/redux/features/review/reviewApi";
 import { TProduct, TVariant } from "@/types/product";
 import { TInventory } from "@/types/inventory";
+import { TCartItem } from "@/types/order";
 import { ProductBreadcrumbs } from "@/components/ui/product/ProductBreadcrumbs";
 import { ProductImageGallery } from "@/components/ui/product/ProductImageGallery";
 import { ProductHeaderInfo } from "@/components/ui/product/ProductHeaderInfo";
@@ -39,22 +40,16 @@ export default function SingleProductPage() {
 
   const product: TProduct | undefined = productResponse?.data;
 
-  // Selected Variant State (defaults to first variant in array)
+  // Selected Variant State: tracks user's explicit selection.
+  // We derive activeVariant purely during render without useEffect to prevent infinite update loops.
   const [selectedVariant, setSelectedVariant] = useState<TVariant | null>(null);
 
-  useEffect(() => {
-    if (product?.variants && product.variants.length > 0) {
-      const belongs = selectedVariant && product.variants.some((v) => v._id === selectedVariant._id);
-      if (!belongs) {
-        setSelectedVariant(product.variants[0]);
-      }
-    }
-  }, [product, selectedVariant]);
-
   const activeVariant: TVariant | undefined =
-    (selectedVariant && product?.variants?.find((v) => v._id === selectedVariant._id)) ||
-    selectedVariant ||
-    (product?.variants && product.variants[0]);
+    (selectedVariant &&
+      product?.variants?.find(
+        (v) => v._id === selectedVariant._id
+      )) ||
+    (product?.variants && product.variants.length > 0 ? product.variants[0] : undefined);
 
   // 2. Extract sellers and vendors based on currently selected product variant
   const sellers: TInventory[] = (activeVariant?.inventory || []).filter(
@@ -70,13 +65,17 @@ export default function SingleProductPage() {
 
   const totalSellers = sellers.length;
 
-  // 3. Fetch Variant Reviews by selected variant's ID
+  // 3. Fetch Variant Reviews by selected variant's ID (memoized query argument to avoid re-fetch thrashing)
   const activeVariantId = activeVariant?._id || "";
+  const reviewQueryArgs = useMemo(
+    () => ({ variantId: activeVariantId }),
+    [activeVariantId]
+  );
   const {
     data: reviewsResponse,
     isLoading: isLoadingReviews,
   } = useVariantReviewsQuery(
-    { variantId: activeVariantId },
+    reviewQueryArgs,
     { skip: !activeVariantId }
   );
 
@@ -128,10 +127,17 @@ export default function SingleProductPage() {
       const variantId = activeVariant?._id || product.variants?.[0]?._id;
       const vendorId =
         buyBoxWinner?.seller?.vendor?._id ||
-        (product.author as any)?.id ||
-        (product.author as any)?._id;
+        product.author?.id ||
+        product.author?._id;
 
-      const cartItem: any = {
+      const categoryName =
+        typeof product.category === "object"
+          ? product.category?.name
+          : typeof product.category === "string"
+          ? product.category
+          : "General";
+
+      const cartItem: TCartItem = {
         ...product,
         _id: variantId || product._id,
         variantId: variantId,
@@ -147,7 +153,7 @@ export default function SingleProductPage() {
           activeVariant?.images?.[0] ||
           product.thumbnail,
         brand: product.brand,
-        category: (product.category as any)?.name || product.category || "General",
+        category: categoryName,
         price: winnerPrice,
         originalPrice:
           product.minPrice && product.minPrice > winnerPrice

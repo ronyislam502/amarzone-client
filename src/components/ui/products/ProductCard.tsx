@@ -90,8 +90,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     typeof product.category === "object" && product.category !== null
       ? product.category.name
       : typeof product.category === "string"
-      ? product.category
-      : "";
+        ? product.category
+        : "";
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const vendorId =
       typeof vendor === "object" && vendor !== null
         ? (vendor as { _id?: string; id?: string })._id ||
-          (vendor as { _id?: string; id?: string }).id
+        (vendor as { _id?: string; id?: string }).id
         : vendor;
 
     dispatch(
@@ -235,9 +235,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               className="shrink-0 w-7 h-7 rounded-full bg-slate-100 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
             >
               <Heart
-                className={`w-3.5 h-3.5 transition-colors ${
-                  isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-400"
-                }`}
+                className={`w-3.5 h-3.5 transition-colors ${isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-400"
+                  }`}
               />
             </button>
           </div>
@@ -249,11 +248,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 {[1, 2, 3, 4, 5].map((s) => (
                   <Star
                     key={s}
-                    className={`w-3 h-3 ${
-                      s <= Math.round(rating)
+                    className={`w-3 h-3 ${s <= Math.round(rating)
                         ? "fill-amber-400 text-amber-400"
                         : "fill-slate-100 text-slate-300"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -305,11 +303,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
-                  addedToCart
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${addedToCart
                     ? "bg-emerald-500 text-white"
                     : "bg-amber-400 hover:bg-amber-300 text-slate-900"
-                }`}
+                  }`}
               >
                 {addedToCart ? (
                   <>
@@ -361,9 +358,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm border border-slate-200 hover:bg-rose-50 transition-colors cursor-pointer"
       >
         <Heart
-          className={`w-3.5 h-3.5 transition-colors ${
-            isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-400"
-          }`}
+          className={`w-3.5 h-3.5 transition-colors ${isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-400"
+            }`}
         />
       </button>
 
@@ -408,11 +404,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star
                   key={s}
-                  className={`w-3 h-3 ${
-                    s <= Math.round(rating)
+                  className={`w-3 h-3 ${s <= Math.round(rating)
                       ? "fill-amber-400 text-amber-400"
                       : "fill-slate-100 text-slate-300"
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -447,11 +442,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <button
             type="button"
             onClick={handleAddToCart}
-            className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm ${
-              addedToCart
+            className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm ${addedToCart
                 ? "bg-emerald-500 text-white"
                 : "bg-amber-400 hover:bg-amber-300 text-slate-900"
-            }`}
+              }`}
           >
             {addedToCart ? (
               <>
