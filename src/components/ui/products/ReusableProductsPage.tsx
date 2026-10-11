@@ -16,7 +16,7 @@ import {
 } from "@/redux/features/category/categoryApi";
 import { useAllDepartmentsQuery } from "@/redux/features/department/departmentApi";
 import { useDebounce } from "@/src/components/utilities/Debaounce";
-import { TProduct } from "@/types/product";
+import { TProduct, TVariant } from "@/types/product";
 import { TCategory } from "@/types/category";
 import { TDepartment } from "@/types/department";
 import { matchesSlug } from "@/utils/slug";
@@ -29,7 +29,7 @@ import { ProductFilterSidebar } from "./ProductFilterSidebar";
 // import { ProductsHeader } from "./ProductsHeader";
 import { ProductsToolbar } from "./ProductsToolbar";
 
-const DEFAULT_LIMIT = 24;
+const DEFAULT_LIMIT = 20;
 
 /**
  * Master Reusable Products Page Component
@@ -154,6 +154,10 @@ function ReusableProductsPageContent({
     (mode === "department" && !activeDepartmentId && !isLoadingDepts) ||
     (mode === "category" && !effectiveCategoryId && !isLoadingDeptCats && !isLoadingDepts);
 
+  // Server-side query: Always fetch 10 parent products per page from server (which produce 20 variant cards)
+  const PARENT_PRODUCTS_PER_PAGE = 10;
+  const VARIANTS_PER_PAGE = 20;
+
   const {
     data: responseData,
     isLoading: isLoadingProducts,
@@ -164,7 +168,7 @@ function ReusableProductsPageContent({
     {
       search: urlSearch || undefined,
       page: String(page),
-      limit: String(urlLimit),
+      limit: String(PARENT_PRODUCTS_PER_PAGE),
       department: activeDepartmentId || undefined,
       category: effectiveCategoryId || undefined,
       brand: urlBrand || undefined,
@@ -181,7 +185,51 @@ function ReusableProductsPageContent({
 
   const products: TProduct[] = responseData?.data || [];
   const meta = responseData?.meta;
-  const total = meta?.total ?? products.length;
+
+  // Unpack each variant as an individual product card item
+  const variantCards = useMemo(() => {
+    const items: Array<{
+      key: string;
+      product: TProduct;
+      variant?: TVariant;
+    }> = [];
+
+    products.forEach((product) => {
+      const activeVariants = Array.isArray(product.variants)
+        ? product.variants.filter((v: any) => !v?.isDeleted)
+        : [];
+
+      if (activeVariants.length > 0) {
+        activeVariants.forEach((variant) => {
+          items.push({
+            key: `${product._id}-${variant._id || variant.asin || variant.sku}`,
+            product,
+            variant,
+          });
+        });
+      } else {
+        // Fallback for parent products without variants
+        items.push({
+          key: product._id,
+          product,
+        });
+      }
+    });
+
+    return items;
+  }, [products]);
+
+  // Display a maximum of 20 variant-based product cards per page
+  const displayedVariantCards = useMemo(() => {
+    return variantCards.slice(0, VARIANTS_PER_PAGE);
+  }, [variantCards]);
+
+  // Compute total variant count for pagination & entries counter (e.g. 760 * 2 = 1520 variants)
+  const avgVariantsRatio =
+    products.length > 0 ? variantCards.length / products.length : 2;
+  const totalVariants = meta?.total
+    ? Math.round(meta.total * avgVariantsRatio)
+    : variantCards.length;
 
   // Extract unique brands for filtering
   const availableBrands = useMemo(() => {
@@ -332,8 +380,8 @@ function ReusableProductsPageContent({
           <div className="flex-1 min-w-0 space-y-5">
             {/* Toolbar */}
             <ProductsToolbar
-              totalResultsCount={total}
-              filteredCount={products.length}
+              totalResultsCount={totalVariants}
+              filteredCount={displayedVariantCards.length}
               isFetching={isFetching}
               activeFilterCount={activeFilterCount}
               onOpenMobileFilters={() => setIsSidebarOpen(true)}
@@ -387,7 +435,7 @@ function ReusableProductsPageContent({
                   Retry
                 </button>
               </div>
-            ) : products.length === 0 ? (
+            ) : displayedVariantCards.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border border-slate-200 space-y-4 text-center p-6">
                 <Search className="w-12 h-12 text-slate-200" />
                 <p className="text-base font-bold text-slate-700">
@@ -406,20 +454,22 @@ function ReusableProductsPageContent({
               </div>
             ) : viewMode === "grid" ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {products.map((product) => (
+                {displayedVariantCards.map((item) => (
                   <ProductCard
-                    key={product._id}
-                    product={product}
+                    key={item.key}
+                    product={item.product}
+                    variant={item.variant}
                     viewMode="grid"
                   />
                 ))}
               </div>
             ) : (
               <div className="space-y-3">
-                {products.map((product) => (
+                {displayedVariantCards.map((item) => (
                   <ProductCard
-                    key={product._id}
-                    product={product}
+                    key={item.key}
+                    product={item.product}
+                    variant={item.variant}
                     viewMode="list"
                   />
                 ))}
@@ -427,14 +477,13 @@ function ReusableProductsPageContent({
             )}
 
             {/* Reusable Pagination from project design system */}
-            {total > 0 && (
+            {totalVariants > 0 && (
               <div className="pt-2">
                 <Pagination
                   page={page}
-                  limit={urlLimit}
-                  total={total}
+                  limit={VARIANTS_PER_PAGE}
+                  total={totalVariants}
                   onPageChange={(newPage) => updateUrl({ page: newPage })}
-                  onLimitChange={(newLimit) => updateUrl({ limit: newLimit, page: 1 })}
                 />
               </div>
             )}
@@ -502,7 +551,7 @@ function ReusableProductsPageContent({
                 onClick={() => setIsSidebarOpen(false)}
                 className="w-full btn btn-sm bg-violet-600 hover:bg-violet-500 text-white border-0 rounded-xl font-bold cursor-pointer"
               >
-                View {total} Products
+                View {totalVariants} Products
               </button>
             </div>
           </div>

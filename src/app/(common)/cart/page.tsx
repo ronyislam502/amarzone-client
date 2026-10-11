@@ -206,18 +206,25 @@ function CartPageContent() {
       });
       const data = await res.json();
       if (data?.data?.accessToken) {
+        const user = data.data.user;
         dispatch(
           setUser({
-            user: data.data.user,
+            user: user,
             token: data.data.accessToken,
           })
         );
+        try {
+          const Cookies = (await import("js-cookie")).default;
+          Cookies.set("accessToken", data.data.accessToken);
+        } catch {
+          // ignore if cookie library fails
+        }
         toast.success("Signed in as Customer (Akhi Akter)!");
         setIsLoginModalOpen(false);
         // Continue to checkout immediately
-        setTimeout(() => executeCheckout(), 200);
+        setTimeout(() => executeCheckout(), 250);
       } else {
-        toast.error("Failed to sign in. Please try again.");
+        toast.error(data?.message || "Failed to sign in. Please try again.");
       }
     } catch {
       toast.error("Network error while signing in.");
@@ -225,6 +232,8 @@ function CartPageContent() {
       setIsLoggingIn(false);
     }
   };
+
+  const [pendingItemIds, setPendingItemIds] = useState<string[]>([]);
 
   // Main Checkout Flow Execution
   const executeCheckout = async () => {
@@ -234,25 +243,42 @@ function CartPageContent() {
     }
 
     try {
-      // Find the primary vendor associated with the selected items
-      const primaryItem = selectedItems[0];
-      const vendorId =
-        primaryItem.vendorId ||
-        (typeof primaryItem.seller?.vendor === "object"
-          ? primaryItem.seller?.vendor?._id
-          : primaryItem.seller?.vendor) ||
-        (typeof primaryItem.vendor === "object"
-          ? primaryItem.vendor?._id
-          : primaryItem.vendor) ||
-        (typeof primaryItem.variant?.inventory?.[0]?.seller?.vendor === "object"
-          ? primaryItem.variant?.inventory?.[0]?.seller?.vendor?._id
-          : primaryItem.variant?.inventory?.[0]?.seller?.vendor) ||
-        (typeof primaryItem.author === "object"
-          ? primaryItem.author?._id || primaryItem.author?.id
-          : primaryItem.author);
+      // Helper to extract vendor ID from a cart item
+      const getItemVendorId = (item: any) => {
+        const v =
+          item.vendorId ||
+          item.seller?.vendor?._id ||
+          item.seller?.vendor ||
+          item.vendor?._id ||
+          item.vendor ||
+          item.variant?.inventory?.[0]?.seller?.vendor?._id ||
+          item.variant?.inventory?.[0]?.seller?.vendor ||
+          item.author?._id ||
+          item.author?.id ||
+          item.author;
+        const id = typeof v === "object" ? v?._id || v?.id : v;
+        if (typeof id === "string" && /^[0-9a-fA-F]{24}$/.test(id)) {
+          return id;
+        }
+        return null;
+      };
+
+      // Find the first selected item that has a valid vendor ID
+      const validItem = selectedItems.find((item) => Boolean(getItemVendorId(item)));
+      if (!validItem) {
+        toast.error("Please select a product from an active seller.");
+        return;
+      }
+
+      const vendorId = getItemVendorId(validItem);
+
+      // Filter selected items to only those belonging to the primary vendor
+      const vendorItems = selectedItems.filter(
+        (item) => getItemVendorId(item) === vendorId
+      );
 
       // Ensure all items have a valid variant ID
-      const invalidItem = selectedItems.find(
+      const invalidItem = vendorItems.find(
         (item) => !item.variantId && !item.variant?._id
       );
       if (invalidItem) {
@@ -262,7 +288,7 @@ function CartPageContent() {
         return;
       }
 
-      const orderProducts = selectedItems.map((item) => ({
+      const orderProducts = vendorItems.map((item) => ({
         variant: item.variantId || item.variant?._id || item._id,
         quantity: item.quantity || 1,
       }));
@@ -274,12 +300,17 @@ function CartPageContent() {
 
       const result = await createOrderMutation(payload).unwrap();
 
-      if (result?.data?.clientSecret) {
-        setCreatedOrder(result.data.order);
-        setStripeClientSecret(result.data.clientSecret);
+      // Dynamically extract clientSecret and order from API response
+      const clientSecret = result?.data?.clientSecret || result?.clientSecret;
+      const orderData = result?.data?.order || result?.order;
+
+      if (clientSecret && orderData) {
+        setCreatedOrder(orderData);
+        setStripeClientSecret(clientSecret);
+        setPendingItemIds(vendorItems.map((i) => i._id || i.id || i.variantId));
         setIsStripeModalOpen(true);
       } else {
-        toast.error("Failed to initialize Stripe checkout. Please try again.");
+        toast.error("Failed to initialize Stripe checkout. No client secret received.");
       }
     } catch (err: any) {
       const errorMsg =
@@ -315,7 +346,12 @@ function CartPageContent() {
   }, [searchParams, cartItems.length]);
 
   const handlePaymentSuccess = () => {
-    dispatch(clearCart());
+    if (pendingItemIds.length > 0) {
+      pendingItemIds.forEach((id) => dispatch(removeFromCart({ _id: id })));
+      setPendingItemIds([]);
+    } else {
+      dispatch(clearCart());
+    }
   };
 
   // Add recommended product directly from empty cart view
@@ -520,7 +556,11 @@ function CartPageContent() {
       {isStripeModalOpen && (
         <StripePaymentModal
           isOpen={isStripeModalOpen}
-          onClose={() => setIsStripeModalOpen(false)}
+          onClose={() => {
+            setIsStripeModalOpen(false);
+            setStripeClientSecret("");
+            setCreatedOrder(null);
+          }}
           clientSecret={stripeClientSecret}
           order={createdOrder}
           onPaymentSuccess={handlePaymentSuccess}

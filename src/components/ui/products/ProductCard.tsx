@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { TProduct } from "@/types/product";
+import { TProduct, TVariant } from "@/types/product";
 import {
   extractProductPriceInfo,
   getProductThumbnail,
@@ -25,6 +25,9 @@ import { addToCart } from "@/redux/features/order/orderSlice";
 export interface ProductCardProps {
   /** Product data item */
   product: TProduct;
+
+  /** Specific variant to display as an individual product card */
+  variant?: TVariant;
 
   /** Layout mode: "grid" (default) or "list" */
   viewMode?: "grid" | "list";
@@ -61,11 +64,12 @@ export interface ProductCardProps {
 /**
  * Reusable Product Card Component
  * Supports both "grid" and "list" view modes, complete with
- * image fallback, stock handling, wishlist toggle, discount badges,
- * and direct Redux cart dispatch.
+ * variant-level image rendering, stock handling, wishlist toggle, discount badges,
+ * and direct Redux cart dispatch with the specific selected variant.
  */
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
+  variant,
   viewMode = "grid",
   badgeLabel,
   isRollback = false,
@@ -80,9 +84,60 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
+  // Active target variant for this card
+  const targetVariant = variant || product.variants?.[0];
+
+  // Variant's own image (prioritizes variant's image gallery, then thumbnail, then parent product fallback)
+  const thumbnail =
+    (targetVariant?.images && Array.isArray(targetVariant.images) && targetVariant.images[0]) ||
+    targetVariant?.thumbnail ||
+    getProductThumbnail(product);
+
+  // Link directly to the product details page with this variant selected
+  const productHref = targetVariant?._id
+    ? `/products/${product._id}?variantId=${targetVariant._id}`
+    : `/products/${product._id}`;
+
   const priceInfo = extractProductPriceInfo(product);
-  const thumbnail = getProductThumbnail(product);
-  const { dollars, cents } = formatWalmartPrice(priceInfo.price);
+
+  // 1. Extract in-stock sellers from this specific variant's inventory
+  const variantInventories = (targetVariant as any)?.inventory;
+  const sellers: any[] = Array.isArray(variantInventories)
+    ? variantInventories.filter(
+        (inv: any) => inv?.seller && inv.seller.isStock !== false
+      )
+    : [];
+
+  // 2. Buy Box winner for this specific variant (matches [id]/page.tsx Buy Box selection)
+  const buyBoxWinner =
+    sellers.find((l: any) => l.seller?.isBuyBoxWinner) ||
+    (sellers.length > 0
+      ? [...sellers].sort(
+          (a: any, b: any) => (a.seller?.price ?? 0) - (b.seller?.price ?? 0)
+        )[0]
+      : null);
+
+  // 3. Variant's own specific price
+  const variantPrice: number =
+    buyBoxWinner?.seller?.price ??
+    (sellers[0]?.seller?.price ??
+      (targetVariant as any)?.price ??
+      product?.minPrice ??
+      24.99);
+
+  const targetSeller = buyBoxWinner?.seller || sellers[0]?.seller;
+  const isTargetInStock =
+    sellers.length > 0
+      ? sellers.some((s: any) => (s.seller?.quantity ?? 0) > 0)
+      : priceInfo.inStock;
+
+  const originalPrice = Number((variantPrice * 1.22).toFixed(2));
+  const savings = Number((originalPrice - variantPrice).toFixed(2));
+  const discountPercent = Math.round(
+    ((originalPrice - variantPrice) / originalPrice) * 100
+  );
+
+  const { dollars, cents } = formatWalmartPrice(variantPrice);
   const rating = product.averageRating ?? 4.2;
   const reviews = product.reviewCount ?? 0;
 
@@ -104,15 +159,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
     setAddedToCart(true);
 
-    const firstVariant = product.variants?.[0];
-    const variantId = firstVariant?._id || product._id;
-    const inv = (firstVariant as { inventory?: { seller?: { vendor?: unknown; price?: number; quantity?: number; isStock?: boolean } }[] })?.inventory?.[0];
-    const seller = inv?.seller;
+    const variantId = targetVariant?._id || product._id;
+    const inv = (targetVariant as any)?.inventory?.[0];
+    const seller = targetSeller || inv?.seller;
     const vendor = seller?.vendor || product.author;
     const vendorId =
       typeof vendor === "object" && vendor !== null
         ? (vendor as { _id?: string; id?: string })._id ||
-        (vendor as { _id?: string; id?: string }).id
+          (vendor as { _id?: string; id?: string }).id
         : vendor;
 
     dispatch(
@@ -120,30 +174,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         ...product,
         _id: variantId,
         variantId,
-        variant: firstVariant,
+        variant: targetVariant,
         productId: product._id,
         title: product.title,
-        thumbnail:
-          firstVariant?.thumbnail ||
-          firstVariant?.images?.[0] ||
-          thumbnail,
-        image:
-          firstVariant?.thumbnail ||
-          firstVariant?.images?.[0] ||
-          thumbnail,
+        thumbnail,
+        image: thumbnail,
         brand: product.brand,
         category: categoryName || "General",
-        price: priceInfo.price,
-        originalPrice: priceInfo.originalPrice,
+        price: variantPrice,
+        originalPrice,
         quantity: 1,
         maxQuantity: seller?.quantity || 10,
         seller,
         vendor,
         vendorId,
-        inStock: priceInfo.inStock,
-        stockNote: priceInfo.inStock ? "In Stock" : "Out of Stock",
+        inStock: isTargetInStock,
+        stockNote: isTargetInStock ? "In Stock" : "Out of Stock",
         shippingTime: (seller as any)?.shippingTime || 2,
-        attributes: firstVariant?.attributes || [],
+        attributes: targetVariant?.attributes || [],
         isSelected: true,
       })
     );
@@ -185,7 +233,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   if (viewMode === "list") {
     return (
       <Link
-        href={`/products/${product._id}`}
+        href={productHref}
         className={`group flex gap-4 bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-lg hover:shadow-slate-200/50 transition-all duration-200 p-4 select-none ${className}`}
       >
         {/* Image & Badges */}
@@ -205,9 +253,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <div className="absolute top-1.5 left-1.5 bg-amber-500 text-slate-900 text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-xs">
               {displayBadge}
             </div>
-          ) : priceInfo.discountPercent > 0 ? (
+          ) : discountPercent > 0 ? (
             <div className="absolute top-1.5 left-1.5 bg-rose-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-xs">
-              -{priceInfo.discountPercent}%
+              -{discountPercent}%
             </div>
           ) : null}
         </div>
@@ -225,6 +273,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {categoryName && (
                 <span className="text-[10px] text-slate-400">{categoryName}</span>
               )}
+
+              {/* Variant Attributes Chips */}
+              {targetVariant?.attributes && targetVariant.attributes.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {targetVariant.attributes.map((attr, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center text-[10px] font-semibold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200"
+                    >
+                      <span className="text-slate-400 mr-0.5 font-normal">{attr.type}:</span>
+                      <span>{attr.value}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Wishlist Button */}
@@ -235,8 +298,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               className="shrink-0 w-7 h-7 rounded-full bg-slate-100 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
             >
               <Heart
-                className={`w-3.5 h-3.5 transition-colors ${isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-400"
-                  }`}
+                className={`w-3.5 h-3.5 transition-colors ${
+                  isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-400"
+                }`}
               />
             </button>
           </div>
@@ -248,10 +312,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 {[1, 2, 3, 4, 5].map((s) => (
                   <Star
                     key={s}
-                    className={`w-3 h-3 ${s <= Math.round(rating)
+                    className={`w-3 h-3 ${
+                      s <= Math.round(rating)
                         ? "fill-amber-400 text-amber-400"
                         : "fill-slate-100 text-slate-300"
-                      }`}
+                    }`}
                   />
                 ))}
               </div>
@@ -281,13 +346,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   .{cents}
                 </span>
               </div>
-              {priceInfo.savings > 0 && (
+              {savings > 0 && (
                 <div className="text-[11px] text-slate-400">
                   <span className="line-through">
-                    ${priceInfo.originalPrice.toFixed(2)}
+                    ${originalPrice.toFixed(2)}
                   </span>
                   <span className="text-emerald-600 font-bold ml-1.5">
-                    Save ${priceInfo.savings.toFixed(2)}
+                    Save ${savings.toFixed(2)}
                   </span>
                 </div>
               )}
@@ -303,10 +368,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               <button
                 type="button"
                 onClick={handleAddToCart}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${addedToCart
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm ${
+                  addedToCart
                     ? "bg-emerald-500 text-white"
                     : "bg-amber-400 hover:bg-amber-300 text-slate-900"
-                  }`}
+                }`}
               >
                 {addedToCart ? (
                   <>
@@ -332,7 +398,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   // ──────────────────────────────────────────────────────────────────────────
   return (
     <Link
-      href={`/products/${product._id}`}
+      href={productHref}
       className={`group relative flex flex-col bg-white rounded-2xl border border-slate-200 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60 transition-all duration-300 overflow-hidden select-none ${className}`}
     >
       {/* Top Badges */}
@@ -342,10 +408,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <Sparkles className="w-3 h-3" />
             {displayBadge}
           </span>
-        ) : priceInfo.discountPercent > 0 ? (
+        ) : discountPercent > 0 ? (
           <div className="flex items-center gap-1 bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-md">
             <BadgePercent className="w-3 h-3" />
-            {priceInfo.discountPercent}% OFF
+            {discountPercent}% OFF
           </div>
         ) : null}
       </div>
@@ -358,12 +424,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm border border-slate-200 hover:bg-rose-50 transition-colors cursor-pointer"
       >
         <Heart
-          className={`w-3.5 h-3.5 transition-colors ${isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-400"
-            }`}
+          className={`w-3.5 h-3.5 transition-colors ${
+            isWishlisted ? "fill-rose-500 text-rose-500" : "text-slate-400"
+          }`}
         />
       </button>
 
-      {/* Product Image */}
+      {/* Product Image (Variant-Specific) */}
       <div className="relative w-full aspect-square bg-slate-50 overflow-hidden">
         <Image
           src={thumbnail}
@@ -397,6 +464,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {product.title}
         </h3>
 
+        {/* Variant Attributes Badges */}
+        {targetVariant?.attributes && targetVariant.attributes.length > 0 && (
+          <div className="flex flex-wrap gap-1 items-center pt-0.5">
+            {targetVariant.attributes.map((attr, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center text-[10px] font-semibold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200/80"
+              >
+                <span className="text-slate-400 mr-0.5 font-normal">{attr.type}:</span>
+                <span>{attr.value}</span>
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Rating */}
         {showRating && (
           <div className="flex items-center gap-1.5">
@@ -404,10 +486,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star
                   key={s}
-                  className={`w-3 h-3 ${s <= Math.round(rating)
+                  className={`w-3 h-3 ${
+                    s <= Math.round(rating)
                       ? "fill-amber-400 text-amber-400"
                       : "fill-slate-100 text-slate-300"
-                    }`}
+                  }`}
                 />
               ))}
             </div>
@@ -432,9 +515,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 .{cents}
               </span>
             </div>
-            {priceInfo.savings > 0 && (
+            {savings > 0 && (
               <div className="text-[10px] text-slate-400 line-through">
-                ${priceInfo.originalPrice.toFixed(2)}
+                ${originalPrice.toFixed(2)}
               </div>
             )}
           </div>
@@ -442,10 +525,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           <button
             type="button"
             onClick={handleAddToCart}
-            className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm ${addedToCart
+            className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer shadow-sm ${
+              addedToCart
                 ? "bg-emerald-500 text-white"
                 : "bg-amber-400 hover:bg-amber-300 text-slate-900"
-              }`}
+            }`}
           >
             {addedToCart ? (
               <>

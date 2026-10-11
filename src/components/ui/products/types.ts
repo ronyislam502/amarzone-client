@@ -27,7 +27,7 @@ export interface ReusableProductsPageProps {
   /** Optional badge override */
   badge?: string;
 
-  /** Default items limit per page (default: 24) */
+  /** Default items limit per page (default: 20) */
   limit?: number;
 
   /** Initial sort option */

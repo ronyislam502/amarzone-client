@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import React, { useState, useMemo, Suspense } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSingleProductQuery } from "@/redux/features/product/productApi";
 import { useVariantReviewsQuery } from "@/redux/features/review/reviewApi";
@@ -25,11 +25,13 @@ import { useAppDispatch } from "@/src/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";
 import { toast } from "react-toastify";
 
-export default function SingleProductPage() {
+function SingleProductPageContent() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useAppDispatch();
   const productId = (params?.id as string) || "";
+  const queryVariantId = searchParams?.get("variantId") || searchParams?.get("variant") || "";
 
   // 1. Fetch Product details
   const {
@@ -40,14 +42,17 @@ export default function SingleProductPage() {
 
   const product: TProduct | undefined = productResponse?.data;
 
-  // Selected Variant State: tracks user's explicit selection.
-  // We derive activeVariant purely during render without useEffect to prevent infinite update loops.
+  // Selected Variant State: tracks user's explicit selection or URL query variantId.
   const [selectedVariant, setSelectedVariant] = useState<TVariant | null>(null);
 
   const activeVariant: TVariant | undefined =
     (selectedVariant &&
       product?.variants?.find(
         (v) => v._id === selectedVariant._id
+      )) ||
+    (queryVariantId &&
+      product?.variants?.find(
+        (v) => v._id === queryVariantId || v.asin === queryVariantId || v.sku === queryVariantId
       )) ||
     (product?.variants && product.variants.length > 0 ? product.variants[0] : undefined);
 
@@ -230,7 +235,10 @@ export default function SingleProductPage() {
               <ProductVariantSelector
                 variants={product.variants}
                 selectedVariant={activeVariant}
-                onSelectVariant={(v) => setSelectedVariant(v)}
+                onSelectVariant={(v) => {
+                  setSelectedVariant(v);
+                  router.replace(`/products/${productId}?variantId=${v._id}`, { scroll: false });
+                }}
               />
             )}
 
@@ -380,5 +388,13 @@ export default function SingleProductPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SingleProductPage() {
+  return (
+    <Suspense fallback={<ProductPageSkeleton />}>
+      <SingleProductPageContent />
+    </Suspense>
   );
 }
