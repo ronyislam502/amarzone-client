@@ -25,17 +25,17 @@ import {
 
 import { loadStripe } from "@stripe/stripe-js";
 import { useSingleOrderQuery } from "@/src/redux/features/order/orderApi";
+import { useAppSelector } from "@/src/redux/hooks";
+import { selectCurrentUser } from "@/src/redux/features/auth/authSlice";
 
 /* =========================================================
    Stripe Initialization
-   - Uses Stripe Publishable Key only (never secret key on client)
+   - Uses Stripe Publishable Key only from environment (never secret key on client)
 ========================================================= */
 
-const STRIPE_PUBLISHABLE_KEY =
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ||
-  "pk_test_51RSEX1FKhIbRM6LAdScyCtaUroSASkmQk6pIocbHanrqPA1jabmwrAf9R0tbXi3dbRRGFYtSYD6Zv51TH2JNJQYf00q0XDIsz1";
-
-const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!
+);
 
 /* =========================================================
    Types
@@ -44,6 +44,8 @@ const stripePromise = loadStripe(STRIPE_PUBLISHABLE_KEY);
 interface StripeCheckoutFormProps {
   order: any;
   clientSecret: string;
+  customerEmail?: string;
+  customerName?: string;
   onPaymentSubmitted: (paymentIntent?: any) => void;
   onClose: () => void;
 }
@@ -63,6 +65,8 @@ interface StripePaymentModalProps {
 const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
   order,
   clientSecret,
+  customerEmail,
+  customerName,
   onPaymentSubmitted,
   onClose,
 }) => {
@@ -78,6 +82,7 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
      Handle Stripe Payment Confirmation
      - Uses the exact clientSecret from the order creation response
      - Confirms via Stripe.js Elements
+     - Associates authenticated customer email with payment method & receipt
   ========================================================= */
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -95,11 +100,19 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
       /**
        * Confirm payment using Stripe.js and the exact clientSecret
        * of this specific order configured in Elements.
+       * Pass the authenticated customer's email and name in confirmParams.
        */
       const { error, paymentIntent } = await stripe.confirmPayment({
         elements,
         confirmParams: {
           return_url: `${window.location.origin}/payment/success?orderId=${order?._id}`,
+          receipt_email: customerEmail || undefined,
+          payment_method_data: {
+            billing_details: {
+              ...(customerEmail ? { email: customerEmail } : {}),
+              ...(customerName ? { name: customerName } : {}),
+            },
+          },
         },
         redirect: "if_required",
       });
@@ -203,6 +216,15 @@ const StripeCheckoutForm: React.FC<StripeCheckoutFormProps> = ({
           </span>
         </div>
 
+        {customerEmail && (
+          <div className="flex justify-between items-center">
+            <span className="text-slate-500 font-medium">Customer:</span>
+            <span className="text-slate-700 font-medium truncate max-w-[220px]">
+              {customerEmail}
+            </span>
+          </div>
+        )}
+
         <div className="flex justify-between items-center">
           <span className="text-slate-500 font-medium">Items Total:</span>
           <span className="font-semibold text-slate-700">
@@ -293,6 +315,14 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
 }) => {
   const [isSuccessState, setIsSuccessState] = useState(false);
   const [confirmedPaymentIntent, setConfirmedPaymentIntent] = useState<any>(null);
+
+  // Retrieve authenticated customer's email and name from Redux store
+  const currentUser = useAppSelector(selectCurrentUser);
+  const customerEmail =
+    currentUser?.email ||
+    order?.customer?.email ||
+    (typeof order?.customer === "string" ? undefined : order?.customer?.email);
+  const customerName = currentUser?.name || order?.customer?.name;
 
   // Poll the single order to update status when Stripe Webhook completes
   const { data: orderRes } = useSingleOrderQuery(order?._id, {
@@ -426,6 +456,15 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
                   </span>
                 </div>
 
+                {customerEmail && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500 font-medium">Customer:</span>
+                    <span className="font-semibold text-slate-800">
+                      {customerEmail}
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex justify-between items-center">
                   <span className="text-slate-500 font-medium">Payment Status:</span>
                   {liveOrder?.paymentStatus === "PAID" ? (
@@ -469,7 +508,7 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
               <div className="bg-emerald-50/70 border border-emerald-200/70 rounded-xl p-3 text-left">
                 <p className="text-[11px] leading-relaxed text-emerald-800">
                   Stripe Payment confirmed via client secret for Order #{liveOrder?.orderNo || order?.orderNo}.
-                  You can track shipment progress and download invoices anytime from your customer account.
+                  A confirmation has been linked to {customerEmail || "your account"}.
                 </p>
               </div>
 
@@ -528,6 +567,8 @@ export const StripePaymentModal: React.FC<StripePaymentModalProps> = ({
               <StripeCheckoutForm
                 order={order}
                 clientSecret={clientSecret}
+                customerEmail={customerEmail}
+                customerName={customerName}
                 onPaymentSubmitted={handlePaymentSubmitted}
                 onClose={handleClose}
               />

@@ -301,13 +301,31 @@ function CartPageContent() {
       const result = await createOrderMutation(payload).unwrap();
 
       // Dynamically extract clientSecret and order from API response
-      const clientSecret = result?.data?.clientSecret || result?.clientSecret;
+      const clientSecret =
+        result?.data?.clientSecret ||
+        result?.clientSecret ||
+        result?.data?.url ||
+        result?.url;
       const orderData = result?.data?.order || result?.order;
 
       if (clientSecret && orderData) {
         setCreatedOrder(orderData);
         setStripeClientSecret(clientSecret);
-        setPendingItemIds(vendorItems.map((i) => i._id || i.id || i.variantId));
+        setPendingItemIds(
+          vendorItems
+            .map((i) => i._id || i.id || i.variantId || "")
+            .filter((id): id is string => Boolean(id))
+        );
+
+        // If clientSecret is a Stripe Checkout Session URL, navigate to Stripe Checkout
+        if (
+          clientSecret.startsWith("http://") ||
+          clientSecret.startsWith("https://")
+        ) {
+          window.location.href = clientSecret;
+          return;
+        }
+
         setIsStripeModalOpen(true);
       } else {
         toast.error("Failed to initialize Stripe checkout. No client secret received.");

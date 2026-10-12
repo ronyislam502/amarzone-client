@@ -10,12 +10,12 @@ import { TInventory } from "@/types/inventory";
 import { TCartItem } from "@/types/order";
 import { ProductBreadcrumbs } from "@/components/ui/product/ProductBreadcrumbs";
 import { ProductImageGallery } from "@/components/ui/product/ProductImageGallery";
-import { ProductHeaderInfo } from "@/components/ui/product/ProductHeaderInfo";
+// import { ProductHeaderInfo } from "@/components/ui/product/ProductHeaderInfo";
 import { ProductPriceBlock } from "@/components/ui/product/ProductPriceBlock";
 import { ProductVariantSelector } from "@/components/ui/product/ProductVariantSelector";
 import { ProductFeaturesList } from "@/components/ui/product/ProductFeaturesList";
 import { ProductBuyBox } from "@/components/ui/product/ProductBuyBox";
-import { ProductDetailsTable } from "@/components/ui/product/ProductDetailsTable";
+// import { ProductDetailsTable } from "@/components/ui/product/ProductDetailsTable";
 import { ProductDescriptionSection } from "@/components/ui/product/ProductDescriptionSection";
 import { ProductSellerOffers } from "@/components/ui/product/ProductSellerOffers";
 import { ProductReviewSection } from "@/components/ui/product/ProductReviewSection";
@@ -139,8 +139,8 @@ function SingleProductPageContent() {
         typeof product.category === "object"
           ? product.category?.name
           : typeof product.category === "string"
-          ? product.category
-          : "General";
+            ? product.category
+            : "General";
 
       const cartItem: TCartItem = {
         ...product,
@@ -217,14 +217,14 @@ function SingleProductPageContent() {
 
           {/* Column 2: Product Core Info & Options (Center ~33%) */}
           <div className="lg:col-span-4 space-y-1">
-            <ProductHeaderInfo
+            {/* <ProductHeaderInfo
               brand={product.brand}
               title={product.title}
               averageRating={averageRating}
               totalRatings={totalRatings}
               categoryName={product.category?.name}
               isBestSeller={product.isBestSeller}
-            />
+            /> */}
 
             <ProductPriceBlock
               price={winnerPrice}
@@ -337,10 +337,10 @@ function SingleProductPageContent() {
         </div>
 
         {/* Middle Section: Product Details & Specifications */}
-        <ProductDetailsTable
+        {/* <ProductDetailsTable
           product={product}
           selectedVariant={activeVariant}
-        />
+        /> */}
 
         {/* Product Editorial Description */}
         <ProductDescriptionSection product={product} />
