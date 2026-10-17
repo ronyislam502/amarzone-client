@@ -131,3 +131,5 @@ export const {
   useCreateVariantMutation,
 } = productApi;
 
+export { useAllVariantsByProductQuery, useLazyAllVariantsByProductQuery } from "../variant/variantApi";
+

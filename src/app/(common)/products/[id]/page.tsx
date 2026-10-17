@@ -1,21 +1,23 @@
 "use client";
 
-import React, { useState, useMemo, Suspense } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useSingleProductQuery } from "@/redux/features/product/productApi";
-import { useVariantReviewsQuery } from "@/redux/features/review/reviewApi";
+import { useAllVariantsByProductQuery } from "@/redux/features/variant/variantApi";
+import { useGetInventoryByVariantAsinQuery } from "@/redux/features/inventory/inventoryApi";
+import { useGetSingleProductReviewQuery } from "@/redux/features/review/reviewApi";
 import { TProduct, TVariant } from "@/types/product";
 import { TInventory } from "@/types/inventory";
 import { TCartItem } from "@/types/order";
 import { ProductBreadcrumbs } from "@/components/ui/product/ProductBreadcrumbs";
 import { ProductImageGallery } from "@/components/ui/product/ProductImageGallery";
-// import { ProductHeaderInfo } from "@/components/ui/product/ProductHeaderInfo";
+import { ProductHeaderInfo } from "@/components/ui/product/ProductHeaderInfo";
 import { ProductPriceBlock } from "@/components/ui/product/ProductPriceBlock";
 import { ProductVariantSelector } from "@/components/ui/product/ProductVariantSelector";
 import { ProductFeaturesList } from "@/components/ui/product/ProductFeaturesList";
 import { ProductBuyBox } from "@/components/ui/product/ProductBuyBox";
-// import { ProductDetailsTable } from "@/components/ui/product/ProductDetailsTable";
+import { ProductDetailsTable } from "@/components/ui/product/ProductDetailsTable";
 import { ProductDescriptionSection } from "@/components/ui/product/ProductDescriptionSection";
 import { ProductSellerOffers } from "@/components/ui/product/ProductSellerOffers";
 import { ProductReviewSection } from "@/components/ui/product/ProductReviewSection";
@@ -24,6 +26,7 @@ import { AlertTriangle, ArrowLeft, ShoppingCart, Zap, Sparkles, ChevronRight } f
 import { useAppDispatch } from "@/src/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";
 import { toast } from "react-toastify";
+
 
 function SingleProductPageContent() {
   const params = useParams();
@@ -42,47 +45,125 @@ function SingleProductPageContent() {
 
   const product: TProduct | undefined = productResponse?.data;
 
+  // 1. Fetch product variants via router.get("/variant-product/:id", VariantControllers.allVariantsByProduct)
+  const {
+    data: variantsResponse,
+    isLoading: isLoadingVariants,
+  } = useAllVariantsByProductQuery(productId, { skip: !productId });
+
+  const variants: TVariant[] = useMemo(() => {
+    if (Array.isArray(variantsResponse?.data?.data)) {
+      return variantsResponse.data.data;
+    }
+    if (Array.isArray(variantsResponse?.data)) {
+      return variantsResponse.data;
+    }
+    return product?.variants || [];
+  }, [variantsResponse, product?.variants]);
+
   // Selected Variant State: tracks user's explicit selection or URL query variantId.
   const [selectedVariant, setSelectedVariant] = useState<TVariant | null>(null);
 
-  const activeVariant: TVariant | undefined =
-    (selectedVariant &&
-      product?.variants?.find(
-        (v) => v._id === selectedVariant._id
-      )) ||
-    (queryVariantId &&
-      product?.variants?.find(
+  // Reset selected variant when navigating to a different product
+  useEffect(() => {
+    setSelectedVariant(null);
+  }, [productId]);
+
+  // Synchronize selected variant when queryVariantId changes in URL
+  useEffect(() => {
+    if (queryVariantId && variants.length > 0) {
+      const match = variants.find(
         (v) => v._id === queryVariantId || v.asin === queryVariantId || v.sku === queryVariantId
-      )) ||
-    (product?.variants && product.variants.length > 0 ? product.variants[0] : undefined);
+      );
+      if (match) {
+        setSelectedVariant(match);
+      }
+    }
+  }, [queryVariantId, variants]);
 
-  // 2. Extract sellers and vendors based on currently selected product variant
-  const sellers: TInventory[] = (activeVariant?.inventory || []).filter(
-    (inv: TInventory) => inv?.seller && inv.seller.isStock !== false
-  );
+  const activeVariant: TVariant | undefined = useMemo(() => {
+    if (selectedVariant) {
+      const match = variants.find(
+        (v) => v._id === selectedVariant._id || (v.asin && v.asin === selectedVariant.asin)
+      );
+      if (match) return match;
+    }
+    if (queryVariantId) {
+      const match = variants.find(
+        (v) => v._id === queryVariantId || v.asin === queryVariantId || v.sku === queryVariantId
+      );
+      if (match) return match;
+    }
+    return variants.length > 0 ? variants[0] : undefined;
+  }, [variants, selectedVariant, queryVariantId]);
 
-  // Buy Box winner for the selected variant
-  const buyBoxWinner: TInventory | null =
-    sellers.find((l) => l.seller?.isBuyBoxWinner) ||
-    (sellers.length > 0
-      ? [...sellers].sort((a, b) => (a.seller?.price ?? 0) - (b.seller?.price ?? 0))[0]
-      : null);
+  // 2. Fetch sellers or vendors based on selected variant via router.get("/variant/:asin", InventoryControllers.getInventoryByVariantAsin)
+  const activeAsin = activeVariant?.asin || activeVariant?._id || "";
+  const {
+    data: inventoryResponseData,
+    currentData: inventoryCurrentData,
+    isFetching: isLoadingInventory,
+  } = useGetInventoryByVariantAsinQuery(activeAsin, {
+    skip: !activeAsin,
+    refetchOnMountOrArgChange: true,
+  });
 
-  const totalSellers = sellers.length;
+  // The server returns: { data: { asin, buyBoxWinner, totalSellers, sellers } }
+  // We trust the server to return only listings matching the requested ASIN with isStock: true.
+  const inventoryResult: {
+    asin?: string;
+    buyBoxWinner?: TInventory | null;
+    totalSellers?: number;
+    sellers?: TInventory[];
+  } | null = useMemo(() => {
+    const raw = inventoryCurrentData ?? inventoryResponseData;
+    if (!raw) return null;
+    const body = (raw as any)?.data ?? raw;
+    // Guard against showing stale inventory data from previously selected variant
+    if (body?.asin && activeAsin && body.asin !== activeAsin && body.asin !== activeVariant?._id) {
+      return null;
+    }
+    return body;
+  }, [inventoryCurrentData, inventoryResponseData, activeAsin, activeVariant?._id]);
 
-  // 3. Fetch Variant Reviews by selected variant's ID (memoized query argument to avoid re-fetch thrashing)
+  // Sellers: display all verified sellers/vendors available for this variant
+  const sellers: TInventory[] = useMemo(() => {
+    const list = inventoryResult?.sellers;
+    if (Array.isArray(list) && list.length > 0) {
+      return list.filter(
+        (listing: TInventory) => listing?.seller != null
+      );
+    }
+    // Fallback: use variant's embedded inventory if available and not yet replaced
+    if (Array.isArray(activeVariant?.inventory) && activeVariant.inventory.length > 0) {
+      return activeVariant.inventory.filter((listing: any) => listing?.seller != null);
+    }
+    return [];
+  }, [inventoryResult, activeVariant?.inventory]);
+
+  // BuyBoxWinner: prefer server-designated winner, then flagged winner, then lowest price
+  const buyBoxWinner: TInventory | null = useMemo(() => {
+    const serverWinner = inventoryResult?.buyBoxWinner as TInventory | null | undefined;
+    if (serverWinner && serverWinner._id) {
+      return serverWinner;
+    }
+    if (sellers.length === 0) return null;
+    return (
+      sellers.find((l) => l.seller?.isBuyBoxWinner) ||
+      [...sellers].sort((a, b) => (a.seller?.price ?? 0) - (b.seller?.price ?? 0))[0]
+    );
+  }, [inventoryResult, sellers]);
+
+  const totalSellers = inventoryResult?.totalSellers ?? sellers.length;
+
+  // 3. Fetch reviews for the product variant via router.get("/variant-reviews/:id", ProductReviewControllers.getSingleProductReview)
   const activeVariantId = activeVariant?._id || "";
-  const reviewQueryArgs = useMemo(
-    () => ({ variantId: activeVariantId }),
-    [activeVariantId]
-  );
   const {
     data: reviewsResponse,
     isLoading: isLoadingReviews,
-  } = useVariantReviewsQuery(
-    reviewQueryArgs,
-    { skip: !activeVariantId }
-  );
+  } = useGetSingleProductReviewQuery(activeVariantId, {
+    skip: !activeVariantId,
+  });
 
   const reviewPayload = reviewsResponse?.data;
   const reviews = reviewPayload?.data || [];
@@ -97,7 +178,7 @@ function SingleProductPageContent() {
     (sellers[0]?.seller?.price ?? product?.minPrice ?? 29.99);
 
   // Fallback / Loading Skeleton
-  if (isLoadingProduct) {
+  if (isLoadingProduct || (isLoadingVariants && !product)) {
     return <ProductPageSkeleton />;
   }
 
@@ -129,7 +210,7 @@ function SingleProductPageContent() {
   // Mobile Sticky Quick Actions Handler
   const handleMobileAddToCart = () => {
     try {
-      const variantId = activeVariant?._id || product.variants?.[0]?._id;
+      const variantId = activeVariant?._id || variants[0]?._id || product.variants?.[0]?._id;
       const vendorId =
         buyBoxWinner?.seller?.vendor?._id ||
         product.author?.id ||
@@ -217,23 +298,23 @@ function SingleProductPageContent() {
 
           {/* Column 2: Product Core Info & Options (Center ~33%) */}
           <div className="lg:col-span-4 space-y-1">
-            {/* <ProductHeaderInfo
+            <ProductHeaderInfo
               brand={product.brand}
               title={product.title}
               averageRating={averageRating}
               totalRatings={totalRatings}
               categoryName={product.category?.name}
               isBestSeller={product.isBestSeller}
-            /> */}
+            />
 
             <ProductPriceBlock
               price={winnerPrice}
               originalPrice={winnerPrice * 1.15}
             />
 
-            {product.variants && product.variants.length > 0 && activeVariant && (
+            {variants && variants.length > 0 && activeVariant && (
               <ProductVariantSelector
-                variants={product.variants}
+                variants={variants}
                 selectedVariant={activeVariant}
                 onSelectVariant={(v) => {
                   setSelectedVariant(v);
@@ -253,7 +334,7 @@ function SingleProductPageContent() {
                 totalSellers={totalSellers}
                 product={product}
                 selectedVariant={activeVariant}
-                isLoadingInventory={isLoadingProduct}
+                isLoadingInventory={isLoadingInventory || isLoadingProduct}
               />
 
               {/* Multi-Vendor Comparison: Other Sellers on Amarzone */}
@@ -337,10 +418,10 @@ function SingleProductPageContent() {
         </div>
 
         {/* Middle Section: Product Details & Specifications */}
-        {/* <ProductDetailsTable
+        <ProductDetailsTable
           product={product}
           selectedVariant={activeVariant}
-        /> */}
+        />
 
         {/* Product Editorial Description */}
         <ProductDescriptionSection product={product} />

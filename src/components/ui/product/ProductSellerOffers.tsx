@@ -45,11 +45,13 @@ export const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
     return null; // Only show if more than 1 seller
   }
 
-  // Find lowest price
-  const lowestPrice = Math.min(...sellers.map((s) => s.seller.price));
+  // Find lowest price safely
+  const validPrices = sellers
+    .map((s) => s.seller?.price)
+    .filter((p): p is number => typeof p === "number" && !isNaN(p));
+  const lowestPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
 
-  // Exclude buybox winner from count in the teaser? Or show total count? 
-  // Amazon shows "New (3) from $X". It means total sellers.
+  // Total sellers count
   const sellersCount = sellers.length;
 
   const handleAddSellerToCart = (listing: TInventory) => {
@@ -156,6 +158,7 @@ export const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
             <div className="flex-1 overflow-y-auto bg-slate-100/50">
               {sellers.map((listing) => {
                 const seller = listing.seller;
+                if (!seller) return null;
                 const isWinner =
                   (buyBoxWinnerId && listing._id === buyBoxWinnerId) ||
                   seller.isBuyBoxWinner;
@@ -164,8 +167,8 @@ export const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
                   seller.vendor?._id ||
                   (typeof seller.vendor === "string" ? seller.vendor : undefined);
                 const vendorId = rawVendorId ? getActualVendorId(rawVendorId) : undefined;
-                const price = seller.price;
-                const isStock = seller.isStock && seller.quantity > 0;
+                const price = seller.price ?? 0;
+                const isStock = Boolean(seller.isStock && (seller.quantity ?? 0) > 0);
 
                 // Calculate dynamic delivery date based on shippingTime
                 const shippingDays = seller.shippingTime || 2;

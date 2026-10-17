@@ -33,7 +33,7 @@ const inventoryApi = baseApi.injectEndpoints({
     }),
     listInventoryProduct: builder.mutation({
       query: (data) => ({
-        url: "/inventories/list",
+        url: "/inventories/list-product",
         method: "POST",
         body: data,
       }),
@@ -86,3 +86,6 @@ export const {
   useUpdateInventoryPriceMutation,
   useUpdateInventoryQuantityMutation,
 } = inventoryApi;
+
+export const useGetInventoryByVariantAsinQuery = useGetInventoryByAsinQuery;
+

@@ -92,7 +92,9 @@ export const reviewApi = baseApi.injectEndpoints({
       providesTags: ["review"],
     }),
     variantReviews: builder.query({
-      query: ({ variantId, params }: { variantId: string; params?: Record<string, any> }) => {
+      query: (args: string | { variantId: string; params?: Record<string, any> }) => {
+        const variantId = typeof args === "string" ? args : args?.variantId;
+        const params = typeof args === "object" ? args?.params : undefined;
         const queryParams = new URLSearchParams();
         if (params?.page) queryParams.append("page", String(params.page));
         if (params?.limit) queryParams.append("limit", String(params.limit));
@@ -117,3 +119,5 @@ export const {
   useMyReviewsQuery,
   useVendorReviewsQuery,
 } = reviewApi;
+
+export const useGetSingleProductReviewQuery = useVariantReviewsQuery;
