@@ -9,6 +9,7 @@ import { useGetInventoryByVariantAsinQuery } from "@/redux/features/inventory/in
 import { useGetSingleProductReviewQuery } from "@/redux/features/review/reviewApi";
 import { TProduct, TVariant } from "@/types/product";
 import { TInventory } from "@/types/inventory";
+import { TReview } from "@/types/review";
 import { TCartItem } from "@/types/order";
 import { ProductBreadcrumbs } from "@/components/ui/product/ProductBreadcrumbs";
 import { ProductImageGallery } from "@/components/ui/product/ProductImageGallery";
@@ -87,6 +88,7 @@ function SingleProductPageContent() {
         (v) => v._id === selectedVariant._id || (v.asin && v.asin === selectedVariant.asin)
       );
       if (match) return match;
+      return selectedVariant;
     }
     if (queryVariantId) {
       const match = variants.find(
@@ -160,17 +162,45 @@ function SingleProductPageContent() {
   const activeVariantId = activeVariant?._id || "";
   const {
     data: reviewsResponse,
+    currentData: reviewsCurrentData,
     isLoading: isLoadingReviews,
   } = useGetSingleProductReviewQuery(activeVariantId, {
     skip: !activeVariantId,
+    refetchOnMountOrArgChange: true,
   });
 
-  const reviewPayload = reviewsResponse?.data;
-  const reviews = reviewPayload?.data || [];
-  const averageRating =
-    reviewPayload?.averageRating || product?.averageRating || "4.50";
-  const totalRatings =
-    reviewPayload?.totalRatings || product?.reviewCount || reviews.length || 0;
+  const rawReviewsData = reviewsCurrentData ?? reviewsResponse;
+  const reviewPayload = (rawReviewsData as any)?.data ?? rawReviewsData;
+
+  const reviews: TReview[] = useMemo(() => {
+    if (!rawReviewsData) return [];
+    if (Array.isArray(reviewPayload?.data)) return reviewPayload.data;
+    if (Array.isArray(reviewPayload)) return reviewPayload;
+    if (Array.isArray((rawReviewsData as any)?.data)) return (rawReviewsData as any).data;
+    if (Array.isArray(rawReviewsData)) return rawReviewsData;
+    return [];
+  }, [rawReviewsData, reviewPayload]);
+
+  const totalRatings: number = useMemo(() => {
+    if (typeof reviewPayload?.totalRatings === "number") return reviewPayload.totalRatings;
+    if (typeof reviewPayload?.meta?.total === "number") return reviewPayload.meta.total;
+    if (typeof (rawReviewsData as any)?.totalRatings === "number") return (rawReviewsData as any).totalRatings;
+    if (typeof (rawReviewsData as any)?.meta?.total === "number") return (rawReviewsData as any).meta.total;
+    if (Array.isArray(reviews) && reviews.length > 0) return reviews.length;
+    return 0;
+  }, [reviewPayload, rawReviewsData, reviews]);
+
+  const averageRating: string = useMemo(() => {
+    if (reviewPayload?.averageRating && !isNaN(parseFloat(String(reviewPayload.averageRating))) && parseFloat(String(reviewPayload.averageRating)) > 0) {
+      return parseFloat(String(reviewPayload.averageRating)).toFixed(1);
+    }
+    if ((rawReviewsData as any)?.averageRating && !isNaN(parseFloat(String((rawReviewsData as any).averageRating))) && parseFloat(String((rawReviewsData as any).averageRating)) > 0) {
+      return parseFloat(String((rawReviewsData as any).averageRating)).toFixed(1);
+    }
+    if (reviews.length === 0) return "0.0";
+    const sum = reviews.reduce((acc: number, r: any) => acc + (Number(r?.rating) || 0), 0);
+    return (sum / reviews.length).toFixed(1);
+  }, [reviewPayload, rawReviewsData, reviews]);
 
   // Pricing: use winner price if available, otherwise lowest seller or product fallback
   const winnerPrice =
@@ -316,6 +346,8 @@ function SingleProductPageContent() {
               <ProductVariantSelector
                 variants={variants}
                 selectedVariant={activeVariant}
+                averageRating={averageRating}
+                totalRatings={totalRatings}
                 onSelectVariant={(v) => {
                   setSelectedVariant(v);
                   router.replace(`/products/${productId}?variantId=${v._id}`, { scroll: false });
@@ -434,6 +466,7 @@ function SingleProductPageContent() {
           totalRatings={totalRatings}
           isLoading={isLoadingReviews}
           productTitle={product?.title}
+          selectedVariant={activeVariant}
         />
       </div>
 

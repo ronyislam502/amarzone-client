@@ -31,6 +31,7 @@ interface ProductReviewSectionProps {
   totalRatings?: number;
   isLoading?: boolean;
   productTitle?: string;
+  selectedVariant?: any;
 }
 
 type TSentiment = "POSITIVE" | "NEUTRAL" | "NEGATIVE" | "MIXED";
@@ -78,10 +79,11 @@ const SENTIMENT_CONFIG: Record<
 
 export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({
   reviews = [],
-  averageRating = 4.5,
+  averageRating = 0,
   totalRatings = 0,
   isLoading = false,
   productTitle,
+  selectedVariant,
 }) => {
   const currentUser = useAppSelector(selectCurrentUser);
   const userRole = currentUser?.role || "";
@@ -115,14 +117,22 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({
 
   const numericRating =
     typeof averageRating === "string"
-      ? parseFloat(averageRating) || 4.5
-      : averageRating;
+      ? (isNaN(parseFloat(averageRating)) ? 0 : parseFloat(averageRating))
+      : (averageRating || 0);
+
+  const variantLabel = useMemo(() => {
+    if (!selectedVariant) return "";
+    if (Array.isArray(selectedVariant.attributes) && selectedVariant.attributes.length > 0) {
+      return selectedVariant.attributes.map((a: any) => `${a.type}: ${a.value}`).join(" | ");
+    }
+    return selectedVariant.sku ? `Variant ${selectedVariant.sku}` : "";
+  }, [selectedVariant]);
 
   // Calculate star breakdown
   const starBreakdown = useMemo(() => {
     const counts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     if (!reviews || reviews.length === 0) {
-      return { 5: 70, 4: 18, 3: 6, 2: 3, 1: 3 };
+      return { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
     }
     reviews.forEach((r) => {
       const star = Math.round(r.rating);
@@ -259,9 +269,16 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({
         {/* ── Left: Rating Breakdown ── */}
         <div className="lg:col-span-4 space-y-6">
           <div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-              Customer Reviews
-            </h2>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+                Customer Reviews
+              </h2>
+              {variantLabel && (
+                <span className="badge badge-sm badge-neutral text-[10px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+                  {variantLabel}
+                </span>
+              )}
+            </div>
 
             <div className="flex items-center gap-3 mt-2">
               <div className="flex items-center text-amber-500">
@@ -269,7 +286,7 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({
                   <Star
                     key={star}
                     className={`w-5 h-5 ${
-                      star <= Math.round(numericRating)
+                      numericRating > 0 && star <= Math.round(numericRating)
                         ? "fill-amber-400 text-amber-400"
                         : "fill-slate-200 text-slate-300"
                     }`}
@@ -277,7 +294,7 @@ export const ProductReviewSection: React.FC<ProductReviewSectionProps> = ({
                 ))}
               </div>
               <span className="text-lg font-bold text-slate-900">
-                {numericRating.toFixed(1)} out of 5
+                {numericRating > 0 ? `${numericRating.toFixed(1)} out of 5` : "0 out of 5"}
               </span>
             </div>
 

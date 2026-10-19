@@ -2,19 +2,23 @@
 
 import React, { useState } from "react";
 import { TVariant, TAttribute } from "@/types/product";
-import { Copy, Check, CheckCircle2 } from "lucide-react";
+import { Copy, Check, CheckCircle2, Star } from "lucide-react";
 import { toast } from "react-toastify";
 
 interface ProductVariantSelectorProps {
   variants: TVariant[];
   selectedVariant: TVariant;
   onSelectVariant: (variant: TVariant) => void;
+  averageRating?: string | number;
+  totalRatings?: number;
 }
 
 export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
   variants,
   selectedVariant,
   onSelectVariant,
+  averageRating = 0,
+  totalRatings = 0,
 }) => {
   const [copiedAsin, setCopiedAsin] = useState(false);
   const [copiedSku, setCopiedSku] = useState(false);
@@ -173,6 +177,32 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
             </button>
           </div>
         )}
+
+        {/* Selected Variant Reviews Indicator */}
+        <a
+          href="#customer-reviews"
+          onClick={(e) => {
+            e.preventDefault();
+            const el = document.getElementById("customer-reviews");
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
+          className="flex items-center gap-1.5 bg-amber-50/80 hover:bg-amber-100 transition-colors px-2 py-1 rounded border border-amber-200 text-slate-800 cursor-pointer group"
+          title="Jump to customer reviews for this variant"
+        >
+          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+          <span className="font-bold text-slate-900">
+            {typeof averageRating === "number"
+              ? averageRating > 0 ? averageRating.toFixed(1) : "0.0"
+              : parseFloat(String(averageRating)) > 0
+              ? parseFloat(String(averageRating)).toFixed(1)
+              : "0.0"}
+          </span>
+          <span className="text-[#007185] group-hover:underline font-medium text-[10px]">
+            {totalRatings > 0
+              ? `(${totalRatings} ${totalRatings === 1 ? "review" : "reviews"})`
+              : "(No reviews yet)"}
+          </span>
+        </a>
       </div>
     </div>
   );

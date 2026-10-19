@@ -21,7 +21,9 @@ export const ProductHeaderInfo: React.FC<ProductHeaderInfoProps> = ({
   categoryName,
   isBestSeller = false,
 }) => {
-  const numericRating = typeof averageRating === "string" ? parseFloat(averageRating) || 4.5 : averageRating;
+  const numericRating = typeof averageRating === "string" 
+    ? (isNaN(parseFloat(averageRating)) ? 0 : parseFloat(averageRating))
+    : (averageRating || 0);
 
   const scrollToReviews = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,7 +60,7 @@ export const ProductHeaderInfo: React.FC<ProductHeaderInfoProps> = ({
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
                 key={star}
-                className={`w-4 h-4 ${star <= Math.round(numericRating)
+                className={`w-4 h-4 ${numericRating > 0 && star <= Math.round(numericRating)
                     ? "fill-amber-400 text-amber-400"
                     : "fill-slate-200 text-slate-300"
                   }`}
@@ -66,7 +68,7 @@ export const ProductHeaderInfo: React.FC<ProductHeaderInfoProps> = ({
             ))}
           </div>
           <span className="font-bold text-slate-800 ml-0.5">
-            {numericRating.toFixed(1)}
+            {numericRating > 0 ? numericRating.toFixed(1) : "0.0"}
           </span>
         </div>
 

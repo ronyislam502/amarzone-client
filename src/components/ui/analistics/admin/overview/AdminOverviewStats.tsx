@@ -45,7 +45,6 @@ export const AdminOverviewStats: React.FC<AdminOverviewStatsProps> = ({
   const totalProducts = products?.totalProducts || 0;
   const activeProducts = products?.activeProducts || 0;
   const lowStock = inventory?.lowStockProducts || 0;
-  const outOfStock = products?.outOfStockProducts ?? inventory?.outOfStockInventory ?? 0;
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("en-US", {
