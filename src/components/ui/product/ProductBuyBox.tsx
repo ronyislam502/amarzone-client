@@ -7,11 +7,8 @@ import {
   Lock,
   ShoppingCart,
   Zap,
-  RotateCcw,
   CheckCircle2,
   AlertCircle,
-  Truck,
-  Store,
 } from "lucide-react";
 import { TInventory } from "@/types/inventory";
 import { TProduct } from "@/types/product";
