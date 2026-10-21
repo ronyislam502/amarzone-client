@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useCallback, useState, Suspense } from "react";
 import AdminsBread from "@/src/components/ui/analistics/admin/admins/AdminsBread";
 import AdminsHeader from "@/src/components/ui/analistics/admin/admins/AdminsHeader";
 import AdminsStats from "@/src/components/ui/analistics/admin/admins/AdminsStats";
@@ -11,6 +11,14 @@ import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi"
 export default function AdminsPage() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
   const [createHandler, setCreateHandler] = useState<(() => void) | null>(null);
+  const registerExportHandler = useCallback(
+    (handler: () => void) => setExportHandler(() => handler),
+    []
+  );
+  const registerCreateHandler = useCallback(
+    (handler: () => void) => setCreateHandler(() => handler),
+    []
+  );
 
   const {
     data: statsResponse,
@@ -50,8 +58,8 @@ export default function AdminsPage() {
       {/* Interactive Admins Data Table with Filters & Modals */}
       <Suspense fallback={<TableSkeleton columns={6} rows={5} showAvatar={true} title="System Administrators" />}>
         <AdminsData
-          registerExportHandler={(handler) => setExportHandler(() => handler)}
-          registerCreateHandler={(handler) => setCreateHandler(() => handler)}
+          registerExportHandler={registerExportHandler}
+          registerCreateHandler={registerCreateHandler}
         />
       </Suspense>
     </div>

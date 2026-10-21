@@ -26,6 +26,7 @@ export type TAZSelectProps = Partial<TInput> & {
   selectClassName?: string;
   containerClassName?: string;
   error?: string;
+  required?: boolean;
 };
 
 const sizeClasses = {
@@ -50,6 +51,7 @@ const AZSelect = ({
   selectClassName = "",
   containerClassName = "",
   error,
+  required = false,
 }: TAZSelectProps) => {
   // Check if inside React Hook Form
   let formContext: any = null;
@@ -91,6 +93,7 @@ const AZSelect = ({
           disabled={disabled}
           value={value}
           onChange={handleChange}
+          required={required}
           className={`select select-bordered w-full rounded-xl font-medium transition-all duration-200 focus:outline-none ${
             activeError
               ? "select-error"

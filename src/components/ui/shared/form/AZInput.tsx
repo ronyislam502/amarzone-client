@@ -22,6 +22,9 @@ export type TAZInputProps = Partial<TInput> & {
   error?: string;
   clearable?: boolean;
   onClear?: () => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  required?: boolean;
+  autoFocus?: boolean;
 };
 
 const sizeClasses = {
@@ -48,6 +51,9 @@ const AZInput = ({
   error,
   clearable = false,
   onClear,
+  onKeyDown,
+  required = false,
+  autoFocus = false,
 }: TAZInputProps) => {
   // Check if inside React Hook Form
   let formContext: any = null;
@@ -99,6 +105,9 @@ const AZInput = ({
           disabled={disabled}
           value={value}
           onChange={handleChange}
+          onKeyDown={onKeyDown}
+          required={required}
+          autoFocus={autoFocus}
           className={`input input-bordered w-full rounded-xl py-4 font-medium transition-all duration-200 focus:outline-none ${
             activeError
               ? "input-error"

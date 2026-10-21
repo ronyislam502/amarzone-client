@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useCallback, useState, Suspense } from "react";
 import ProductsBread from "@/src/components/ui/analistics/admin/products/ProductsBread";
 import ProductsHeader from "@/src/components/ui/analistics/admin/products/ProductsHeader";
 import ProductsStats from "@/src/components/ui/analistics/admin/products/ProductsStats";
@@ -11,8 +11,16 @@ import { TableSkeleton } from "@/src/components/ui/skeleton";
 
 function ProductsPageContent() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
-  const [createHandler, setCreateHandler] = useState<((initData?: any) => void) | null>(null);
+  const [createHandler, setCreateHandler] = useState<((initData?: unknown) => void) | null>(null);
   const [isAiStudioOpen, setIsAiStudioOpen] = useState<boolean>(false);
+  const registerExportHandler = useCallback(
+    (handler: () => void) => setExportHandler(() => handler),
+    []
+  );
+  const registerCreateHandler = useCallback(
+    (handler: (initData?: unknown) => void) => setCreateHandler(() => handler),
+    []
+  );
 
   const {
     data: statsResponse,
@@ -49,10 +57,8 @@ function ProductsPageContent() {
       {/* Interactive Products Directory Table with Filters & Modals */}
       <ProductsData
         onProductCreated={refetchStats}
-        registerExportHandler={(fn: () => void) => setExportHandler(() => fn)}
-        registerCreateHandler={(fn: (initData?: any) => void) =>
-          setCreateHandler(() => fn)
-        }
+        registerExportHandler={registerExportHandler}
+        registerCreateHandler={registerCreateHandler}
       />
 
       {/* Unified AI Product Content Studio & Catalog Creator Modal */}

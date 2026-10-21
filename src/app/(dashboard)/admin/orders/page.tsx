@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   OrdersBread,
   OrdersHeader,
@@ -12,6 +12,14 @@ import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi"
 export default function AdminOrdersPage() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
   const [refreshHandler, setRefreshHandler] = useState<(() => void) | null>(null);
+  const registerExportHandler = useCallback(
+    (handler: () => void) => setExportHandler(() => handler),
+    []
+  );
+  const registerRefreshHandler = useCallback(
+    (handler: () => void) => setRefreshHandler(() => handler),
+    []
+  );
 
   // Use dedicated dashboard stats query for overview statistics
   const {
@@ -47,8 +55,8 @@ export default function AdminOrdersPage() {
         pendingOrdersCount={pendingOrdersCount}
       />
       <OrdersData
-        registerExportHandler={(handler) => setExportHandler(() => handler)}
-        registerRefreshHandler={(handler) => setRefreshHandler(() => handler)}
+        registerExportHandler={registerExportHandler}
+        registerRefreshHandler={registerRefreshHandler}
       />
     </div>
   );

@@ -17,6 +17,7 @@ export type TAZTextareaProps = Partial<TInput> & {
   textareaClassName?: string;
   containerClassName?: string;
   error?: string;
+  required?: boolean;
 };
 
 const AZTextarea = ({
@@ -32,6 +33,7 @@ const AZTextarea = ({
   textareaClassName = "",
   containerClassName = "",
   error,
+  required = false,
 }: TAZTextareaProps) => {
   let formContext: any = null;
   try {
@@ -71,6 +73,7 @@ const AZTextarea = ({
         value={value}
         onChange={handleChange}
         rows={rows}
+        required={required}
         className={`textarea textarea-bordered w-full rounded-xl p-4 font-medium transition-all duration-200 focus:outline-none min-h-[120px] ${
           activeError
             ? "textarea-error"

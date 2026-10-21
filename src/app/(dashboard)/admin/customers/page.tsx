@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useCallback, useState, Suspense } from "react";
 import CustomersBread from "@/src/components/ui/analistics/admin/customers/CustomersBread";
 import CustomersHeader from "@/src/components/ui/analistics/admin/customers/CustomersHeader";
 import CustomersStats from "@/src/components/ui/analistics/admin/customers/CustomersStats";
@@ -9,6 +9,10 @@ import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi"
 
 function CustomersPageContent() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
+  const registerExportHandler = useCallback(
+    (handler: () => void) => setExportHandler(() => handler),
+    []
+  );
 
   const {
     data: statsResponse,
@@ -44,7 +48,7 @@ function CustomersPageContent() {
 
       {/* Interactive Customers Data Table with Filters & Modals */}
       <CustomersData
-        registerExportHandler={(handler) => setExportHandler(() => handler)}
+        registerExportHandler={registerExportHandler}
       />
     </div>
   );

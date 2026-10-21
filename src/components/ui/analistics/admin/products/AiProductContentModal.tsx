@@ -36,6 +36,9 @@ import { useAllDepartmentsQuery } from "@/redux/features/department/departmentAp
 import { TCategory } from "@/src/types/category";
 import { TDepartment } from "@/src/types/department";
 import { toast } from "react-toastify";
+import AZInput from "../../../shared/form/AZInput";
+import AZSelect from "../../../shared/form/AZSelect";
+import AZTextarea from "../../../shared/form/AZTextarea";
 
 export interface AiProductContentModalProps {
   isOpen: boolean;
@@ -143,6 +146,24 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
       return deptId === formDepartment;
     });
   }, [allCategories, formDepartment]);
+
+  const departmentOptions = useMemo(
+    () =>
+      departments.map((dept) => ({
+        value: dept._id,
+        label: dept.name,
+      })),
+    [departments]
+  );
+
+  const categoryOptions = useMemo(
+    () =>
+      filteredCategories.map((cat) => ({
+        value: cat._id,
+        label: cat.name,
+      })),
+    [filteredCategories]
+  );
 
   // Sync initial values
   useEffect(() => {
@@ -554,8 +575,10 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
                     </div>
 
                     {useImageUrlMode ? (
-                      <input
+                      <AZInput
+                        name="imageUrlInput"
                         type="url"
+                        size="sm"
                         value={imageUrlInput}
                         onChange={(e) => {
                           setImageUrlInput(e.target.value);
@@ -563,7 +586,7 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
                           else setImagePreviews([]);
                         }}
                         placeholder="https://example.com/product-image.jpg"
-                        className="input input-sm w-full bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs"
+                        inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                       />
                     ) : (
                       <div>
@@ -625,71 +648,80 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
 
                 {/* Common / Seed Inputs */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
-                    <span>Product Working Title / Concept</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-200">
+                      Product Working Title / Concept
+                    </span>
                     {activeInputMode === "text" && (
                       <span className="text-amber-400 text-[10px]">* Required</span>
                     )}
-                  </label>
-                  <input
+                  </div>
+                  <AZInput
+                    name="seedTitle"
                     type="text"
+                    size="sm"
                     value={seedTitle}
                     onChange={(e) => setSeedTitle(e.target.value)}
                     placeholder="e.g. Sony WH-1000XM5 Wireless Headphones"
                     required={activeInputMode === "text"}
-                    className="input input-sm w-full bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs"
+                    inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-200 flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-xs font-bold text-slate-200">
                       <Building2 className="w-3 h-3 text-amber-400" />
                       <span>Brand</span>
                       {activeInputMode === "text" && (
                         <span className="text-amber-400 text-[10px]">*</span>
                       )}
-                    </label>
-                    <input
+                    </div>
+                    <AZInput
+                      name="seedBrand"
                       type="text"
+                      size="sm"
                       value={seedBrand}
                       onChange={(e) => setSeedBrand(e.target.value)}
                       placeholder="e.g. Sony"
                       required={activeInputMode === "text"}
-                      className="input input-sm w-full bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs"
+                      inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-200 flex items-center gap-1">
+                    <div className="flex items-center gap-1 text-xs font-bold text-slate-200">
                       <Layers className="w-3 h-3 text-sky-400" />
                       <span>Category Hint</span>
-                    </label>
-                    <input
+                    </div>
+                    <AZInput
+                      name="seedCategory"
                       type="text"
+                      size="sm"
                       value={seedCategory}
                       onChange={(e) => setSeedCategory(e.target.value)}
                       placeholder="e.g. Electronics, Audio"
-                      className="input input-sm w-full bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs"
+                      inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                     />
                   </div>
                 </div>
 
                 {/* Seed Specs (Text Mode or optional for Vision) */}
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-200">
                     <span className="flex items-center gap-1">
                       <ListCheck className="w-3 h-3 text-emerald-400" />
                       Key Features or Specs (1 per line)
                     </span>
                     <span className="text-[10px] text-slate-400">Optional</span>
-                  </label>
-                  <textarea
+                  </div>
+                  <AZTextarea
+                    name="seedFeaturesText"
                     rows={2}
                     value={seedFeaturesText}
                     onChange={(e) => setSeedFeaturesText(e.target.value)}
                     placeholder="e.g.&#10;Industry-leading noise cancellation&#10;30-hour battery life with quick charge"
-                    className="textarea textarea-sm w-full bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs leading-relaxed"
+                    textareaClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs leading-relaxed min-h-[70px] p-2.5"
                   />
                 </div>
 
@@ -1118,13 +1150,15 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
                           </button>
                         )}
                       </div>
-                      <input
+                      <AZInput
+                        name="formTitle"
                         type="text"
+                        size="sm"
                         value={formTitle}
                         onChange={(e) => setFormTitle(e.target.value)}
                         placeholder="Enter master product listing title"
                         required
-                        className="input input-sm w-full bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs font-medium"
+                        inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs font-medium"
                       />
                     </div>
 
@@ -1144,13 +1178,15 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
                           </button>
                         )}
                       </div>
-                      <input
+                      <AZInput
+                        name="formBrand"
                         type="text"
+                        size="sm"
                         value={formBrand}
                         onChange={(e) => setFormBrand(e.target.value)}
                         placeholder="e.g. Sony, Apple, Nike"
                         required
-                        className="input input-sm w-full bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs"
+                        inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                       />
                     </div>
 
@@ -1161,22 +1197,19 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
                           <Building2 className="w-3 h-3 text-amber-400" />
                           Department *
                         </label>
-                        <select
+                        <AZSelect
+                          name="formDepartment"
+                          size="sm"
                           value={formDepartment}
                           onChange={(e) => {
                             setFormDepartment(e.target.value);
                             setFormCategory(""); // Reset category when department changes
                           }}
                           required
-                          className="select select-sm w-full bg-[#100722] border border-white/15 text-slate-200 focus:border-amber-400 focus:outline-none rounded-xl text-xs"
-                        >
-                          <option value="">Select department</option>
-                          {departments.map((dept) => (
-                            <option key={dept._id} value={dept._id}>
-                              {dept.name}
-                            </option>
-                          ))}
-                        </select>
+                          placeholder="Select department"
+                          options={departmentOptions}
+                          selectClassName="bg-[#100722] border-white/15 text-slate-200 focus:border-amber-400 rounded-xl text-xs"
+                        />
                       </div>
 
                       <div className="space-y-1">
@@ -1184,24 +1217,21 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
                           <Layers className="w-3 h-3 text-sky-400" />
                           Category *
                         </label>
-                        <select
+                        <AZSelect
+                          name="formCategory"
+                          size="sm"
                           value={formCategory}
                           onChange={(e) => setFormCategory(e.target.value)}
                           required
                           disabled={!formDepartment}
-                          className="select select-sm w-full bg-[#100722] border border-white/15 text-slate-200 focus:border-amber-400 focus:outline-none rounded-xl text-xs disabled:opacity-50"
-                        >
-                          <option value="">
-                            {formDepartment
+                          placeholder={
+                            formDepartment
                               ? "Select category"
-                              : "First select department"}
-                          </option>
-                          {filteredCategories.map((cat) => (
-                            <option key={cat._id} value={cat._id}>
-                              {cat.name}
-                            </option>
-                          ))}
-                        </select>
+                              : "First select department"
+                          }
+                          options={categoryOptions}
+                          selectClassName="bg-[#100722] border-white/15 text-slate-200 focus:border-amber-400 rounded-xl text-xs disabled:opacity-50"
+                        />
                       </div>
                     </div>
 
@@ -1213,24 +1243,28 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
                           {formFeatures.length} added
                         </span>
                       </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={featureInput}
-                          onChange={(e) => setFeatureInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleAddFeature();
-                            }
-                          }}
-                          placeholder="Type feature bullet and press Add"
-                          className="input input-sm flex-1 bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs"
-                        />
+                      <div className="flex gap-2 items-center">
+                        <div className="flex-1">
+                          <AZInput
+                            name="featureInput"
+                            type="text"
+                            size="sm"
+                            value={featureInput}
+                            onChange={(e) => setFeatureInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddFeature();
+                              }
+                            }}
+                            placeholder="Type feature bullet and press Add"
+                            inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={handleAddFeature}
-                          className="btn btn-sm bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs"
+                          className="btn btn-sm bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs shrink-0"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>
@@ -1266,24 +1300,28 @@ export const AiProductContentModal: React.FC<AiProductContentModalProps> = ({
                           {formTags.length} tags
                         </span>
                       </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={tagInput}
-                          onChange={(e) => setTagInput(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleAddTag();
-                            }
-                          }}
-                          placeholder="Type tag and press Add"
-                          className="input input-sm flex-1 bg-[#100722] border border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 focus:outline-none rounded-xl text-xs"
-                        />
+                      <div className="flex gap-2 items-center">
+                        <div className="flex-1">
+                          <AZInput
+                            name="tagInput"
+                            type="text"
+                            size="sm"
+                            value={tagInput}
+                            onChange={(e) => setTagInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddTag();
+                              }
+                            }}
+                            placeholder="Type tag and press Add"
+                            inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
+                          />
+                        </div>
                         <button
                           type="button"
                           onClick={handleAddTag}
-                          className="btn btn-sm bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs"
+                          className="btn btn-sm bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs shrink-0"
                         >
                           <Plus className="w-3.5 h-3.5" />
                         </button>

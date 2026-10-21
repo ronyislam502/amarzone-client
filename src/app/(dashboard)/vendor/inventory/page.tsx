@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useCallback, useState, Suspense } from "react";
 import InventoryBread from "@/src/components/ui/analistics/vendor/inventory/InventoryBread";
 import InventoryHeader from "@/src/components/ui/analistics/vendor/inventory/InventoryHeader";
 import InventoryStats from "@/src/components/ui/analistics/vendor/inventory/InventoryStats";
@@ -10,6 +10,10 @@ import { TInventory } from "@/src/types/inventory";
 
 function VendorInventoryPageContent() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
+  const registerExportHandler = useCallback(
+    (handler: () => void) => setExportHandler(() => handler),
+    []
+  );
 
   const { data: inventoryResponse, refetch, isFetching } = useGetMyInventoryQuery(
     {},
@@ -54,7 +58,7 @@ function VendorInventoryPageContent() {
 
       {/* Inventory Table with Search, Filter & Modals */}
       <InventoryData
-        registerExportHandler={(fn: () => void) => setExportHandler(() => fn)}
+        registerExportHandler={registerExportHandler}
         isRefreshing={isFetching}
       />
     </div>

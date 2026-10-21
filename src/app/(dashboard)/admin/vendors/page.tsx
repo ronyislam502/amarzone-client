@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useCallback, useState, Suspense } from "react";
 import VendorsBread from "@/src/components/ui/analistics/admin/vendors/VendorsBread";
 import VendorsHeader from "@/src/components/ui/analistics/admin/vendors/VendorsHeader";
 import VendorsStats from "@/src/components/ui/analistics/admin/vendors/VendorsStats";
@@ -9,6 +9,10 @@ import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi"
 
 function VendorsPageContent() {
   const [exportHandler, setExportHandler] = useState<(() => void) | null>(null);
+  const registerExportHandler = useCallback(
+    (handler: () => void) => setExportHandler(() => handler),
+    []
+  );
 
   const {
     data: statsResponse,
@@ -45,7 +49,7 @@ function VendorsPageContent() {
 
       {/* Interactive Vendors Data Table with Filters & Modals */}
       <VendorsData
-        registerExportHandler={(handler) => setExportHandler(() => handler)}
+        registerExportHandler={registerExportHandler}
       />
     </div>
   );
