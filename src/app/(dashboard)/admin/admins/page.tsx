@@ -36,6 +36,7 @@ export default function AdminsPage() {
 
   return (
     <div className="space-y-6 w-full pb-10">
+      <div>admin</div>
       {/* Breadcrumb Navigation */}
       <AdminsBread />
 
