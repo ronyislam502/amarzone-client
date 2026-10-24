@@ -1,0 +1,45 @@
+"use client"
+
+import { useState } from "react";
+import FooterFeedbackModal from "../ui/footer/FooterModal";
+import TopBanner from "../ui/footer/TopBanner";
+import ValueProps from "../ui/footer/ValueProps";
+import FooterLinks from "../ui/footer/FooterLinks";
+import LegalLinks from "../ui/footer/LegalLinks";
+import Copyright from "../ui/footer/Copyright";
+
+
+
+const AZFooter = () => {
+
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+
+  return (
+    <footer className="bg-[#170d2f] text-white font-sans">
+      {/* 1. WALMART TOP FEEDBACK & BACK TO TOP BANNER */}
+      <TopBanner onOpenFeedback={() => setShowFeedbackModal(true)} />
+
+      {/* 2. WALMART VALUE PROPOSITION STRIP */}
+      <ValueProps />
+
+      {/* 3. MAIN DIRECTORY LINKS LIST (WALMART STYLE INLINE & MULTI-COLUMN) */}
+      <div className="py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <FooterLinks />
+
+        {/* Horizontal Divider */}
+        <div className="border-t border-blue-900/80 pt-6">
+          <LegalLinks />
+          <Copyright />
+        </div>
+      </div>
+
+      {/* FEEDBACK MODAL */}
+      <FooterFeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+      />
+    </footer>
+  );
+};
+
+export default AZFooter;

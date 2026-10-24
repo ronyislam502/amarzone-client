@@ -1,0 +1,167 @@
+import {
+    LayoutDashboard,
+    Bell,
+    Store,
+    Users,
+    ShoppingBag,
+    Layers,
+    DollarSign,
+    ShieldAlert,
+    BarChart3,
+    Settings,
+    Activity,
+    User,
+    UserCheck,
+    Building2,
+    PackageCheck,
+    MessageSquare,
+} from "lucide-react";
+
+export const adminSidebarItems = [
+    {
+        title: "Main Overview",
+        items: [
+            {
+                label: "Admin Dashboard",
+                href: "/admin",
+                icon: LayoutDashboard,
+                iconClass: "text-primary",
+                exact: true,
+            },
+            {
+                label: "Notifications",
+                href: "/admin#notifications-section",
+                icon: Bell,
+                iconClass: "text-warning",
+            },
+            {
+                label: "Analytics",
+                href: "/admin/analytics",
+                icon: BarChart3,
+                iconClass: "text-secondary",
+                exact: true,
+            },
+            // {
+            //     label: "System Health",
+            //     href: "/admin/health",
+            //     icon: Activity,
+            //     iconClass: "text-success",
+            //     exact: true,
+            //     badge: {
+            //         text: "99.8%",
+            //         className: "badge-success",
+            //     },
+            // },
+        ],
+    },
+
+    {
+        title: "Management",
+        items: [
+            {
+                label: "Admins & Staff",
+                href: "/admin/admins",
+                icon: UserCheck,
+                iconClass: "text-secondary",
+                badge: {
+                    text: "Staff",
+                    className: "badge-secondary",
+                },
+            },
+            {
+                label: "Vendors",
+                href: "/admin/vendors",
+                icon: Store,
+                iconClass: "text-warning",
+                badge: {
+                    text: "12 New",
+                    className: "badge-warning",
+                },
+            },
+            {
+                label: "Customers",
+                href: "/admin/customers",
+                icon: Users,
+                iconClass: "text-info",
+            },
+            {
+                label: "Departments",
+                href: "/admin/departments",
+                icon: Building2,
+                iconClass: "text-warning",
+            },
+            {
+                label: "Categories",
+                href: "/admin/categories",
+                icon: Layers,
+                iconClass: "text-accent",
+            },
+            {
+                label: "Products",
+                href: "/admin/products",
+                icon: ShoppingBag,
+                iconClass: "text-primary",
+            },
+            {
+                label: "Orders",
+                href: "/admin/orders",
+                icon: PackageCheck,
+                iconClass: "text-emerald-400",
+                badge: {
+                    text: "Fulfillment",
+                    className: "badge-success",
+                },
+            },
+        ],
+    },
+
+    {
+        title: "Finance & SLA",
+        items: [
+            {
+                label: "Payout Requests",
+                href: "/admin/payouts",
+                icon: DollarSign,
+                iconClass: "text-success",
+                badge: {
+                    text: "5 Pending",
+                    className: "badge-info",
+                },
+            },
+            {
+                label: "Disputes",
+                href: "/admin/disputes",
+                icon: ShieldAlert,
+                iconClass: "text-error",
+                badge: {
+                    text: "3 Open",
+                    className: "badge-error",
+                },
+            },
+            {
+                label: "Support Chat",
+                href: "/admin/chat",
+                icon: MessageSquare,
+                iconClass: "text-accent",
+            },
+        ],
+    },
+
+    {
+        title: "System Config",
+        items: [
+            {
+                label: "My Profile",
+                href: "/admin/profile",
+                icon: User,
+                iconClass: "text-amber-400",
+            },
+            {
+                label: "Settings",
+                href: "/admin/settings",
+                icon: Settings,
+                iconClass: "text-base-content/70",
+            },
+        ],
+    },
+];

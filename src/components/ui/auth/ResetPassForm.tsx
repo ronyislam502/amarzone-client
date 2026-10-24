@@ -16,14 +16,16 @@ import { useSearchParams } from 'next/navigation';
 import { FieldValues } from 'react-hook-form';
 import { useRouter } from "next/navigation";
 import { zodResolver } from '@hookform/resolvers/zod';
-import AZForm from '../shared/form/AZFrom';
-import AZInput from '../shared/form/AZInput';
-import { resetPasswordSchema } from '@/src/schema/Auth';
-import { useResetPasswordMutation } from '@/src/redux/features/auth/authApi';
+import { resetPasswordSchema } from '@/schema/Auth';
+import { useResetPasswordMutation } from '@/redux/features/auth/authApi';
 import { toast } from 'react-toastify';
+import AZForm from '../../shared/form/AZFrom';
+import AZInput from '../../shared/form/AZInput';
 
 
-const ResetPassContent: React.FC = () => {
+
+export const ResetPassForm: React.FC = () => {
+
     const [showNewPassword, setShowNewPassword] = useState(false);
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -46,7 +48,7 @@ const ResetPassContent: React.FC = () => {
 
             if (res?.success) {
                 toast.success(res?.message || "Password reset successfully!");
-                router.push("/login");
+                router.push("/signin");
             }
         } catch (err: any) {
             toast.error(err?.data?.message || "Failed to reset password. Please try again.");
@@ -128,7 +130,7 @@ const ResetPassContent: React.FC = () => {
             {/* Footer Back to Login Link */}
             <div className="mt-8 text-center pt-4 border-t border-white/10">
                 <Link
-                    href="/login"
+                    href="/signin"
                     className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-amber-400 transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
@@ -136,14 +138,7 @@ const ResetPassContent: React.FC = () => {
                 </Link>
             </div>
         </div>
-    );
-};
 
-export const ResetPassForm: React.FC = () => {
-    return (
-        <Suspense fallback={<div className="p-6 text-center text-slate-400 text-sm">Loading reset form...</div>}>
-            <ResetPassContent />
-        </Suspense>
     );
 };
 

@@ -1,18 +1,16 @@
-import CategoriesBread from "@/src/components/ui/analistics/admin/categories/CategoriesBread";
-import CategoriesData from "@/src/components/ui/analistics/admin/categories/CategoriesData";
-import CategoriesHeader from "@/src/components/ui/analistics/admin/categories/CategoriesHeader";
-import CategoriesStats from "@/src/components/ui/analistics/admin/categories/CategoriesStats";
+import CategoriesBread from "@/components/ui/dashboard/admin/categories/CategoriesBread";
+import CategoriesData from "@/components/ui/dashboard/admin/categories/CategoriesData";
+import CategoriesHeader from "@/components/ui/dashboard/admin/categories/CategoriesHeader";
+
 
 const Categories = () => {
-
     return (
-        <div className="space-y-6 w-full pb-10">
+        <div>
             <CategoriesBread />
             <CategoriesHeader />
-            <CategoriesStats />
             <CategoriesData />
         </div>
-    )
-}
+    );
+};
 
 export default Categories;

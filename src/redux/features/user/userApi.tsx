@@ -1,4 +1,5 @@
-import { baseApi } from "../../api/baseApi";
+import { baseApi } from "@/redux/api/baseApi";
+
 
 const userApi = baseApi.injectEndpoints({
   overrideExisting: true,
@@ -34,30 +35,6 @@ const userApi = baseApi.injectEndpoints({
       }),
       providesTags: ["user"],
     }),
-    updateVendorProfile: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `/vendors/update/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags: ["user", "vendor"],
-    }),
-    updateCustomerProfile: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `/customers/update/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags: ["user", "customer"],
-    }),
-    updateAdminProfile: builder.mutation({
-      query: ({ id, data }) => ({
-        url: `/admins/update/${id}`,
-        method: "PATCH",
-        body: data,
-      }),
-      invalidatesTags: ["user", "admin"],
-    }),
   }),
 });
 
@@ -66,7 +43,4 @@ export const {
   useCreateVendorMutation,
   useCreateAdminMutation,
   useMyProfileQuery,
-  useUpdateVendorProfileMutation,
-  useUpdateCustomerProfileMutation,
-  useUpdateAdminProfileMutation,
 } = userApi;

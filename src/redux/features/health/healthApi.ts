@@ -1,12 +1,14 @@
-import { baseApi } from "../../api/baseApi";
+
+import { baseApi } from "@/redux/api/baseApi";
 import { TResponseRedux } from "@/types/global";
-import { TAccountHealth, TSlaViolation } from "@/src/types/health";
+import { TAccountHealth, TSlaViolation } from "@/types/health";
 
 const healthApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getMyHealth: builder.query<TResponseRedux<TAccountHealth>, void>({
       query: () => ({
-        url: "/health/my-health",
+        url: "/healths/my-health",
         method: "GET",
       }),
       providesTags: ["health"],

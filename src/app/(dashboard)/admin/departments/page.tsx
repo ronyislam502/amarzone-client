@@ -1,14 +1,13 @@
-import DepartmentsBread from "@/src/components/ui/analistics/admin/departments/DepartmentsBread";
-import DepartmentsData from "@/src/components/ui/analistics/admin/departments/DepartmentsData";
-import DepartmentsHeader from "@/src/components/ui/analistics/admin/departments/DepartmentsHeader";
-import DepartmentsStats from "@/src/components/ui/analistics/admin/departments/DepartmentsStats";
+import DepartmentsBread from "@/components/ui/dashboard/admin/departments/DepartmentsBread";
+import DepartmentsData from "@/components/ui/dashboard/admin/departments/DepartmentsData";
+import DepartmentsHeader from "@/components/ui/dashboard/admin/departments/DepartmentsHeader";
+
 
 const Departments = () => {
     return (
-        <div className="space-y-6 w-full pb-10">
+        <div>
             <DepartmentsBread />
             <DepartmentsHeader />
-            <DepartmentsStats />
             <DepartmentsData />
         </div>
     );

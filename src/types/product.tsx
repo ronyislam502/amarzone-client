@@ -1,40 +1,41 @@
 import { TCategory } from "./category"
 import { TDepartment } from "./department"
-import { TInventory } from "./inventory"
-import { TReview } from "./review"
-import { TVariant, TAttribute } from "./variant"
-
-export type { TVariant, TAttribute };
 
 export type TProduct = {
     _id: string
     author: TAuthor
-    department: TDepartment
-    category: TCategory
-    title: string
-    description?: string
-    features: string[]
-    thumbnail?: string
     brand: string
-    variants: TVariant[]
-    tags: string[]
+    category: TCategory
+    department: TDepartment
+    features: string[]
+    isBestSeller: boolean
     isDeleted: boolean
-    isBestSeller?: boolean
-    __v?: number
-    createdAt?: string
-    updatedAt?: string
-    inventory?: TInventory[]
-    reviews?: TReview[]
-    minPrice?: number
-    averageRating?: number
-    reviewCount?: number
-    inStock?: boolean
+    tags: string[]
+    thumbnail: string
+    title: string
+    variants: TVariant[]
 }
 
 export type TAuthor = {
-    role: string
-    id: string
     name: string
-    _id: string
+    role: string
 }
 
+export type TVariant = {
+    _id: string
+    asin: string
+    attributes: TAttribute[]
+    images: string[]
+    isDeleted: boolean
+    isPrivateLevel: boolean
+    product: string
+    sku: string
+    isBuyBoxEligible: boolean
+    price: number
+    rating: number
+}
+
+export type TAttribute = {
+    type: string
+    value: string
+}

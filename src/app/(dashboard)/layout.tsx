@@ -1,14 +1,14 @@
+import DashSidebar from "@/components/dashboard/DashSidebar";
+import Background from "@/components/shared/Background";
 
-import Background from "@/src/components/ui/auth/Background";
-import DashboardSidebar from "@/src/components/ui/analistics/DashSidebar";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
     return (
-        <DashboardSidebar>
+        <DashSidebar>
             <Background isDashboard className="flex-1 min-w-0">
-                {children}
+                <div> {children}</div>
             </Background>
-        </DashboardSidebar>
+        </DashSidebar>
     );
 };
 

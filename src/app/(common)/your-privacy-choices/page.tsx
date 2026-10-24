@@ -144,9 +144,8 @@ export const YourPrivacyChoicesPage: React.FC = () => {
         <div className="mb-8 p-5 rounded-3xl bg-white border border-slate-200 shadow-2xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3.5">
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
-                gpcDetected ? "bg-emerald-100 text-emerald-700" : "bg-blue-50 text-[#0071dc]"
-              }`}>
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${gpcDetected ? "bg-emerald-100 text-emerald-700" : "bg-blue-50 text-[#0071dc]"
+                }`}>
                 <Globe className="w-5 h-5" />
               </div>
               <div>
@@ -391,11 +390,10 @@ export const YourPrivacyChoicesPage: React.FC = () => {
                       Request Type <span className="text-rose-500">*</span>
                     </label>
                     <div className="grid grid-cols-1 gap-2">
-                      <label className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition-colors ${
-                        requestType === "know"
+                      <label className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition-colors ${requestType === "know"
                           ? "bg-blue-50/60 border-[#0071dc] text-[#0071dc]"
                           : "border-slate-200 hover:bg-slate-50 text-slate-700"
-                      }`}>
+                        }`}>
                         <input
                           type="radio"
                           name="requestType"
@@ -410,11 +408,10 @@ export const YourPrivacyChoicesPage: React.FC = () => {
                         </div>
                       </label>
 
-                      <label className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition-colors ${
-                        requestType === "delete"
+                      <label className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition-colors ${requestType === "delete"
                           ? "bg-blue-50/60 border-[#0071dc] text-[#0071dc]"
                           : "border-slate-200 hover:bg-slate-50 text-slate-700"
-                      }`}>
+                        }`}>
                         <input
                           type="radio"
                           name="requestType"
@@ -429,11 +426,10 @@ export const YourPrivacyChoicesPage: React.FC = () => {
                         </div>
                       </label>
 
-                      <label className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition-colors ${
-                        requestType === "correct"
+                      <label className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition-colors ${requestType === "correct"
                           ? "bg-blue-50/60 border-[#0071dc] text-[#0071dc]"
                           : "border-slate-200 hover:bg-slate-50 text-slate-700"
-                      }`}>
+                        }`}>
                         <input
                           type="radio"
                           name="requestType"

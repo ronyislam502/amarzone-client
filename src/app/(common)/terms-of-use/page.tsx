@@ -8,7 +8,6 @@ import {
   Printer,
   ChevronRight,
   Home,
-  CheckCircle2,
   AlertTriangle,
   HelpCircle,
   Mail,
@@ -400,11 +399,10 @@ export const TermsOfUsePage: React.FC = () => {
                     <a
                       key={sec.id}
                       href={`#${sec.id}`}
-                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
-                        isActive
+                      className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${isActive
                           ? "bg-blue-50 text-[#0071dc] font-bold shadow-2xs"
                           : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                      }`}
+                        }`}
                     >
                       <span className="shrink-0">{sec.icon}</span>
                       <span className="truncate">{sec.title}</span>

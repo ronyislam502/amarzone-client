@@ -6,8 +6,8 @@ const Loading = () => {
         <div className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col justify-between relative overflow-hidden font-sans selection:bg-amber-500 selection:text-slate-950">
             {/* Background Animated Ambient Orbs */}
             <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none animate-pulse-slow" />
-            <div className="absolute bottom-10 right-10 w-[350px] h-[350px] bg-orange-500/10 rounded-full blur-[100px] pointer-events-none animate-float-slow" />
-            <div className="absolute top-20 left-10 w-[300px] h-[300px] bg-amber-600/10 rounded-full blur-[90px] pointer-events-none animate-float-reverse" />
+            <div className="absolute bottom-10 right-10 w-87.5 h-87.5 bg-orange-500/10 rounded-full blur-[100px] pointer-events-none animate-float-slow" />
+            <div className="absolute top-20 left-10 w-75 h-[300px] bg-amber-600/10 rounded-full blur-[90px] pointer-events-none animate-float-reverse" />
 
             {/* Background Dot Grid Pattern */}
             <div className="absolute inset-0 bg-dot-grid opacity-30 pointer-events-none" />

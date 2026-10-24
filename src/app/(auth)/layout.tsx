@@ -1,4 +1,4 @@
-import Background from "@/src/components/ui/auth/Background";
+import Background from "@/components/shared/Background";
 
 
 const layout = ({ children }: { children: React.ReactNode }) => {

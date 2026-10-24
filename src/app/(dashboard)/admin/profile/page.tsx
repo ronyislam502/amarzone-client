@@ -1,14 +1,10 @@
-import React from "react";
-import { Metadata } from "next";
-import AdminProfileContainer from "@/src/components/ui/analistics/admin/profile/AdminProfileContainer";
+import AdminProfile from "@/components/ui/dashboard/admin/profile/AdminProfile";
 
-export const metadata: Metadata = {
-  title: "Admin Profile | Amarzone",
-  description: "Manage administrator profile details, security preferences, and administrative access.",
+
+const Profile = () => {
+    return (
+        <div><AdminProfile /></div>
+    );
 };
 
-const AdminProfilePage = () => {
-  return <AdminProfileContainer />;
-};
-
-export default AdminProfilePage;
+export default Profile;

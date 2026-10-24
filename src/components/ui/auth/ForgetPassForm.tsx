@@ -11,11 +11,11 @@ import {
 } from 'lucide-react';
 import { FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import AZForm from '../shared/form/AZFrom';
-import AZInput from '../shared/form/AZInput';
-import { forgotPasswordSchema } from '@/src/schema/Auth';
-import { useForgotPasswordMutation } from '@/src/redux/features/auth/authApi';
+import { forgotPasswordSchema } from '@/schema/Auth';
+import { useForgotPasswordMutation } from '@/redux/features/auth/authApi';
 import { toast } from 'react-toastify';
+import AZForm from '../../shared/form/AZFrom';
+import AZInput from '../../shared/form/AZInput';
 
 export const ForgetPassForm = () => {
     const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
@@ -78,7 +78,7 @@ export const ForgetPassForm = () => {
             {/* Navigation Links */}
             <div className="mt-8 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
                 <Link
-                    href="/login"
+                    href="/signin"
                     className="inline-flex items-center gap-1.5 font-bold text-slate-400 hover:text-amber-400 transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />

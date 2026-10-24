@@ -1,4 +1,4 @@
-import { TUser } from "./user"
+import { TAddress, TUser } from "./user"
 
 
 export type TAdmin = {
@@ -8,6 +8,7 @@ export type TAdmin = {
     email: string
     avatar: string
     phone: string
+    address?: TAddress
     isDeleted: boolean
     createdAt: string
     updatedAt: string

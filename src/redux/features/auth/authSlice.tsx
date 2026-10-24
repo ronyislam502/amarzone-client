@@ -1,6 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../../store";
-import { TAuthState } from "@/src/types/user";
+import { TAuthState } from "@/types/user";
+
+
 
 
 

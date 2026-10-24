@@ -42,3 +42,10 @@ export type TQueryParam = {
     name: string;
     value: string | React.Key;
 };
+
+export interface HeaderProps {
+    onExportCsv?: () => void;
+    onRefresh?: () => void;
+    isRefreshing?: boolean;
+    onOpenCreateModal?: () => void;
+}

@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.join(__dirname, ".."),
+  },
   images: {
+    dangerouslyAllowSVG: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -32,4 +37,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-

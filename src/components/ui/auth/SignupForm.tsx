@@ -19,16 +19,13 @@ import {
 } from 'lucide-react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FieldValues } from 'react-hook-form';
-import AZForm from '../shared/form/AZFrom';
-import { registerSchema } from '@/src/schema/Auth';
-import AZInput from '../shared/form/AZInput';
-import Image from 'next/image';
-
-
+import { registerSchema } from '@/schema/Auth';
 import { useRouter } from 'next/navigation';
-import { useCreateCustomerMutation, useCreateVendorMutation } from '@/src/redux/features/auth/authApi';
+import { useCreateCustomerMutation, useCreateVendorMutation } from '@/redux/features/auth/authApi';
 import { toast } from 'react-toastify';
-
+import AZForm from '../../shared/form/AZFrom';
+import AZInput from '../../shared/form/AZInput';
+import AZFileInput from '../../shared/form/AZFileInput';
 
 export const SignUpForm = () => {
     const router = useRouter();
@@ -66,7 +63,6 @@ export const SignUpForm = () => {
         }
     };
 
-
     const onSubmit = async (data: FieldValues) => {
         if (role === 'customer') {
             const customerData = {
@@ -90,15 +86,13 @@ export const SignUpForm = () => {
                 formData.append("image", image);
             }
 
-            try {
-                const res = await createCustomer(formData).unwrap();
-                if (res?.success) {
-                    toast.success(res?.message || "Customer account created successfully!");
-                    router.push("/login");
-                }
-            } catch (err: any) {
-                toast.error(err?.data?.message || "Failed to create customer account");
+
+            const res = await createCustomer(formData).unwrap();
+            if (res?.success) {
+                toast.success(res?.message);
+                router.push("/signin");
             }
+
         } else {
             const vendorData = {
                 password: data.password,
@@ -124,17 +118,16 @@ export const SignUpForm = () => {
                 formData.append("banner", banner);
             }
 
-            try {
-                const res = await createVendor(formData).unwrap();
-                if (res?.success) {
-                    toast.success(res?.message || "Vendor account created successfully!");
-                    router.push("/login");
-                }
-            } catch (err: any) {
-                toast.error(err?.data?.message || "Failed to create vendor account");
+
+            const res = await createVendor(formData).unwrap();
+            if (res?.success) {
+                toast.success(res?.message || "Vendor account created successfully!");
+                router.push("/signin");
             }
         }
     };
+
+    const isLoading = isCustomerLoading || isVendorLoading;
 
     return (
         <div className="w-full max-w-md mx-auto py-2">
@@ -279,114 +272,36 @@ export const SignUpForm = () => {
                             </div>
                         )}
                     </div>
-                    {/* Customer Image & Preview Grid */}
-                    {role === 'customer' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="form-control w-full">
-                                <label className="label mb-1">
-                                    <span className="text-md font-black text-warning uppercase tracking-widest italic">
-                                        Image
-                                    </span>
-                                </label>
-                                <input
-                                    type="file"
-                                    name="image"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="file-input file-input-warning w-full h-12 rounded-2xl border border-warning/40 text-xs"
-                                />
-                            </div>
 
-                            <div className="form-control w-full">
-                                <label className="label mb-1">
-                                    <span className="text-md font-black text-warning uppercase tracking-widest italic">
-                                        Preview
-                                    </span>
-                                </label>
-                                <div className="w-full h-12 rounded-2xl overflow-hidden">
-                                    {imagePreview ? (
-                                        <div className="flex items-center gap-3 w-full h-full px-3 bg-slate-900/60 rounded-2xl border border-warning/40">
-                                            <Image
-                                                src={imagePreview}
-                                                alt="Profile preview"
-                                                height={36}
-                                                width={36}
-                                                className="w-9 h-9 object-cover rounded-xl border border-warning/50 shrink-0"
-                                            />
-                                            <span className="text-xs text-gray-300 truncate font-medium">
-                                                {image?.name}
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center justify-center w-full h-full px-3 bg-slate-900/30 rounded-2xl border border-dashed border-white/10 text-gray-500 text-xs">
-                                            No image chosen
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
+                    {/* Customer Image */}
+                    {role === 'customer' && (
+                        <AZFileInput
+                            name="image"
+                            label="Profile Image"
+                            file={image}
+                            preview={imagePreview}
+                            onChange={handleImageChange}
+                        />
                     )}
 
                     {/* Vendor Logo & Banner */}
                     {role === 'vendor' && (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div className="form-control w-full">
-                                <label className="label mb-1">
-                                    <span className="text-md font-black text-warning uppercase tracking-widest italic">
-                                        Logo
-                                    </span>
-                                </label>
-                                <input
-                                    type="file"
-                                    name="logo"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="file-input file-input-warning w-full"
-                                />
-                                {logoPreview && (
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <Image
-                                            src={logoPreview}
-                                            alt="Logo preview"
-                                            width={48}
-                                            height={48}
-                                            className="w-12 h-12 object-cover rounded-xl border border-warning/40"
-                                        />
-                                        <span className="text-[11px] text-gray-400 truncate max-w-[120px]">
-                                            {logo?.name}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
+                            <AZFileInput
+                                name="logo"
+                                label="Logo"
+                                file={logo}
+                                preview={logoPreview}
+                                onChange={handleImageChange}
+                            />
 
-                            <div className="form-control w-full">
-                                <label className="label mb-1">
-                                    <span className="text-md font-black text-warning uppercase tracking-widest italic">
-                                        Banner
-                                    </span>
-                                </label>
-                                <input
-                                    type="file"
-                                    name="banner"
-                                    accept="image/*"
-                                    onChange={handleImageChange}
-                                    className="file-input file-input-warning w-full"
-                                />
-                                {bannerPreview && (
-                                    <div className="mt-2 flex items-center gap-2">
-                                        <Image
-                                            src={bannerPreview}
-                                            alt="Banner preview"
-                                            width={64}
-                                            height={48}
-                                            className="w-16 h-12 object-cover rounded-xl border border-warning/40"
-                                        />
-                                        <span className="text-[11px] text-gray-400 truncate max-w-[120px]">
-                                            {banner?.name}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
+                            <AZFileInput
+                                name="banner"
+                                label="Banner"
+                                file={banner}
+                                preview={bannerPreview}
+                                onChange={handleImageChange}
+                            />
                         </div>
                     )}
                 </div>
@@ -404,8 +319,13 @@ export const SignUpForm = () => {
                     <button
                         className="w-full group flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-500 to-green-400 hover:from-emerald-400 hover:to-green-300 text-slate-950 py-4 rounded-xl text-xs font-black uppercase tracking-[0.2em] italic transition-all duration-300 active:scale-98 shadow-[0_15px_30px_-8px_rgba(34,197,94,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
                         type="submit"
+                        disabled={isLoading}
                     >
-                        Signup
+                        {isLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            'Signup'
+                        )}
                     </button>
                 </div>
             </AZForm>
@@ -414,7 +334,7 @@ export const SignUpForm = () => {
             <div className="mt-6 text-center text-xs text-gray-400">
                 Already have an Amarzone account?{' '}
                 <Link
-                    href="/login"
+                    href="/signin"
                     className="text-warning hover:underline font-bold inline-flex items-center gap-1 ml-0.5"
                 >
                     Sign in here

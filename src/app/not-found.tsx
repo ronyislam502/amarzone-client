@@ -9,7 +9,6 @@ import {
     ShoppingBag,
     HelpCircle,
     LayoutDashboard,
-    Search,
     Sparkles,
 } from 'lucide-react';
 

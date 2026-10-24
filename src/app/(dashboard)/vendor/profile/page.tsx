@@ -1,14 +1,9 @@
-import React from "react";
-import { Metadata } from "next";
-import VendorProfileContainer from "@/src/components/ui/analistics/vendor/profile/VendorProfileContainer";
+import VendorProfile from "@/components/ui/dashboard/vendor/VendorProfile";
 
-export const metadata: Metadata = {
-  title: "Vendor Store Profile | Amarzone",
-  description: "Manage merchant profile details, store branding, fulfillment information, and business credentials.",
+const Profile = () => {
+    return (
+        <div><VendorProfile /></div>
+    );
 };
 
-const VendorProfilePage = () => {
-  return <VendorProfileContainer />;
-};
-
-export default VendorProfilePage;
+export default Profile;

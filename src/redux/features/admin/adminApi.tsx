@@ -1,31 +1,32 @@
-import { TResponseRedux } from "@/src/types/global";
-import { baseApi } from "../../api/baseApi";
-import { TAdmin } from "@/src/types/admin";
+import { TResponseRedux } from "@/types/global";
+import { TAdmin } from "@/types/admin";
+import { baseApi } from "@/redux/api/baseApi";
 
 
-const adminApi = baseApi.injectEndpoints({
+const adminApi = baseApi?.injectEndpoints({
+    overrideExisting: true,
     endpoints: (builder) => ({
         allAdmins: builder.query({
-            query: (args?: { search?: string; sort?: string; page?: number | string; limit?: number | string; role?: string; status?: string }) => {
+            query: ({ search, sort, page, limit, status, role }) => {
                 const params = new URLSearchParams();
 
-                if (args?.search) {
-                    params.append("searchTerm", args.search);
+                if (search) {
+                    params.append("searchTerm", search);
                 }
-                if (args?.sort) {
-                    params.append("sort", args.sort);
+                if (sort) {
+                    params.append("sort", sort);
                 }
-                if (args?.role) {
-                    params.append("role", args.role);
+                if (page) {
+                    params.append("page", page);
                 }
-                if (args?.status) {
-                    params.append("status", args.status);
+                if (limit) {
+                    params.append("limit", limit);
                 }
-                if (args?.page) {
-                    params.append("page", String(args.page));
+                if (status) {
+                    params.append("status", status);
                 }
-                if (args?.limit !== undefined && args?.limit !== null) {
-                    params.append("limit", String(args.limit));
+                if (role) {
+                    params.append("role", role);
                 }
 
                 return {
@@ -42,18 +43,17 @@ const adminApi = baseApi.injectEndpoints({
                 };
             },
         }),
+        singleAdmin: builder.query({
+            query: (id) => ({
+                url: `/admins/admin/${id}`,
+                method: "GET",
+            }),
+            providesTags: ["admin"],
+        }),
         deleteAdmin: builder.mutation({
-            query: (id: string) => ({
+            query: (id) => ({
                 url: `/admins/delete/${id}`,
                 method: "DELETE",
-            }),
-            invalidatesTags: ["admin"],
-        }),
-        createAdmin: builder.mutation({
-            query: (adminInfo) => ({
-                url: "/users/create-admin",
-                method: "POST",
-                body: adminInfo,
             }),
             invalidatesTags: ["admin"],
         }),
@@ -61,9 +61,9 @@ const adminApi = baseApi.injectEndpoints({
             query: (args) => ({
                 url: `/admins/update/${args?.id}`,
                 method: "PATCH",
-                body: args.data,
+                body: args?.data,
             }),
-            invalidatesTags: ["admin"],
+            invalidatesTags: ["admin", "user"],
         }),
     }),
 });
@@ -71,7 +71,9 @@ const adminApi = baseApi.injectEndpoints({
 export const {
     useAllAdminsQuery,
     useDeleteAdminMutation,
-    useCreateAdminMutation,
+    useSingleAdminQuery,
     useUpdateAdminMutation
 } = adminApi;
+
+
 

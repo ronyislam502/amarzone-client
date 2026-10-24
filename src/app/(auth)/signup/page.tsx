@@ -1,5 +1,6 @@
-import AuthBrandShowcase from "@/src/components/ui/auth/Branding";
-import SignUpForm from "@/src/components/ui/auth/SignupForm";
+import AuthBrandShowcase from "@/components/shared/Branding";
+import SignUpForm from "@/components/ui/auth/SignupForm";
+
 
 const Signup = () => {
     return (

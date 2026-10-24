@@ -1,68 +1,77 @@
+"use client";
+
 import React from "react";
 import { TProduct, TVariant } from "@/types/product";
 
 interface ProductDetailsTableProps {
-  product: TProduct;
-  selectedVariant?: TVariant;
+  product?: TProduct;
+  selectedVariant?: TVariant | null;
 }
 
 export const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
   product,
   selectedVariant,
 }) => {
-  const formattedDate = product.createdAt
-    ? new Date(product.createdAt).toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : "September 12, 2026";
+  const specs: { label: string; value: string }[] = [];
 
-  const specs = [
-    { label: "Brand", value: product.brand || "Amarzone Basics" },
-    { label: "Department", value: product.department?.name || "General" },
-    { label: "Category", value: product.category?.name || "General" },
-    { label: "ASIN", value: selectedVariant?.asin || "N/A" },
-    { label: "Item model number / SKU", value: selectedVariant?.sku || "N/A" },
-    {
-      label: "Package Information",
-      value:
-        Array.isArray(selectedVariant?.attributes) && selectedVariant?.attributes.length > 0
-          ? selectedVariant.attributes.map((a) => `${a.type}: ${a.value}`).join(", ")
-          : "Standard Retail Packaging",
-    },
-    { label: "Date First Available", value: formattedDate },
-    {
-      label: "Manufacturer",
-      value: product.brand ? `${product.brand} Consumer Products` : "Amarzone Certified Vendor",
-    },
-    {
-      label: "Country of Origin",
-      value: "Imported / Domestic",
-    },
-  ];
+  if (product?.brand) {
+    specs.push({ label: "Brand", value: product.brand });
+  }
+
+  if (selectedVariant?.asin) {
+    specs.push({ label: "ASIN", value: selectedVariant.asin });
+  }
+
+  if (selectedVariant?.sku) {
+    specs.push({ label: "Item Model / SKU", value: selectedVariant.sku });
+  }
+
+  const categoryName = (product?.category as any)?.name;
+  if (categoryName) {
+    specs.push({ label: "Product Category", value: categoryName });
+  }
+
+  const departmentName = (product?.department as any)?.name;
+  if (departmentName) {
+    specs.push({ label: "Department", value: departmentName });
+  }
+
+  if (Array.isArray(selectedVariant?.attributes)) {
+    selectedVariant.attributes.forEach((attr: any) => {
+      if (attr.type && attr.value) {
+        specs.push({ label: attr.type, value: attr.value });
+      }
+    });
+  }
+
+  if (Array.isArray(product?.tags) && product.tags.length > 0) {
+    specs.push({ label: "Tags", value: product.tags.join(", ") });
+  }
+
+  if (specs.length === 0) {
+    return null;
+  }
 
   return (
-    <div className="py-6 border-b border-slate-200 select-none">
-      <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4">
-        Product details
+    <div className="pt-8 border-t border-slate-200 select-none">
+      <h2 className="text-lg font-bold text-[#0f1111] mb-4">
+        Technical Details & Specifications
       </h2>
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="table table-zebra w-full text-xs sm:text-sm">
-          <tbody>
-            {specs.map((item, idx) => (
-              <tr key={idx} className="border-b border-slate-100 last:border-none">
-                <th className="bg-slate-50/80 w-1/3 sm:w-1/4 font-semibold text-slate-700 py-3 px-4">
-                  {item.label}
-                </th>
-                <td className="text-slate-900 py-3 px-4 font-normal">
-                  {item.value}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-2 text-xs">
+        {specs.map((item, index) => (
+          <div
+            key={item.label}
+            className={`flex items-center justify-between py-2 px-3 rounded ${
+              index % 2 === 0 ? "bg-slate-50" : "bg-white"
+            } border border-slate-100`}
+          >
+            <span className="font-semibold text-slate-600">{item.label}</span>
+            <span className="text-slate-900 font-medium text-right truncate max-w-[220px]">
+              {item.value}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

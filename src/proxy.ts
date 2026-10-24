@@ -3,17 +3,8 @@ import { NextRequest } from "next/server";
 import { jwtDecode } from "jwt-decode";
 import { TAuthUser } from "./types/user";
 
-// export type TUser = {
-//   _id?: string;
-//   user?: string;
-//   role?: string;
-//   name?: string;
-//   email?: string;
-//   iat?: number;
-//   exp?: number;
-// };
 
-const AuthRoutes = ["/login", "/sign-up"];
+const AuthRoutes = ["/signin", "/signup"];
 
 
 type Role = keyof typeof roleBasedRoutes;
@@ -43,7 +34,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next();
     } else {
       return NextResponse.redirect(
-        new URL(`/login?redirect=${pathname}`, request.url)
+        new URL(`/signin?redirect=${pathname}`, request.url)
       );
     }
   }

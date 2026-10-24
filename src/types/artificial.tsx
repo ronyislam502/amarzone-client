@@ -1,0 +1,134 @@
+export interface TProductContentInput {
+    title?: string;
+    category?: string;
+    brand?: string;
+    features?: string[] | string;
+    imageUrl?: string;
+    image?: string;
+    specifications?: Record<string, any> | Array<{ key: string; value: string }>;
+    targetAudience?: string;
+    tone?: string;
+    keywords?: string[];
+}
+
+export interface TProductContentOutput {
+    title?: string;
+    brand?: string;
+    features?: string[];
+    bulletFeatures: string[];
+    tags: string[];
+    suggestedDepartment?: string;
+    suggestedCategory?: string;
+    shortDescription: string;
+    longDescription: string;
+    seoTitle: string;
+    seoDescription: string;
+    keywords: string[];
+    imageUrl?: string;
+    department?: string;
+    category?: string;
+    description?: string;
+}
+
+export interface TShoppingAssistantInput {
+    message: string;
+    chatHistory?: Array<{ role: "system" | "user" | "assistant"; content: string }>;
+    context?: {
+        category?: string;
+        budget?: number;
+        currency?: string;
+        preferredBrands?: string[];
+        userPreferences?: Record<string, any>;
+        currentProductId?: string;
+    };
+    filters?: {
+        minPrice?: number;
+        maxPrice?: number;
+        brand?: string;
+        category?: string;
+        rating?: number;
+    };
+}
+
+export interface TProductComparisonItem {
+    item: string;
+    pros: string[];
+    cons: string[];
+    verdict: string;
+}
+
+export interface TShoppingAssistantOutput {
+    reply: string;
+    intent: "search" | "comparison" | "recommendation" | "general_inquiry" | "support";
+    extractedCriteria?: {
+        category?: string;
+        minPrice?: number;
+        maxPrice?: number;
+        currency?: string;
+        brand?: string;
+        keywords?: string[];
+        keyAttributes?: Record<string, string>;
+    };
+    suggestions: string[];
+    comparisons?: TProductComparisonItem[];
+    recommendedCategories?: string[];
+}
+
+export interface TReviewModerationInput {
+    reviewText: string;
+    rating: number;
+    productTitle?: string;
+}
+
+export interface TReviewModerationOutput {
+    isAppropriate: boolean;
+    sentiment: "POSITIVE" | "NEUTRAL" | "NEGATIVE" | "MIXED";
+    flaggedReasons: string[];
+    moderationConfidence: number;
+}
+
+export interface TFraudAnalysisInput {
+    userId: string;
+    orderAmount: number;
+    paymentMethod: string;
+    shippingAddress: Record<string, any>;
+    billingAddress: Record<string, any>;
+    recentAttemptsCount?: number;
+}
+
+export interface TFraudAnalysisOutput {
+    riskScore: number;
+    riskLevel: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+    riskFactors: string[];
+    recommendedAction: "ALLOW" | "REVIEW" | "BLOCK";
+}
+
+export interface TDashboardInsightsInput {
+    stats: Record<string, any>;
+    timeframe?: "daily" | "weekly" | "monthly" | "yearly" | "custom";
+    focusArea?: "all" | "revenue" | "operations" | "vendor_performance" | "customer_satisfaction";
+    comparisonTimeframe?: string;
+}
+
+export interface TDashboardInsightsOutput {
+    executiveSummary: string;
+    businessInsights: Array<{ category: string; observation: string; impact: string } | string>;
+    recommendations: Array<{
+        title: string;
+        action: string;
+        priority: "HIGH" | "MEDIUM" | "LOW";
+        expectedImpact: string;
+    }>;
+    warnings: Array<{
+        alert: string;
+        severity: "CRITICAL" | "WARNING" | "INFO";
+        metricTrigger: string;
+        suggestedRemediation: string;
+    }>;
+    growthOpportunities: Array<{
+        opportunity: string;
+        estimatedPotential: string;
+        actionableNextStep: string;
+    }>;
+    naturalLanguageReport: string;
+}

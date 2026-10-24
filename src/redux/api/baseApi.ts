@@ -7,10 +7,11 @@ import {
   fetchBaseQuery,
 } from "@reduxjs/toolkit/query/react";
 import { logout, setUser } from "../features/auth/authSlice";
-import { RootState } from "../store";
 import { toast } from "react-toastify";
+import { RootState } from "../store";
 
-export const url = "http://localhost:9000";
+
+export const url = process.env.NEXT_PUBLIC_API_URL;
 
 const baseQuery = fetchBaseQuery({
   baseUrl: `${url}/api/v1`,
@@ -33,16 +34,14 @@ const baseQueryWithRefreshToken: BaseQueryFn<
   let result = await baseQuery(args, api, extraOptions);
 
   // Global error handled removed to allow component-level handling
-  // if (result?.error?.status === 404) {
-  //   toast.error((result.error.data as { message: string }).message);
-  // }
-  // if (result?.error?.status === 403) {
-  //   toast.error((result.error.data as { message: string }).message);
-  // }
+  if (result?.error?.status === 404) {
+    toast.error((result.error.data as { message: string }).message);
+  }
+  if (result?.error?.status === 403) {
+    toast.error((result.error.data as { message: string }).message);
+  }
 
   if (result?.error?.status === 401) {
-    //* Send Refresh
-    // console.log("Sending refresh token");
 
     const res = await fetch(`${url}/api/v1/auth/refresh-token`, {
       method: "POST",
@@ -82,15 +81,20 @@ export const baseApi = createApi({
     "order",
     "dashboard",
     "review",
+    "productReview",
+    "serviceReview",
     "vendor",
-    "product",
+    "product", "variant",
     "inventory",
     "Disputes",
+    "dispute",
+    "disputeDecision",
     "chats",
     "ai",
     "notification",
     "health",
     "violation",
+    "fraud",
   ],
   endpoints: () => ({}),
 });

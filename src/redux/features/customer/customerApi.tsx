@@ -1,28 +1,26 @@
-import { TResponseRedux } from "@/types/global";
-import { baseApi } from "../../api/baseApi";
+import { baseApi } from "@/redux/api/baseApi";
 import { TCustomer } from "@/types/customer";
+import { TResponseRedux } from "@/types/global";
 
-const customerApi = baseApi.injectEndpoints({
+
+const customerApi = baseApi?.injectEndpoints({
     overrideExisting: true,
     endpoints: (builder) => ({
         allCustomers: builder.query({
-            query: (args?: { search?: string; sort?: string; status?: string; page?: number | string; limit?: number | string }) => {
+            query: ({ search, sort, page, limit }) => {
                 const params = new URLSearchParams();
 
-                if (args?.search) {
-                    params.append("searchTerm", args.search);
+                if (search) {
+                    params.append("searchTerm", search);
                 }
-                if (args?.sort) {
-                    params.append("sort", args.sort);
+                if (sort) {
+                    params.append("sort", sort);
                 }
-                if (args?.status) {
-                    params.append("status", args.status);
+                if (page) {
+                    params.append("page", page);
                 }
-                if (args?.page) {
-                    params.append("page", String(args.page));
-                }
-                if (args?.limit !== undefined && args?.limit !== null) {
-                    params.append("limit", String(args.limit));
+                if (limit) {
+                    params.append("limit", limit);
                 }
 
                 return {
@@ -39,26 +37,25 @@ const customerApi = baseApi.injectEndpoints({
                 };
             },
         }),
-        deleteCustomer: builder.mutation({
-            query: (id: string) => ({
-                url: `/customers/delete/${id}`,
-                method: "DELETE",
+        singleCustomer: builder.query({
+            query: (id) => ({
+                url: `/customers/single/${id}`,
+                method: "GET",
             }),
-            invalidatesTags: ["customer"],
-        }),
-        createCustomer: builder.mutation({
-            query: (customerInfo) => ({
-                url: "/customers/create-customer",
-                method: "POST",
-                body: customerInfo,
-            }),
-            invalidatesTags: ["customer"],
+            providesTags: ["customer"],
         }),
         updateCustomer: builder.mutation({
             query: (args) => ({
                 url: `/customers/update/${args?.id}`,
                 method: "PATCH",
-                body: args.data,
+                body: args?.data,
+            }),
+            invalidatesTags: ["customer", "user"],
+        }),
+        deleteCustomer: builder.mutation({
+            query: (id) => ({
+                url: `/customers/delete/${id}`,
+                method: "DELETE",
             }),
             invalidatesTags: ["customer"],
         }),
@@ -67,8 +64,7 @@ const customerApi = baseApi.injectEndpoints({
 
 export const {
     useAllCustomersQuery,
-    useDeleteCustomerMutation,
-    useCreateCustomerMutation,
+    useSingleCustomerQuery,
     useUpdateCustomerMutation,
+    useDeleteCustomerMutation,
 } = customerApi;
-

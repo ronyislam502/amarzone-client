@@ -1,102 +1,75 @@
-import { TVariant } from "./product";
+import { TUser } from "./user";
 
-export type TCartItem = {
+export type TOrderDashboardRole = "ADMIN" | "VENDOR" | "CUSTOMER";
+
+export type TTracking = {
+    trackingNumber: string;
+    courierName: string;
+    shippedBy?: string;
+    shippedAt?: string | Date;
+    estimatedDelivery?: string | Date;
+    deliveredAt?: string | Date;
+};
+
+export type TOrderProductVariant = {
     _id: string;
-    productId?: string;
-    variantId?: string;
-    variant?: TVariant | any;
-    title: string;
-    thumbnail?: string;
-    image?: string;
-    brand?: string;
-    category?: any;
-    price: number;
-    originalPrice?: number;
+    sku?: string;
+    price?: number;
+    product?: {
+        _id: string;
+        title: string;
+        thumbnail?: string;
+        department?: { _id: string; name: string } | string;
+        category?: { _id: string; name: string } | string;
+    };
+};
+
+export type TOrderProduct = {
+    variant: TOrderProductVariant;
     quantity: number;
-    maxQuantity?: number;
-    seller?: any;
-    vendor?: any;
-    vendorId?: string;
-    inStock?: boolean;
-    stockNote?: string;
-    shippingTime?: number;
-    attributes?: { type: string; value: string }[];
-    isSelected?: boolean;
-    [key: string]: any;
+    price?: number;
 };
 
-
-export type TCartState = {
-    user: string | null;
-    products: TCartItem[];
-    foods?: TCartItem[];
-    selectedItems: number;
-    totalPrice: number;
-    tax: number;
-    grandTotal: number;
+export type TOrderCustomer = {
+    _id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
 };
 
+export type TOrderVendor = {
+    _id: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    logo?: string;
+};
 
 export type TOrder = {
-    _id: string
-    customer: TOdrCustomer
-    vendor: TOdrVendor
-    orderNo: string
-    products: TOdrProduct[]
-    commission: number
-    tax: number
-    totalPrice: number
-    totalQuantity: number
-    vendorAmount: number
-    shippedDate: TOdrShippedDate
-    deliveryDate: TOdrDeliveryDate
-    status: string
-    paymentStatus: string
-    transactionId: string
-    isDeleted: boolean
-    createdAt: string
-    updatedAt: string
-    __v: number
-    invoiceUrl: string
-    tracking?: {
-        trackingNumber?: string
-        courierName?: string
-        shippedBy?: string
-        shippedAt?: string
-        estimatedDelivery?: string
-        deliveredAt?: string
-        notes?: string
-    }
-}
-
-export type Order = TOrder;
-
-
-
-export type TOdrCustomer = {
-    _id: string
-    name: string
-    email: string
-}
-
-export type TOdrVendor = {
-    _id: string
-    name: string
-    email: string
-}
-
-export type TOdrProduct = {
-    variant: any,
-    quantity: number
-    price: number
-}
-
-export type TOdrShippedDate = {
-    from: string
-    to: string
-}
-
-export type TOdrDeliveryDate = {
-    from: string
-    to: string
-}
+    _id: string;
+    orderNo: string;
+    customer: TOrderCustomer | TUser;
+    vendor: TOrderVendor | TUser;
+    products: TOrderProduct[];
+    commission: number;
+    tax: number;
+    totalPrice: number;
+    totalQuantity: number;
+    vendorAmount: number;
+    status:
+        | "PENDING"
+        | "UNSHIPPED"
+        | "SHIPPED"
+        | "IN_TRANSIT"
+        | "DELIVERED"
+        | "CANCELLED"
+        | "OUT_OF_DELIVERY"
+        | "REFUNDED"
+        | string;
+    paymentStatus: "PENDING" | "PAID" | "UNPAID" | "REFUNDED" | string;
+    tracking?: TTracking;
+    invoiceUrl?: string;
+    isDeleted?: boolean;
+    createdAt?: string;
+    updatedAt?: string;
+};

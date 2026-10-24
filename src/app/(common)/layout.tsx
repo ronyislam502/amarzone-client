@@ -1,14 +1,13 @@
-import Footer from "@/src/components/ui/shared/Footer";
-import Navbar from "@/src/components/ui/shared/Navbar";
-import AiShoppingAssistant from "@/src/components/ui/shared/AiShoppingAssistant";
+import AZFooter from "@/components/shared/AZFooter";
+import AZNavbar from "@/components/shared/AZNavbar";
+
 
 const layout = ({ children }: { children: React.ReactNode }) => {
     return (
-        <div>
-            <Navbar />
+        <div className="">
+            <AZNavbar />
             {children}
-            <Footer />
-            <AiShoppingAssistant />
+            <AZFooter />
         </div>
     );
 };

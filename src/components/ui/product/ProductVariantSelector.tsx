@@ -1,29 +1,81 @@
 "use client";
 
-import React, { useState } from "react";
-import { TVariant, TAttribute } from "@/types/product";
-import { Copy, Check, CheckCircle2, Star } from "lucide-react";
+import React, { useMemo } from "react";
+import { TVariant } from "@/types/product";
+import { Copy, Check, Star } from "lucide-react";
 import { toast } from "react-toastify";
 
 interface ProductVariantSelectorProps {
-  variants: TVariant[];
-  selectedVariant: TVariant;
-  onSelectVariant: (variant: TVariant) => void;
+  variants?: TVariant[];
+  selectedVariant?: TVariant | null;
+  onSelectVariant?: (variant: TVariant) => void;
   averageRating?: string | number;
   totalRatings?: number;
 }
 
 export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
-  variants,
+  variants = [],
   selectedVariant,
   onSelectVariant,
   averageRating = 0,
   totalRatings = 0,
 }) => {
-  const [copiedAsin, setCopiedAsin] = useState(false);
-  const [copiedSku, setCopiedSku] = useState(false);
+  const [copiedAsin, setCopiedAsin] = React.useState(false);
+  const [copiedSku, setCopiedSku] = React.useState(false);
 
-  if (!variants || variants.length === 0) return null;
+  // Discover all attribute types dynamically across provided variants
+  const attributeTypes = useMemo(() => {
+    const types: string[] = [];
+    if (Array.isArray(variants)) {
+      variants.forEach((v) => {
+        if (Array.isArray(v.attributes)) {
+          v.attributes.forEach((attr) => {
+            if (attr.type && !types.some((t) => t.toLowerCase() === attr.type.toLowerCase())) {
+              types.push(attr.type);
+            }
+          });
+        }
+      });
+    }
+    return types;
+  }, [variants]);
+
+  // Discover all values for each attribute type from real variants
+  const attributeOptions = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    attributeTypes.forEach((type) => {
+      const values: string[] = [];
+      if (Array.isArray(variants)) {
+        variants.forEach((v) => {
+          if (Array.isArray(v.attributes)) {
+            v.attributes.forEach((attr) => {
+              if (
+                attr.type?.toLowerCase() === type.toLowerCase() &&
+                attr.value &&
+                !values.some((val) => val.toLowerCase() === attr.value.toLowerCase())
+              ) {
+                values.push(attr.value);
+              }
+            });
+          }
+        });
+      }
+      map[type] = values;
+    });
+    return map;
+  }, [variants, attributeTypes]);
+
+  // Determine current active value for each attribute type
+  const activeAttributes = useMemo(() => {
+    const current: Record<string, string> = {};
+    attributeTypes.forEach((type) => {
+      const found = selectedVariant?.attributes?.find(
+        (a) => a.type.toLowerCase() === type.toLowerCase()
+      )?.value;
+      current[type] = found || attributeOptions[type]?.[0] || "";
+    });
+    return current;
+  }, [selectedVariant, attributeTypes, attributeOptions]);
 
   const handleCopy = (text: string, type: "asin" | "sku") => {
     if (typeof window !== "undefined") {
@@ -42,168 +94,162 @@ export const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
     }
   };
 
-  // Helper to extract attribute label from a variant
-  const getVariantLabel = (variant: TVariant, index: number) => {
-    if (Array.isArray(variant.attributes) && variant.attributes.length > 0) {
-      return variant.attributes.map((attr) => `${attr.type}: ${attr.value}`).join(" | ");
+  // Handle clicking on an attribute option
+  const handleSelectAttribute = (type: string, value: string) => {
+    const nextAttributes = {
+      ...activeAttributes,
+      [type]: value,
+    };
+
+    // Try to find exact variant matching all attributes
+    let matchedVariant = variants.find((v) => {
+      if (!Array.isArray(v.attributes) || v.attributes.length === 0) return false;
+      return Object.entries(nextAttributes).every(([attrType, attrVal]) => {
+        return v.attributes.some(
+          (a) =>
+            a.type.toLowerCase() === attrType.toLowerCase() &&
+            a.value.toLowerCase() === attrVal.toLowerCase()
+        );
+      });
+    });
+
+    // Fallback: find variant that has this attribute value
+    if (!matchedVariant) {
+      matchedVariant = variants.find((v) =>
+        v.attributes?.some(
+          (a) =>
+            a.type.toLowerCase() === type.toLowerCase() &&
+            a.value.toLowerCase() === value.toLowerCase()
+        )
+      );
     }
-    return `Option ${index + 1}`;
+
+    if (matchedVariant) {
+      onSelectVariant?.(matchedVariant);
+    }
   };
 
-  // Group attributes by type across all variants (e.g. Size: [...], Flavor: [...])
-  const attributeTypes = Array.from(
-    new Set(
-      variants.flatMap((v) =>
-        Array.isArray(v.attributes) ? v.attributes.map((a) => a.type) : []
-      )
-    )
-  );
+  const currentAsin = selectedVariant?.asin || "";
+  const currentSku = selectedVariant?.sku || "";
+
+  if (variants.length === 0 && !currentAsin && !currentSku) {
+    return null;
+  }
+
+  const numericRating =
+    typeof averageRating === "string"
+      ? isNaN(parseFloat(averageRating))
+        ? 0
+        : parseFloat(averageRating)
+      : averageRating || 0;
 
   return (
-    <div className="py-3 border-b border-slate-200 space-y-3.5 select-none">
-      {/* If variants have structured attributes, show Amazon-style attribute selector */}
-      {attributeTypes.length > 0 ? (
-        attributeTypes.map((type) => {
-          // Current selected value for this attribute type
-          const currentAttr = Array.isArray(selectedVariant?.attributes)
-            ? selectedVariant.attributes.find((a) => a.type === type)?.value
-            : "";
+    <div className="py-3.5 border-b border-slate-200/80 space-y-4 select-none">
+      {/* Dynamic Attribute Selectors */}
+      {attributeTypes.map((type) => {
+        const options = attributeOptions[type] || [];
+        const currentValue = activeAttributes[type];
 
-          return (
-            <div key={type} className="space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="text-slate-500 font-medium">{type}:</span>
-                <span className="text-slate-900 font-bold">{currentAttr || "Selected"}</span>
-              </div>
+        if (options.length <= 1) return null;
 
-              {/* Swatch options for this type */}
-              <div className="flex flex-wrap gap-2">
-                {variants.map((variant, idx) => {
-                  const val = Array.isArray(variant.attributes)
-                    ? variant.attributes.find((a) => a.type === type)?.value
-                    : `Option ${idx + 1}`;
-                  const isSelected = variant._id === selectedVariant._id;
-
-                  return (
-                    <button
-                      key={variant._id || idx}
-                      type="button"
-                      onClick={() => onSelectVariant(variant)}
-                      className={`relative px-3.5 py-2 rounded-lg text-xs transition-all duration-150 border cursor-pointer text-left ${
-                        isSelected
-                          ? "border-[#e77600] ring-2 ring-[#e77600]/30 bg-amber-50/30 text-slate-900 font-bold shadow-xs"
-                          : "border-slate-200 hover:border-slate-400 bg-white text-slate-700 hover:bg-slate-50 font-normal"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5">
-                        {isSelected && (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#e77600] shrink-0" />
-                        )}
-                        <span>{val}</span>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+        return (
+          <div key={type} className="space-y-1.5">
+            <div className="text-xs text-slate-700">
+              <span>{type}: </span>
+              <span className="font-bold text-[#0f1111]">{currentValue}</span>
             </div>
-          );
-        })
-      ) : (
-        /* Fallback if no structured attributes: generic variant list */
-        <div className="space-y-1.5">
-          <div className="text-xs font-semibold text-slate-700">
-            Available Options ({variants.length}):
+            <div className="flex flex-wrap gap-2">
+              {options.map((option) => {
+                const isSelected =
+                  currentValue?.toLowerCase() === option?.toLowerCase();
+
+                return (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => handleSelectAttribute(type, option)}
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs transition-all cursor-pointer ${
+                      isSelected
+                        ? "border-2 border-[#e77600] bg-white text-[#0f1111] font-bold shadow-2xs"
+                        : "border border-slate-300 hover:border-slate-400 bg-white text-slate-700 font-normal"
+                    }`}
+                  >
+                    {isSelected && (
+                      <Check className="w-3.5 h-3.5 text-[#e77600] stroke-[2.5]" />
+                    )}
+                    <span>{option}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {variants.map((variant, idx) => {
-              const isSelected = variant._id === selectedVariant._id;
-              return (
-                <button
-                  key={variant._id || idx}
-                  type="button"
-                  onClick={() => onSelectVariant(variant)}
-                  className={`px-3 py-1.5 rounded-lg text-xs transition-all border cursor-pointer ${
-                    isSelected
-                      ? "border-[#e77600] ring-2 ring-[#e77600]/30 bg-amber-50 text-slate-900 font-bold"
-                      : "border-slate-200 hover:border-slate-400 bg-white text-slate-700 font-medium"
-                  }`}
-                >
-                  {getVariantLabel(variant, idx)}
-                </button>
-              );
-            })}
-          </div>
+        );
+      })}
+
+      {/* Identifiers: ASIN and SKU Pills & Rating Pill */}
+      {(currentAsin || currentSku || totalRatings > 0) && (
+        <div className="flex items-center flex-wrap gap-2.5 pt-1 text-xs text-slate-600">
+          {/* ASIN Pill */}
+          {currentAsin && (
+            <div className="flex items-center gap-1 bg-slate-100/90 hover:bg-slate-200/70 transition-colors px-2.5 py-1 rounded-md border border-slate-200 text-[11px]">
+              <span className="font-semibold text-slate-700">ASIN:</span>
+              <span className="font-mono text-slate-900 font-medium">
+                {currentAsin}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopy(currentAsin, "asin")}
+                title="Copy ASIN"
+                aria-label="Copy ASIN"
+                className="ml-1 text-slate-400 hover:text-slate-800 cursor-pointer"
+              >
+                {copiedAsin ? (
+                  <Check className="w-3 h-3 text-emerald-600" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* SKU Pill */}
+          {currentSku && (
+            <div className="flex items-center gap-1 bg-slate-100/90 hover:bg-slate-200/70 transition-colors px-2.5 py-1 rounded-md border border-slate-200 text-[11px]">
+              <span className="font-semibold text-slate-700">SKU:</span>
+              <span className="font-mono text-slate-900 font-medium">
+                {currentSku}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleCopy(currentSku, "sku")}
+                title="Copy SKU"
+                aria-label="Copy SKU"
+                className="ml-1 text-slate-400 hover:text-slate-800 cursor-pointer"
+              >
+                {copiedSku ? (
+                  <Check className="w-3 h-3 text-emerald-600" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Rating Pill */}
+          <a
+            href="#customer-reviews"
+            className="flex items-center gap-1.5 bg-amber-50/70 hover:bg-amber-100/80 transition-colors px-2.5 py-1 rounded-md border border-amber-200/80 text-[11px] text-slate-800 cursor-pointer"
+          >
+            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+            <span className="font-bold text-[#0f1111]">
+              {numericRating > 0 ? numericRating.toFixed(1) : "0.0"}
+            </span>
+            <span className="text-[#007185] hover:underline font-normal">
+              ({totalRatings} reviews)
+            </span>
+          </a>
         </div>
       )}
-
-      {/* Identifiers: ASIN and SKU (Amazon Spec) */}
-      <div className="flex items-center flex-wrap gap-3 pt-1 text-[11px] text-slate-500">
-        {selectedVariant.asin && (
-          <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded border border-slate-200">
-            <span className="font-semibold text-slate-700">ASIN:</span>
-            <span className="font-mono text-slate-900 font-medium">{selectedVariant.asin}</span>
-            <button
-              type="button"
-              onClick={() => handleCopy(selectedVariant.asin, "asin")}
-              title="Copy ASIN"
-              aria-label="Copy ASIN"
-              className="ml-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-            >
-              {copiedAsin ? (
-                <Check className="w-3 h-3 text-emerald-600" />
-              ) : (
-                <Copy className="w-3 h-3" />
-              )}
-            </button>
-          </div>
-        )}
-
-        {selectedVariant.sku && (
-          <div className="flex items-center gap-1 bg-slate-100/80 px-2 py-1 rounded border border-slate-200">
-            <span className="font-semibold text-slate-700">SKU:</span>
-            <span className="font-mono text-slate-900 font-medium">{selectedVariant.sku}</span>
-            <button
-              type="button"
-              onClick={() => handleCopy(selectedVariant.sku, "sku")}
-              title="Copy SKU"
-              aria-label="Copy SKU"
-              className="ml-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-            >
-              {copiedSku ? (
-                <Check className="w-3 h-3 text-emerald-600" />
-              ) : (
-                <Copy className="w-3 h-3" />
-              )}
-            </button>
-          </div>
-        )}
-
-        {/* Selected Variant Reviews Indicator */}
-        <a
-          href="#customer-reviews"
-          onClick={(e) => {
-            e.preventDefault();
-            const el = document.getElementById("customer-reviews");
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
-          className="flex items-center gap-1.5 bg-amber-50/80 hover:bg-amber-100 transition-colors px-2 py-1 rounded border border-amber-200 text-slate-800 cursor-pointer group"
-          title="Jump to customer reviews for this variant"
-        >
-          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
-          <span className="font-bold text-slate-900">
-            {typeof averageRating === "number"
-              ? averageRating > 0 ? averageRating.toFixed(1) : "0.0"
-              : parseFloat(String(averageRating)) > 0
-              ? parseFloat(String(averageRating)).toFixed(1)
-              : "0.0"}
-          </span>
-          <span className="text-[#007185] group-hover:underline font-medium text-[10px]">
-            {totalRatings > 0
-              ? `(${totalRatings} ${totalRatings === 1 ? "review" : "reviews"})`
-              : "(No reviews yet)"}
-          </span>
-        </a>
-      </div>
     </div>
   );
 };

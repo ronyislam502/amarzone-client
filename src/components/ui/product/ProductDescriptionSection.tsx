@@ -1,41 +1,56 @@
+"use client";
+
 import React from "react";
 import { TProduct } from "@/types/product";
-import { Info, Sparkles } from "lucide-react";
+import { CheckCircle2, Volume2, ShieldCheck, Cpu } from "lucide-react";
 
 interface ProductDescriptionSectionProps {
-  product: TProduct;
+  product?: TProduct;
 }
 
 export const ProductDescriptionSection: React.FC<ProductDescriptionSectionProps> = ({
   product,
 }) => {
-  const descriptionText =
-    product.description ||
-    `Experience top-tier quality and reliability with the ${product.title}. Carefully engineered to deliver premium performance, this product combines modern design with everyday practicality. Backed by ${product.brand || "Amarzone"}'s dedication to customer satisfaction, each unit is manufactured under stringent quality controls to ensure excellence.`;
+  if (!product) return null;
+
+  const brand = product.brand;
+  const description = (product as any)?.description;
+  const features = product.features || [];
 
   return (
-    <div className="py-6 border-b border-slate-200 select-none">
-      <h2 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-        <span>Product Description</span>
-      </h2>
-
-      <div className="bg-slate-50/50 rounded-2xl border border-slate-200/70 p-5 sm:p-6 text-slate-700 text-xs sm:text-sm leading-relaxed space-y-4">
-        <p className="whitespace-pre-line">{descriptionText}</p>
-
-        {product.tags && product.tags.length > 0 && (
-          <div className="pt-2 flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-semibold text-slate-500">Tags:</span>
-            {product.tags.map((tag, idx) => (
-              <span
-                key={idx}
-                className="inline-block bg-white text-slate-600 text-[11px] font-medium px-2.5 py-0.5 rounded-full border border-slate-200"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
+    <div className="pt-8 border-t border-slate-200 space-y-6 select-none">
+      <div>
+        <h2 className="text-lg font-bold text-[#0f1111] mb-2">
+          Product Overview
+        </h2>
+        {description ? (
+          <p className="text-xs text-slate-600 leading-relaxed max-w-3xl">
+            {description}
+          </p>
+        ) : (
+          <p className="text-xs text-slate-600 leading-relaxed max-w-3xl">
+            Discover premium quality with {brand ? `${brand}'s ` : ""}official catalog on Amarzone. Verified authentic and backed by Amarzone customer satisfaction guarantees.
+          </p>
         )}
       </div>
+
+      {features.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {features.slice(0, 3).map((feat, i) => (
+            <div
+              key={i}
+              className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2"
+            >
+              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-amber-600">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              </div>
+              <p className="text-xs text-slate-700 leading-relaxed">
+                {feat}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

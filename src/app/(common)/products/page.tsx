@@ -1,5 +1,11 @@
-import { ProductsPage } from "@/src/components/ui/products/ReusableProductsPage";
+import ProductsPage from "@/components/ui/products/ProductsPage";
 
-export default function AllProductsPage() {
-  return <ProductsPage mode="all" />;
+const Products = () => {
+    return (
+        <div className="bg-slate-200">
+            <ProductsPage />
+        </div>
+    )
 }
+
+export default Products;

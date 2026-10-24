@@ -1,24 +1,17 @@
-
-import { baseApi } from "../../api/baseApi";
+import { TResponseRedux } from "@/types/global";
 import { TDepartment } from "@/types/department";
+import { baseApi } from "@/redux/api/baseApi";
 
-const departmentApi = baseApi.injectEndpoints({
+
+const departmentApi = baseApi?.injectEndpoints({
+    overrideExisting: true,
     endpoints: (builder) => ({
         allDepartments: builder.query({
-            query: ({ search, sort, page, limit, category, minPrice, maxPrice }: Record<string, any> = {}) => {
+            query: ({ search, sort, page, limit }) => {
                 const params = new URLSearchParams();
 
                 if (search) {
                     params.append("searchTerm", search);
-                }
-                if (category) {
-                    params.append("category", category);
-                }
-                if (minPrice) {
-                    params.append("minPrice", String(minPrice));
-                }
-                if (maxPrice) {
-                    params.append("maxPrice", String(maxPrice));
                 }
                 if (sort) {
                     params.append("sort", sort);
@@ -26,9 +19,10 @@ const departmentApi = baseApi.injectEndpoints({
                 if (page) {
                     params.append("page", page);
                 }
-                if (limit !== undefined && limit !== null) {
-                    params.append("limit", String(limit));
+                if (limit) {
+                    params.append("limit", limit);
                 }
+
 
                 return {
                     url: "/departments",
@@ -37,20 +31,18 @@ const departmentApi = baseApi.injectEndpoints({
                 };
             },
             providesTags: ["department"],
-            transformResponse: (response: any) => {
+            transformResponse: (response: TResponseRedux<TDepartment[]>) => {
                 return {
-                    data: (Array.isArray(response?.data)
-                        ? response?.data
-                        : response?.data?.data || []) as TDepartment[],
-                    meta: response?.data?.meta || response?.meta,
+                    data: response?.data,
+                    meta: response?.meta,
                 };
             },
         }),
         createDepartment: builder.mutation({
-            query: (departmentInfo) => ({
+            query: (data) => ({
                 url: "/departments/create-department",
                 method: "POST",
-                body: departmentInfo,
+                body: data,
             }),
             invalidatesTags: ["department"],
         }),
@@ -58,7 +50,14 @@ const departmentApi = baseApi.injectEndpoints({
             query: (args) => ({
                 url: `/departments/update/${args?.id}`,
                 method: "PATCH",
-                body: args.data,
+                body: args?.data,
+            }),
+            invalidatesTags: ["department"],
+        }),
+        deleteDepartment: builder.mutation({
+            query: (id) => ({
+                url: `/departments/delete/${id}`,
+                method: "DELETE",
             }),
             invalidatesTags: ["department"],
         }),
@@ -68,5 +67,9 @@ const departmentApi = baseApi.injectEndpoints({
 export const {
     useAllDepartmentsQuery,
     useCreateDepartmentMutation,
-    useUpdateDepartmentMutation
+    useUpdateDepartmentMutation,
+    useDeleteDepartmentMutation
 } = departmentApi;
+
+
+

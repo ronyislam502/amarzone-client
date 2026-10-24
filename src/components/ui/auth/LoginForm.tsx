@@ -3,19 +3,19 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Eye, EyeOff, Sparkles } from 'lucide-react';
-import { FieldValues } from 'react-hook-form';
-import AZForm from '../shared/form/AZFrom';
-import AZInput from '../shared/form/AZInput';
-import { loginSchema } from '@/src/schema/Auth';
 import { toast } from 'react-toastify';
-import { useAppDispatch } from '@/src/redux/hooks';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { TAuthUser } from '@/src/types/user';
-import { verifyToken } from '../../utilities/verifyToken';
-import { setUser } from '@/src/redux/features/auth/authSlice';
-import { useLogInMutation } from '@/src/redux/features/auth/authApi';
 import { useRouter } from 'next/navigation';
 import Cookies from "js-cookie";
+import AZForm from '../../shared/form/AZFrom';
+import AZInput from '../../shared/form/AZInput';
+import { useAppDispatch } from '@/redux/hooks';
+import { useLogInMutation } from '@/redux/features/auth/authApi';
+import { verifyToken } from '@/components/shared/verifyToken';
+import { TAuthUser } from '@/types/user';
+import { setUser } from '@/redux/features/auth/authSlice';
+import { FieldValues } from "react-hook-form";
+import { loginSchema } from '@/schema/Auth';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 
 
@@ -27,41 +27,33 @@ const LoginForm = () => {
     const [signIn, { isLoading: isLoginLoading }] = useLogInMutation();
 
 
-
     const onSubmit = async (data: FieldValues) => {
 
-        try {
-            const authData = {
-                email: data.email,
-                password: data.password
-            };
+        const authData = {
+            email: data.email,
+            password: data.password
+        };
 
-            const res = await signIn(authData).unwrap();
+        const res = await signIn(authData).unwrap();
 
+        if (res?.success) {
             const user = verifyToken(res?.data?.accessToken) as TAuthUser;
             dispatch(setUser({ user: user, token: res?.data?.accessToken }));
+            Cookies.set("accessToken", res?.data?.accessToken);
 
-            if (res?.success) {
-                Cookies.set("accessToken", res?.data?.accessToken);
+            toast.success(res?.message
+            );
 
-                // refreshToken is usually handled by http-only cookies from server
-                toast.success(res?.message);
-                // loginMethods.reset();
-
-                if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') {
-                    router.push("/admin");
-                } else if (user?.role === 'VENDOR') {
-                    router.push("/vendor");
-                } else if (user?.role === 'CUSTOMER') {
-                    router.push("/customer");
-                } else {
-                    router.push("/");
-                }
+            if (user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN') {
+                router.push("/admin");
+            } else if (user?.role === 'VENDOR') {
+                router.push("/vendor");
+            } else if (user?.role === 'CUSTOMER') {
+                router.push("/customer");
+            } else {
+                router.push("/");
             }
-        } catch (err: any) {
-            toast.error(err?.data?.message || "Login failed. Please check your credentials.");
         }
-
 
     };
 
@@ -110,7 +102,7 @@ const LoginForm = () => {
                 </div>
 
                 <div className="mt-4 text-right">
-                    <Link href="/forget" className="text-[10px] font-black text-gray-500 hover:text-warning uppercase tracking-widest italic transition-colors">
+                    <Link href="/forgot" className="text-[10px] font-black text-gray-500 hover:text-warning uppercase tracking-widest italic transition-colors">
                         Forgot Password?
                     </Link>
                 </div>

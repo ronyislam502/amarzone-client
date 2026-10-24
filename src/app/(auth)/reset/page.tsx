@@ -1,5 +1,6 @@
-import AuthBrandShowcase from "@/src/components/ui/auth/Branding";
-import ResetPassForm from "@/src/components/ui/auth/ResetPassForm";
+import AuthBrandShowcase from "@/components/shared/Branding";
+import ResetPassForm from "@/components/ui/auth/ResetPassForm";
+
 
 const ResetPassword = () => {
 
