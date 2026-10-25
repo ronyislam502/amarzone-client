@@ -65,16 +65,12 @@ const UpdateDepartment = ({
             name: data.name,
         };
 
-        console.log("data", dept)
-
         const formData = new FormData();
         formData.append("data", JSON.stringify(dept));
 
         if (iconFile) {
             formData.append("icon", iconFile);
         }
-        console.log("iconFile", iconFile)
-        console.log("data", formData)
 
         try {
             const res = await updateDepartment({

@@ -39,15 +39,17 @@ const UpdateCategory = ({
     const [previewImage, setPreviewImage] = useState(category?.icon || "");
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
-    useEffect(() => {
-        if (category) {
-            setPreviewImage(category.icon || "");
-            setSelectedImage(null);
-        }
-    }, [category]);
+    // useEffect(() => {
+    //     if (category) {
+    //         setPreviewImage(category.icon || "");
+    //         setSelectedImage(null);
+    //     }
+    // }, [category]);
 
     const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
     const { data: departmentsData, isLoading: isDepartmentsLoading } = useAllDepartmentsQuery({ limit: "100" });
+
+    console.log("se", selectedImage)
 
     const departmentOptions = departmentsData?.data?.map((dept: TDepartment) => ({
         value: dept._id,
@@ -104,10 +106,8 @@ const UpdateCategory = ({
         }
     };
 
+    console.log("ca", category)
 
-    // const departmentId = typeof category?.department === "object"
-    //     ? category?.department?._id
-    //     : category?.department || "";
 
     return (
         <AZModal
@@ -129,7 +129,6 @@ const UpdateCategory = ({
         >
             {isOpen && category && (
                 <AZForm
-                    key={category?._id}
                     defaultValues={{
                         name: category?.name,
                         department: category?.department?._id,

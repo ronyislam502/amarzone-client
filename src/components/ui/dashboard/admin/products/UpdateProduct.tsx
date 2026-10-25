@@ -1,11 +1,13 @@
 "use client";
 
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useState, useEffect } from "react";
 import {
     Edit3,
     Image as ImageIcon,
     Loader2,
+    Plus,
     Save,
+    X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,6 +43,39 @@ const UpdateProduct = ({
 }: UpdateProductProps) => {
     const [previewImage, setPreviewImage] = useState(product?.thumbnail || "");
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [formFeatures, setFormFeatures] = useState<string[]>([]);
+    const [featureInput, setFeatureInput] = useState("");
+    const [formTags, setFormTags] = useState<string[]>([]);
+    const [tagInput, setTagInput] = useState("");
+
+    useEffect(() => {
+        if (product) {
+            const initialFeatures = Array.isArray(product.features)
+                ? product.features
+                : typeof product.features === "string"
+                    ? (product.features as string)
+                        .split("\n")
+                        .map((f: string) => f.trim())
+                        .filter(Boolean)
+                    : [];
+            setFormFeatures(initialFeatures);
+
+            const initialTags = Array.isArray(product.tags)
+                ? product.tags
+                : typeof product.tags === "string"
+                    ? (product.tags as string)
+                        .split(",")
+                        .map((t: string) => t.trim().toLowerCase().replace(/^#/, ""))
+                        .filter(Boolean)
+                    : [];
+            setFormTags(initialTags);
+
+            setPreviewImage(product.thumbnail || "");
+            setSelectedImage(null);
+            setFeatureInput("");
+            setTagInput("");
+        }
+    }, [product]);
 
     const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
     const { data: departmentsData, isLoading: isDepartmentsLoading } =
@@ -49,16 +84,39 @@ const UpdateProduct = ({
         useAllCategoriesQuery({});
 
 
-
-    const departmentOptions = departmentsData?.data?.map((dept) => ({
-        value: dept._id,
-        label: dept.name,
+    const departmentOptions = departmentsData?.data?.map((dept: TDepartment) => ({
+        value: dept?._id,
+        label: dept?.name,
     }));
 
-    const categoryOptions = categoriesData?.data?.map((cat) => ({
-        value: cat._id,
-        label: cat.name,
+    const categoryOptions = categoriesData?.data?.map((cat: TCategory) => ({
+        value: cat?._id,
+        label: cat?.name,
     }));
+
+    const handleAddFeature = () => {
+        if (featureInput.trim()) {
+            setFormFeatures((prev) => [...prev, featureInput.trim()]);
+            setFeatureInput("");
+        }
+    };
+
+    const handleRemoveFeature = (idx: number) => {
+        setFormFeatures((prev) => prev.filter((_, i) => i !== idx));
+    };
+
+    const handleAddTag = () => {
+        const trimmed = tagInput.trim().toLowerCase().replace(/^#/, "");
+        if (trimmed && !formTags.includes(trimmed)) {
+            setFormTags((prev) => [...prev, trimmed]);
+            setTagInput("");
+        }
+    };
+
+    const handleRemoveTag = (idx: number) => {
+        setFormTags((prev) => prev.filter((_, i) => i !== idx));
+    };
+
 
     const handleImage = (e: ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -81,29 +139,27 @@ const UpdateProduct = ({
     };
 
     const onSubmit = async (data: FieldValues) => {
+        const finalFeatures =
+            formFeatures.length > 0
+                ? formFeatures
+                : featureInput.trim()
+                    ? [featureInput.trim()]
+                    : [];
+
+        const finalTags =
+            formTags.length > 0
+                ? formTags
+                : tagInput.trim()
+                    ? [tagInput.trim().toLowerCase()]
+                    : [];
+
         const productPayload = {
             title: data.title,
             brand: data.brand,
             department: data.department,
             category: data.category,
-            features:
-                typeof data.features === "string"
-                    ? data.features
-                        .split("\n")
-                        .map((f: string) => f.trim())
-                        .filter(Boolean)
-                    : Array.isArray(data.features)
-                        ? data.features
-                        : [],
-            tags:
-                typeof data.tags === "string"
-                    ? data.tags
-                        .split(",")
-                        .map((t: string) => t.trim().toLowerCase().replace(/^#/, ""))
-                        .filter(Boolean)
-                    : Array.isArray(data.tags)
-                        ? data.tags
-                        : [],
+            features: finalFeatures,
+            tags: finalTags,
         };
 
         const formData = new FormData();
@@ -147,17 +203,27 @@ const UpdateProduct = ({
             }
             description="Modify product catalog properties, hierarchy assignment, and imagery"
             icon={<Edit3 className="w-5 h-5 text-primary" />}
-            size="lg"
+            size="xl"
+
         >
             {isOpen && product && (
                 <AZForm
+                    key={product?._id}
                     defaultValues={{
                         title: product.title,
                         brand: product.brand,
-                        department: product?.department?._id,
-                        category: product?.category?._id,
-                        features: product?.features,
-                        tags: product?.tags,
+                        department:
+                            typeof product?.department === "object" && product.department !== null
+                                ? product.department._id
+                                : typeof product?.department === "string"
+                                    ? product.department
+                                    : "",
+                        category:
+                            typeof product?.category === "object" && product.category !== null
+                                ? product.category._id
+                                : typeof product?.category === "string"
+                                    ? product.category
+                                    : "",
                         image: product?.thumbnail,
                     }}
                     resolver={zodResolver(updateProductSchema)}
@@ -202,19 +268,103 @@ const UpdateProduct = ({
                             />
                         </div>
 
-                        <AZTextarea
-                            label="Key Specifications & Highlights (One per line)"
-                            name="features"
-                            placeholder="Enter product features (one per line)..."
-                            rows={3}
-                        />
+                        <div className="space-y-1.5">
+                            <div
+                                className="flex gap-2 items-center"
+                                onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleAddFeature();
+                                    }
+                                }}
+                            >
+                                <AZInput
+                                    label="Bullet Features"
+                                    name="featureInput"
+                                    type="text"
+                                    value={featureInput}
+                                    onChange={(e) => setFeatureInput(e.target.value)}
+                                    placeholder="Type feature bullet and press Add"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleAddFeature}
+                                    className="btn btn-sm bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs shrink-0"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                            {formFeatures.length > 0 && (
+                                <div className="space-y-1 max-h-32 overflow-y-auto pt-1">
+                                    {formFeatures.map((feat, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="p-1.5 px-2.5 rounded-lg bg-[#100722]/80 border border-white/10 flex items-center justify-between gap-2 text-xs"
+                                        >
+                                            <span className="text-slate-300 truncate">
+                                                • {feat}
+                                            </span>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveFeature(idx)}
+                                                className="text-slate-400 hover:text-rose-400 cursor-pointer"
+                                            >
+                                                <X className="w-3 h-3" />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
 
-                        <AZInput
-                            label="Search Discovery Tags (Comma separated)"
-                            name="tags"
-                            type="text"
-                            placeholder="e.g. wireless, bluetooth, audio"
-                        />
+                        <div className="space-y-1.5">
+                            <div
+                                className="flex gap-2 items-center"
+                                onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                                    if (e.key === "Enter") {
+                                        e.preventDefault();
+                                        handleAddTag();
+                                    }
+                                }}
+                            >
+                                <AZInput
+                                    label="Discovery Tags"
+                                    name="tagInput"
+                                    type="text"
+                                    value={tagInput}
+                                    onChange={(e) => setTagInput(e.target.value)}
+                                    placeholder="Type tag and press Add"
+                                />
+
+                                <button
+                                    type="button"
+                                    onClick={handleAddTag}
+                                    className="btn btn-sm bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs shrink-0"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                            {formTags.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 pt-1">
+                                    {formTags.map((t, idx) => (
+                                        <span
+                                            key={idx}
+                                            className="badge badge-sm bg-white/5 border border-white/15 text-slate-200 gap-1 text-[11px] py-1"
+                                        >
+                                            #{t}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveTag(idx)}
+                                                className="hover:text-rose-400 cursor-pointer ml-0.5"
+                                            >
+                                                <X className="w-2.5 h-2.5" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
 
                         <AZFileInput
                             name="image"
@@ -257,8 +407,9 @@ const UpdateProduct = ({
                         </div>
                     </div>
                 </AZForm>
-            )}
-        </AZModal>
+            )
+            }
+        </AZModal >
     );
 };
 

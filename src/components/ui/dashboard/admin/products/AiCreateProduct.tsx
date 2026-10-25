@@ -11,13 +11,10 @@ import {
   ListCheck,
   Tag,
   FileText,
-  Layers,
   Building2,
   RefreshCw,
   Sliders,
-  UploadCloud,
   ImageIcon,
-  Trash2,
   ShoppingBag,
   Plus,
   ArrowRight,
@@ -89,7 +86,6 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
     initialValues?.imageFile ? [initialValues.imageFile] : []
   );
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // AI Output state
   const [generatedResult, setGeneratedResult] =
@@ -187,32 +183,36 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
   };
 
   const handleImageFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files).slice(0, 4);
-      setUploadedImages(newFiles);
-      const previews = newFiles.map((file) => URL.createObjectURL(file));
-      setImagePreviews(previews);
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedImages([file]);
+      const preview = URL.createObjectURL(file);
+      setImagePreviews([preview]);
 
       // Auto-set first image as product image for creation
-      setFormImage(newFiles[0]);
-      setFormImagePreview(previews[0]);
+      setFormImage(file);
+      setFormImagePreview(preview);
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    const updatedFiles = uploadedImages.filter((_, i) => i !== index);
-    const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
-    setUploadedImages(updatedFiles);
-    setImagePreviews(updatedPreviews);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  const handleClearVisionImage = () => {
+    setUploadedImages([]);
+    setImagePreviews([]);
+    setFormImage(null);
+    setFormImagePreview("");
+  };
 
-    if (updatedFiles.length > 0) {
-      setFormImage(updatedFiles[0]);
-      setFormImagePreview(updatedPreviews[0]);
-    } else {
-      setFormImage(null);
-      setFormImagePreview("");
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFormImage(file);
+      setFormImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  const handleClearFile = () => {
+    setFormImage(null);
+    setFormImagePreview("");
   };
 
   // Generate Product Content (Vision or Text)
@@ -222,7 +222,7 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
 
     const currentTitle = (formDataValues?.seedTitle ?? seedTitle ?? "").trim();
     const currentBrand = (formDataValues?.seedBrand ?? seedBrand ?? "").trim();
-    const currentCategory = (formDataValues?.seedCategory ?? seedCategory ?? "").trim();
+    // const currentCategory = (formDataValues?.seedCategory ?? seedCategory ?? "").trim();
 
     if (!isVision) {
       if (!currentTitle) {
@@ -585,67 +585,18 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
               {/* Vision Photo Mode */}
               {activeInputMode === "vision" && (
                 <div className="space-y-2">
-                  <div>
-                    <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5 mb-1.5">
-                      <UploadCloud className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Upload Product Photo</span>
-                    </label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageFilesChange}
-                      className="hidden"
-                      id="ai-studio-file-upload"
-                    />
-                    <label
-                      htmlFor="ai-studio-file-upload"
-                      className="group flex flex-col items-center justify-center p-3 rounded-xl border border-dashed border-white/20 hover:border-amber-400/60 bg-[#100722]/70 hover:bg-[#100722] transition-all cursor-pointer text-center"
-                    >
-                      <UploadCloud className="w-6 h-6 text-amber-400 group-hover:scale-110 transition-transform mb-1" />
-                      <span className="text-xs font-bold text-slate-200">
-                        {uploadedImages.length > 0
-                          ? `${uploadedImages.length} image(s) selected`
-                          : "Click to upload product image (max 4)"}
-                      </span>
-                      <span className="text-[10px] text-slate-400 mt-0.5">
-                        Vision AI automatically detects brand, category &amp; key specs
-                      </span>
-                    </label>
-                  </div>
-
-                  {/* Previews */}
-                  {imagePreviews.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-1">
-                      {imagePreviews.map((src, idx) => (
-                        <div
-                          key={idx}
-                          className="relative w-14 h-14 rounded-xl overflow-hidden border border-amber-400/40 bg-black/40 group shadow-md"
-                        >
-                          <Image
-                            src={src}
-                            alt={`Preview ${idx + 1}`}
-                            width={56}
-                            height={56}
-                            unoptimized
-                            className="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(idx)}
-                            className="absolute top-1 right-1 p-0.5 rounded-md bg-black/70 hover:bg-rose-600 text-white transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-2.5 h-2.5" />
-                          </button>
-                        </div>
-                      ))}
-                      <div className="flex items-center text-[10px] font-bold text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-lg border border-amber-400/20">
-                        ⚡ Vision AI Active (Text inputs optional)
-                      </div>
+                  <AZFileInput
+                    name="image"
+                    label="Product Photo"
+                    icon={<ImageIcon className="w-4 h-4 text-warning" />}
+                    file={uploadedImages[0] || null}
+                    preview={imagePreviews[0] || ""}
+                    onChange={handleImageFilesChange}
+                    onClear={handleClearVisionImage}
+                  />
+                  {uploadedImages.length > 0 && (
+                    <div className="flex items-center text-[10px] font-bold text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded-lg border border-amber-400/20">
+                      ⚡ Vision AI Active (Text inputs optional)
                     </div>
                   )}
                 </div>
@@ -653,77 +604,51 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
 
               {/* Common / Seed Inputs */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-200">
-                    Product Working Title / Concept
-                  </span>
-                  {activeInputMode === "text" && (
-                    <span className="text-amber-400 text-[10px]">* Required</span>
-                  )}
-                </div>
                 <AZInput
+                  label="Product Working Title / Concept"
                   name="seedTitle"
                   type="text"
                   value={seedTitle}
                   onChange={(e) => setSeedTitle(e.target.value)}
                   placeholder="e.g. Sony WH-1000XM5 Wireless Headphones"
                   required={activeInputMode === "text"}
-                  inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-1 text-xs font-bold text-slate-200">
-                    <Building2 className="w-3 h-3 text-amber-400" />
-                    <span>Brand</span>
-                    {activeInputMode === "text" && (
-                      <span className="text-amber-400 text-[10px]">*</span>
-                    )}
-                  </div>
                   <AZInput
+                    label="Brand"
                     name="seedBrand"
                     type="text"
                     value={seedBrand}
                     onChange={(e) => setSeedBrand(e.target.value)}
                     placeholder="e.g. Sony"
                     required={activeInputMode === "text"}
-                    inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex items-center gap-1 text-xs font-bold text-slate-200">
-                    <Layers className="w-3 h-3 text-sky-400" />
-                    <span>Category Hint</span>
-                  </div>
                   <AZInput
+                    label="Category Hint"
                     name="seedCategory"
                     type="text"
                     value={seedCategory}
                     onChange={(e) => setSeedCategory(e.target.value)}
                     placeholder="e.g. Electronics, Audio"
-                    inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                   />
                 </div>
               </div>
 
               {/* Seed Specs (Text Mode or optional for Vision) */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs font-bold text-slate-200">
-                  <span className="flex items-center gap-1">
-                    <ListCheck className="w-3 h-3 text-emerald-400" />
-                    Key Features or Specs (1 per line)
-                  </span>
-                  <span className="text-[10px] text-slate-400">Optional</span>
-                </div>
                 <AZTextarea
+                  label="Key Features or Specs (1 per line)"
                   name="seedFeaturesText"
                   rows={3}
                   value={seedFeaturesText}
                   onChange={(e) => setSeedFeaturesText(e.target.value)}
                   placeholder={"e.g.\nIndustry-leading noise cancellation\n30-hour battery life with quick charge"}
-                  textareaClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs leading-relaxed min-h-[70px] p-2.5"
                 />
               </div>
 
@@ -1102,71 +1027,36 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
                 <AZForm onSubmit={handleCreateProductSubmit}>
                   {/* Title */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-200">
-                        Product Listing Title *
-                      </label>
-                      {generatedResult?.seoTitle && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setFormTitle(
-                              generatedResult.seoTitle || generatedResult.title || ""
-                            )
-                          }
-                          className="text-[10px] font-bold text-amber-400 hover:underline cursor-pointer"
-                        >
-                          Paste AI Title
-                        </button>
-                      )}
-                    </div>
                     <AZInput
-                      name="formTitle"
+                      label="Title"
+                      name="title"
                       type="text"
                       value={formTitle}
                       onChange={(e) => setFormTitle(e.target.value)}
                       placeholder="Enter master product listing title"
                       required
-                      inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                     />
                   </div>
 
                   {/* Brand */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-200">
-                        Brand Name *
-                      </label>
-                      {generatedResult?.brand && (
-                        <button
-                          type="button"
-                          onClick={() => setFormBrand(generatedResult.brand || "")}
-                          className="text-[10px] font-bold text-amber-400 hover:underline cursor-pointer"
-                        >
-                          Paste AI Brand
-                        </button>
-                      )}
-                    </div>
                     <AZInput
+                      label="Brand Name"
                       name="formBrand"
                       type="text"
                       value={formBrand}
                       onChange={(e) => setFormBrand(e.target.value)}
                       placeholder="e.g. Sony, Apple, Nike"
                       required
-                      inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                     />
                   </div>
 
                   {/* Department & Category Selects */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-200 flex items-center gap-1">
-                        <Building2 className="w-3 h-3 text-amber-400" />
-                        Department *
-                      </label>
                       <AZSelect
-                        name="formDepartment"
+                        label="Department"
+                        name="Department"
                         value={formDepartment}
                         onChange={(e) => {
                           setFormDepartment(e.target.value);
@@ -1179,17 +1069,13 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
                             : "Select department"
                         }
                         options={departmentOptions}
-                        selectClassName="bg-[#100722] border-white/15 text-slate-200 focus:border-amber-400 rounded-xl text-xs"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate-200 flex items-center gap-1">
-                        <Layers className="w-3 h-3 text-sky-400" />
-                        Category *
-                      </label>
                       <AZSelect
-                        name="formCategory"
+                        label="Category"
+                        name="category"
                         value={formCategory}
                         onChange={(e) => setFormCategory(e.target.value)}
                         required
@@ -1202,30 +1088,21 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
                               : "First select department"
                         }
                         options={categoryOptions}
-                        selectClassName="bg-[#100722] border-white/15 text-slate-200 focus:border-amber-400 rounded-xl text-xs"
                       />
                     </div>
                   </div>
 
                   {/* Feature Bullets Manager */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-200">
-                        Bullet Features
-                      </label>
-                      <span className="text-[10px] text-slate-400">
-                        {formFeatures.length} added
-                      </span>
-                    </div>
                     <div className="flex gap-2 items-center">
                       <div className="flex-1">
                         <AZInput
-                          name="featureInput"
+                          label="Bullet Features"
+                          name="feature"
                           type="text"
                           value={featureInput}
                           onChange={(e) => setFeatureInput(e.target.value)}
                           placeholder="Type feature bullet and press Add"
-                          inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                         />
                       </div>
                       <button
@@ -1261,23 +1138,15 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
 
                   {/* Discovery Tags Manager */}
                   <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-200">
-                        Discovery Tags
-                      </label>
-                      <span className="text-[10px] text-slate-400">
-                        {formTags.length} tags
-                      </span>
-                    </div>
                     <div className="flex gap-2 items-center">
                       <div className="flex-1">
                         <AZInput
-                          name="tagInput"
+                          label="Tags"
+                          name="tag"
                           type="text"
                           value={tagInput}
                           onChange={(e) => setTagInput(e.target.value)}
                           placeholder="Type tag and press Add"
-                          inputClassName="bg-[#100722] border-white/15 text-slate-200 placeholder:text-slate-500 focus:border-amber-400 rounded-xl text-xs"
                         />
                       </div>
                       <button
@@ -1312,21 +1181,12 @@ const AiCreateProduct: React.FC<AiCreateProductProps> = ({
                   {/* Product Image Attachment Preview / Reusable AZFileInput */}
                   <AZFileInput
                     name="image"
-                    label="Product Image Attachment"
+                    label="Product Image"
                     icon={<ImageIcon className="w-4 h-4 text-warning" />}
                     file={formImage}
                     preview={formImagePreview}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setFormImage(file);
-                        setFormImagePreview(URL.createObjectURL(file));
-                      }
-                    }}
-                    onClear={() => {
-                      setFormImage(null);
-                      setFormImagePreview("");
-                    }}
+                    onChange={handleFileChange}
+                    onClear={handleClearFile}
                   />
 
 

@@ -60,7 +60,9 @@ const InventoryTable = ({
     onEditPrice,
     onEditQuantity,
 }: InventoryTableProps) => {
-    const [itemPrice, setitemPrice] = useState<TInventory | null>(null);
+    const [isListOpen, setIsListOpen] = useState(false);
+    const [editingPriceItem, setEditingPriceItem] = useState<TInventory | null>(null);
+    const [editingQuantityItem, setEditingQuantityItem] = useState<TInventory | null>(null);
 
     // const handleView = (item: TInventory) => {
     //     if (onViewItem) {
@@ -70,21 +72,21 @@ const InventoryTable = ({
     //     }
     // };
 
-    // const handleEditPrice = (item: TInventory) => {
-    //     if (onEditPrice) {
-    //         onEditPrice(item);
-    //     } else {
-    //         setPriceItem(item);
-    //     }
-    // };
+    const handleEditPrice = (item: TInventory) => {
+        if (onEditPrice) {
+            onEditPrice(item);
+        } else {
+            setEditingPriceItem(item);
+        }
+    };
 
-    // const handleEditQuantity = (item: TInventory) => {
-    //     if (onEditQuantity) {
-    //         onEditQuantity(item);
-    //     } else {
-    //         setQuantityItem(item);
-    //     }
-    // };
+    const handleEditQuantity = (item: TInventory) => {
+        if (onEditQuantity) {
+            onEditQuantity(item);
+        } else {
+            setEditingQuantityItem(item);
+        }
+    };
 
     const columns: TColumn<TInventory>[] = [
         {
@@ -168,7 +170,7 @@ const InventoryTable = ({
                         </div>
                         <button
                             type="button"
-                            // onClick={() => handleEditPrice(item)}
+                            onClick={() => handleEditPrice(item)}
                             title="Quick Edit Price"
                             className="p-1 rounded-md bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
                         >
@@ -219,7 +221,7 @@ const InventoryTable = ({
                         </div>
                         <button
                             type="button"
-                            // onClick={() => handleEditQuantity(item)}
+                            onClick={() => handleEditQuantity(item)}
                             title="Replenish Units"
                             className="p-1 rounded-md bg-white/5 border border-white/10 hover:border-emerald-400/40 hover:bg-emerald-400/10 text-slate-400 hover:text-emerald-400 transition-colors cursor-pointer"
                         >
@@ -296,24 +298,24 @@ const InventoryTable = ({
                     </button>
 
                     {/* Edit Price */}
-                    <button
+                    {/* <button
                         type="button"
-                        // onClick={() => handleEditPrice(item)}
+                        onClick={() => handleEditPrice(item)}
                         title="Update Live Price"
                         className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200 cursor-pointer"
                     >
                         <DollarSign className="w-3.5 h-3.5" />
-                    </button>
+                    </button> */}
 
                     {/* Restock Quantity */}
-                    <button
+                    {/* <button
                         type="button"
-                        // onClick={() => handleEditQuantity(item)}
+                        onClick={() => handleEditQuantity(item)}
                         title="Replenish Stock"
                         className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-emerald-500/20 text-emerald-400 transition-all duration-200 cursor-pointer"
                     >
                         <Boxes className="w-3.5 h-3.5" />
-                    </button>
+                    </button> */}
                 </div>
             ),
         },
@@ -343,16 +345,14 @@ const InventoryTable = ({
                 emptyMessage="No catalog offerings match your active filters or search criteria."
                 emptyIcon={<Boxes className="w-6 h-6 text-amber-400" />}
                 headerActions={
-
                     <button
                         type="button"
-                        // onClick={() => setIsListOpen(true)}
+                        onClick={() => setIsListOpen(true)}
                         className="btn btn-sm bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black border-none shadow-md shadow-amber-400/20 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer"
                     >
                         <Plus className="w-4 h-4" />
                         <span>List by ASIN</span>
                     </button>
-
                 }
                 pagination={
                     onPageChange && meta && meta.total > 0
@@ -368,17 +368,17 @@ const InventoryTable = ({
 
             {/* Price Edit Modal */}
             <UpdatePriceModal
-                isOpen={Boolean(itemPrice)}
-                item={itemPrice}
-                onClose={() => setitemPrice(null)}
+                isOpen={Boolean(editingPriceItem)}
+                item={editingPriceItem}
+                onClose={() => setEditingPriceItem(null)}
                 refetch={refetch}
             />
 
             {/* Quantity Edit Modal */}
-            {/* <UpdateQuantityModal
-                isOpen={Boolean(quantityItem)}
-                item={quantityItem}
-                onClose={() => setQuantityItem(null)}
+            <UpdateQuantityModal
+                isOpen={Boolean(editingQuantityItem)}
+                item={editingQuantityItem}
+                onClose={() => setEditingQuantityItem(null)}
                 refetch={refetch}
             />
 
@@ -392,11 +392,11 @@ const InventoryTable = ({
             /> */}
 
             {/* List Offering Modal */}
-            {/* <ListProductModal
+            <ListProductModal
                 isOpen={isListOpen}
                 onClose={() => setIsListOpen(false)}
                 refetch={refetch}
-            /> */}
+            />
         </div>
     );
 };

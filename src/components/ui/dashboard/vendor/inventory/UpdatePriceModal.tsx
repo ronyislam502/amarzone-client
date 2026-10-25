@@ -16,6 +16,7 @@ export interface UpdatePriceModalProps {
     onClose: () => void;
     item?: TInventory | null;
     refetch?: () => void;
+    onSuccess?: () => void;
 }
 
 const UpdatePriceModal = ({
@@ -23,88 +24,143 @@ const UpdatePriceModal = ({
     onClose,
     item,
     refetch,
+    onSuccess,
 }: UpdatePriceModalProps) => {
     const [updatePrice, { isLoading }] = useUpdatePriceMutation();
 
-    console.log("item", item)
+    const handleClose = () => {
+        if (isLoading) return;
+        onClose();
+    };
 
     const handleSubmit = async (data: FieldValues) => {
+        if (!item?._id) {
+            toast.error("Inventory item ID not found");
+            return;
+        }
 
+        const newPrice = Number(data.price);
+        if (isNaN(newPrice) || newPrice < 0) {
+            toast.error("Please enter a valid price");
+            return;
+        }
+
+        try {
+            const res = await updatePrice({
+                id: item._id,
+                data: {
+                    price: newPrice,
+                },
+            }).unwrap();
+
+            if (res?.success) {
+                toast.success(res?.message || "Price updated successfully!");
+                handleClose();
+                refetch?.();
+                onSuccess?.();
+            }
+        } catch (err: any) {
+            toast.error(
+                err?.data?.message || err?.message || "Failed to update price"
+            );
+        }
     };
+
+    const variant = typeof item?.variant === "object" ? (item?.variant as any) : null;
+    const product = typeof variant?.product === "object" ? (variant?.product as any) : null;
+    const title = product?.title || variant?.sku || (item?.asin ? `ASIN: ${item.asin}` : "Inventory Offering");
+    const thumbnail =
+        variant?.images?.[0] ||
+        product?.thumbnail ||
+        "https://res.cloudinary.com/dkk9lvbtf/image/upload/v1785693062/amarzone_fnnw8s.png";
+    const currentPrice = item?.seller?.price ?? 0;
 
     return (
         <AZModal
-            isOpen={isOpen}
-            onClose={onClose}
+            isOpen={isOpen && Boolean(item)}
+            onClose={handleClose}
             title={
                 <div className="flex items-center gap-2">
                     <span>Update Price</span>
-                    <span className="px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-400 text-[10px] font-mono font-bold uppercase tracking-wider">
-                        {item?.asin}
-                    </span>
+                    {item?.asin && (
+                        <span className="px-2 py-0.5 rounded-full bg-amber-400/15 border border-amber-400/30 text-amber-400 text-[10px] font-mono font-bold uppercase tracking-wider">
+                            {item.asin}
+                        </span>
+                    )}
                 </div>
             }
             description="Adjust the live listing price for this product offering."
             icon={<DollarSign className="w-5 h-5 text-amber-400" />}
             size="md"
         >
-            <AZForm onSubmit={handleSubmit}>
-                {/* Product Summary */}
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                    <div className="w-12 h-12 rounded-lg bg-slate-900/80 border border-white/15 shrink-0 overflow-hidden relative">
-                        <Image
-                            src={""}
-                            alt={""}
-                            fill
-                            className="object-cover"
-                        />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <h4 className="font-bold text-sm text-white truncate">{item?.asin}</h4>
-                        <div className="text-xs text-slate-400 mt-0.5">
-                            Current Price: <span className="text-amber-400 font-bold">${""}</span>
+            {isOpen && item && (
+                <AZForm
+                    key={item._id || item.asin}
+                    defaultValues={{
+                        price: item?.seller?.price !== undefined ? item.seller.price : "",
+                    }}
+                    onSubmit={handleSubmit}
+                >
+                    {/* Product Summary */}
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 mb-4">
+                        <div className="w-12 h-12 rounded-lg bg-slate-900/80 border border-white/15 shrink-0 overflow-hidden relative">
+                            <Image
+                                src={thumbnail}
+                                alt={title}
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-sm text-white truncate">{title}</h4>
+                            <div className="text-xs text-slate-400 mt-0.5">
+                                Current Price: <span className="text-amber-400 font-bold">${currentPrice.toFixed(2)}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Simple Price Input using AZInput */}
-                <AZInput
-                    name="price"
-                    label="New Price ($ USD)"
-                    type="number"
-                    icon={<DollarSign className="w-4 h-4 text-warning" />}
-                    placeholder="0.00"
-                />
+                    {/* Simple Price Input using AZInput */}
+                    <div className="mb-4">
+                        <AZInput
+                            name="price"
+                            label="New Price ($ USD)"
+                            type="number"
+                            icon={<DollarSign className="w-4 h-4 text-warning" />}
+                            placeholder="0.00"
+                            required
+                        />
+                    </div>
 
-                {/* Footer Actions */}
-                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        disabled={isLoading}
-                        className="btn btn-sm btn-ghost text-slate-400 hover:text-white rounded-xl cursor-pointer"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="btn btn-sm bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black border-none rounded-xl shadow-lg shadow-amber-400/20 flex items-center gap-1.5 cursor-pointer"
-                    >
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                <span>Saving...</span>
-                            </>
-                        ) : (
-                            <>
-                                <Save className="w-3.5 h-3.5" />
-                                <span>Save Price</span>
-                            </>
-                        )}
-                    </button>
-                </div>
-            </AZForm>
+                    {/* Footer Actions */}
+                    <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-white/10">
+                        <button
+                            type="button"
+                            onClick={handleClose}
+                            disabled={isLoading}
+                            className="btn btn-sm btn-ghost text-slate-400 hover:text-white rounded-xl cursor-pointer"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="btn btn-sm bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black border-none rounded-xl shadow-lg shadow-amber-400/20 flex items-center gap-1.5 cursor-pointer"
+                        >
+                            {isLoading ? (
+                                <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    <span>Saving...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Save className="w-3.5 h-3.5" />
+                                    <span>Save Price</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
+                </AZForm>
+            )}
         </AZModal>
     );
 };

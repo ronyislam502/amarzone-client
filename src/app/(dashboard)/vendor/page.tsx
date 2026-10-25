@@ -1,6 +1,8 @@
+import VendorOverview from "@/components/ui/dashboard/vendor/overview/VendorOverview";
+
 const VendorDash = () => {
     return (
-        <div>vendor dashb oadt</div>
+        <div><VendorOverview /></div>
     )
 }
 
