@@ -67,7 +67,7 @@ const FOCUS_AREAS: { id: TFocusArea; label: string; icon: React.ComponentType<{ 
     { id: "customer_satisfaction", label: "Customer Sentiment", icon: ShieldCheck },
 ];
 
-const AdminAiDashboardInsights: React.FC<AiDashboardInsightsWidgetProps> = ({
+const AiDashboardInsights: React.FC<AiDashboardInsightsWidgetProps> = ({
     isOpen = false,
     onClose,
     stats,
@@ -91,7 +91,18 @@ const AdminAiDashboardInsights: React.FC<AiDashboardInsightsWidgetProps> = ({
 
     const handleGenerate = async (overrideFocus?: TFocusArea, overrideTimeframe?: TDashboardInsightsInput["timeframe"]) => {
         try {
-            const activeStats = stats || {};
+            const activeStats = {
+                ...(stats || {}),
+                dashboardRole: role,
+                perspective:
+                    role === "VENDOR"
+                        ? "Individual Store Merchant / Seller Operations"
+                        : "Marketplace C-Suite Leadership / Platform Governance",
+                targetAudience:
+                    role === "VENDOR"
+                        ? "Store Owner & Merchant (Analyze store listings, fulfillment, orders, and customer service)"
+                        : "Platform Administrator (Analyze ecosystem health, all vendors, all customers, and platform commission)",
+            };
             await getDashboardInsights({
                 stats: activeStats,
                 timeframe: overrideTimeframe || timeframe,
@@ -809,4 +820,4 @@ const AdminAiDashboardInsights: React.FC<AiDashboardInsightsWidgetProps> = ({
     );
 };
 
-export default AdminAiDashboardInsights;
+export default AiDashboardInsights;

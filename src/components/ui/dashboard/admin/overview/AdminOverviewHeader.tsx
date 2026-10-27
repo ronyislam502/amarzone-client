@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { TDashboardDateRange, TDashboardStatsData } from "@/types/dashboard";
 import AZHeader from "@/components/shared/AZHeader";
-import AdminAiDashboardInsights from "@/components/ui/artificial/AdminAiDashInsights";
+import AiDashboardInsights from "@/components/ui/artificial/AiDashInsights";
 
 export interface AdminSummaryHeaderProps {
     selectedRange: TDashboardDateRange;
@@ -25,11 +25,11 @@ const RANGE_OPTIONS: {
     label: string;
     value: TDashboardDateRange;
 }[] = [
-    { label: "7 Days", value: "7_days" },
-    { label: "30 Days", value: "30_days" },
-    { label: "90 Days", value: "90_days" },
-    { label: "12 Months", value: "12_months" },
-];
+        { label: "7 Days", value: "7_days" },
+        { label: "30 Days", value: "30_days" },
+        { label: "90 Days", value: "90_days" },
+        { label: "12 Months", value: "12_months" },
+    ];
 
 export const AdminOverviewHeader: React.FC<AdminSummaryHeaderProps> = ({
     selectedRange,
@@ -68,11 +68,10 @@ export const AdminOverviewHeader: React.FC<AdminSummaryHeaderProps> = ({
                                         key={opt.value}
                                         type="button"
                                         onClick={() => onRangeChange(opt.value)}
-                                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                                            isActive
-                                                ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20"
-                                                : "text-slate-300 hover:text-white hover:bg-white/5"
-                                        }`}
+                                        className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer ${isActive
+                                            ? "bg-amber-400 text-slate-950 shadow-md shadow-amber-400/20"
+                                            : "text-slate-300 hover:text-white hover:bg-white/5"
+                                            }`}
                                     >
                                         {opt.label}
                                     </button>
@@ -104,7 +103,7 @@ export const AdminOverviewHeader: React.FC<AdminSummaryHeaderProps> = ({
             />
 
             {/* AI Executive Intelligence Modal */}
-            <AdminAiDashboardInsights
+            <AiDashboardInsights
                 isOpen={isAiModalOpen}
                 onClose={() => setIsAiModalOpen(false)}
                 stats={{
@@ -122,8 +121,8 @@ export const AdminOverviewHeader: React.FC<AdminSummaryHeaderProps> = ({
                     selectedRange === "7_days"
                         ? "weekly"
                         : selectedRange === "12_months"
-                        ? "yearly"
-                        : "monthly"
+                            ? "yearly"
+                            : "monthly"
                 }
             />
         </div>

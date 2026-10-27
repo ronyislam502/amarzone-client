@@ -205,3 +205,87 @@ export interface TDashboardStatsApiResponse {
   message: string;
   data: TDashboardStatsData;
 }
+
+export interface TVendorOverviewStats {
+  totalRevenue: number;
+  pendingBalance: number;
+  withdrawableBalance: number;
+  totalOrders: number;
+  activeListings?: number;
+  draftListings?: number;
+  outOfStockProducts?: number;
+}
+
+export interface TVendorSalesStats {
+  revenueThisMonth: number;
+  revenueToday: number;
+  ordersToday: number;
+  ordersThisMonth: number;
+}
+
+export interface TVendorProductsStats {
+  bestSellingProducts?: any[];
+  lowStockProducts?: any[];
+  outOfStockProducts?: any[];
+  buyBoxWinners?: any[];
+}
+
+export interface TVendorPerformanceStats {
+  orderDefectRate: number;
+  lateShipmentRate: number;
+  cancellationRate: number;
+  validTrackingRate: number;
+  averageRating: number;
+  accountHealthScore: number;
+  healthStatus: string;
+}
+
+export interface TVendorSlaStats {
+  activeViolations: number;
+  warningCount: number;
+  suspensionCount: number;
+}
+
+export interface TVendorCustomerStats {
+  totalCustomers: number;
+  returningCustomers: number;
+  newCustomers: number;
+}
+
+export interface TVendorRefundStats {
+  pendingRefunds: number;
+  completedRefunds: number;
+}
+
+export interface TVendorDisputeStats {
+  open: number;
+  underReview: number;
+  resolved: number;
+}
+
+export interface TVendorChartsStats {
+  monthlyRevenue: Array<{ label: string; value: number }>;
+  monthlyOrders: Array<{ label: string; value: number }>;
+  productSales?: any[];
+  ratingTrend?: any[];
+}
+
+export interface TVendorRecentActivities {
+  recentOrders?: any[];
+  recentReviews?: any[];
+  recentRefunds?: any[];
+  recentDisputes?: any[];
+}
+
+export interface TVendorDashboardData {
+  overview?: TVendorOverviewStats;
+  sales?: TVendorSalesStats;
+  products?: TVendorProductsStats;
+  performance?: TVendorPerformanceStats;
+  sla?: TVendorSlaStats;
+  customers?: TVendorCustomerStats;
+  refund?: TVendorRefundStats;
+  disputes?: TVendorDisputeStats;
+  charts?: TVendorChartsStats;
+  recent?: TVendorRecentActivities;
+}
