@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -8,7 +8,6 @@ import {
     BadgePercent,
     ShieldCheck,
 } from "lucide-react";
-import { PRODUCT_PLACEHOLDER } from "@/lib/constants";
 
 interface AZProductCardProps {
     product: any;
@@ -17,12 +16,7 @@ interface AZProductCardProps {
 }
 
 const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardProps) => {
-    // const rawImage = product?.thumbnail || product?.image;
-    // const [imgSrc, setImgSrc] = useState(rawImage || PRODUCT_PLACEHOLDER);
 
-    // useEffect(() => {
-    //     setImgSrc(rawImage || PRODUCT_PLACEHOLDER);
-    // }, [rawImage]);
 
     const discountPercentage = product?.discountPercentage || 0;
     const currentPrice = product?.price || 0;
@@ -46,7 +40,7 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
                     {/* Image */}
                     <figure className="relative aspect-square overflow-hidden">
                         <Image
-                            src={product?.thumbnail || PRODUCT_PLACEHOLDER}
+                            src={product?.thumbnail || ""}
                             alt={product?.title || "Product"}
                             width={225}
                             height={225}
@@ -95,11 +89,10 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <Star
                                             key={star}
-                                            className={`h-3.5 w-3.5 ${
-                                                star <= Math.round(averageRating)
-                                                    ? "fill-amber-400 text-amber-400"
-                                                    : "text-slate-300"
-                                            }`}
+                                            className={`h-3.5 w-3.5 ${star <= Math.round(averageRating)
+                                                ? "fill-amber-400 text-amber-400"
+                                                : "text-slate-300"
+                                                }`}
                                         />
                                     ))}
                                 </div>
