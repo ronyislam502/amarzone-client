@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { useDashboardStatsQuery } from "@/redux/features/dashboard/dashboardApi";
 import { useMyOrdersQuery } from "@/redux/features/order/orderApi";
@@ -16,6 +16,7 @@ import VendorOverviewCharts from "./VendorOverviewCharts";
 import VendorOverviewHealthSales from "./VendorOverviewHealthSales";
 import VendorRecentOrders from "./VendorRecentOrders";
 import VendorStockAlerts from "./VendorStockAlerts";
+import DashboardOverviewSkeleton from "@/components/shared/skeleton/DashboardOverviewSkeleton";
 
 const VendorOverview: React.FC = () => {
     const [selectedRange, setSelectedRange] = useState<TDashboardDateRange>("30_days");
@@ -64,7 +65,7 @@ const VendorOverview: React.FC = () => {
     ) as TInventory[];
     const healthData = healthResponse?.data;
 
-    const isPageLoading = statsLoading && ordersLoading;
+    const isPageLoading = statsLoading || ordersLoading || inventoryLoading;
     const isPageFetching = statsFetching || ordersFetching || inventoryFetching || healthFetching;
 
     const handleRefreshAll = () => {
@@ -109,9 +110,53 @@ const VendorOverview: React.FC = () => {
         (item) => (item?.seller?.quantity ?? 0) <= 5
     ).length;
 
-    // Monthly charts data from DB
-    const monthlyRevenue = vendorStats?.charts?.monthlyRevenue || [];
-    const monthlyOrders = vendorStats?.charts?.monthlyOrders || [];
+    // Monthly charts data from DB with dynamic live fallback from database orders
+    const derivedMonthly = useMemo(() => {
+        const backendRev = vendorStats?.charts?.monthlyRevenue;
+        const backendOrd = vendorStats?.charts?.monthlyOrders;
+        if (backendRev && backendRev.length > 0) {
+            return {
+                revenue: backendRev,
+                orders: backendOrd || [],
+            };
+        }
+
+        const months: { label: string; key: string; altKey: string; revenue: number; count: number }[] = [];
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const label = d.toLocaleDateString("en-US", { month: "short" });
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+            const altKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
+            months.push({ label, key, altKey, revenue: 0, count: 0 });
+        }
+
+        orders.forEach((o) => {
+            if (!o.createdAt) return;
+            const d = new Date(o.createdAt);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+            const altKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
+            const match = months.find((m) => m.key === key || m.altKey === altKey);
+            if (match) {
+                const st = (o.status || "").toUpperCase();
+                if (st !== "CANCELLED" && st !== "REFUNDED") {
+                    const amount = Number(
+                        o.vendorAmount ?? (o.totalPrice ? o.totalPrice - (o.commission || 0) : 0)
+                    );
+                    match.revenue += isNaN(amount) ? 0 : amount;
+                }
+                match.count += 1;
+            }
+        });
+
+        return {
+            revenue: months.map((m) => ({ label: m.label, value: Math.round(m.revenue * 100) / 100 })),
+            orders: months.map((m) => ({ label: m.label, value: m.count })),
+        };
+    }, [vendorStats?.charts?.monthlyRevenue, vendorStats?.charts?.monthlyOrders, orders]);
+
+    const monthlyRevenue = derivedMonthly.revenue;
+    const monthlyOrders = derivedMonthly.orders;
 
     // Recent orders from DB: either populated in vendorStats or latest from live orders
     const recentOrdersList =
@@ -133,90 +178,71 @@ const VendorOverview: React.FC = () => {
                 stats={vendorStats}
             />
 
-            {/* Error Retry Banner */}
-            {statsError && !isPageLoading && (
-                <div className="card bg-[#170d2f] border border-rose-500/30 shadow-2xl p-5 sm:p-6 rounded-2xl sm:rounded-3xl">
-                    <div className="flex items-center gap-3 text-rose-400">
-                        <AlertCircle className="w-5 h-5 shrink-0" />
-                        <div className="flex-1 min-w-0">
-                            <h3 className="text-sm font-extrabold text-white">
-                                Dashboard Sync Notice
-                            </h3>
-                            <p className="text-xs text-slate-400 mt-0.5 truncate">
-                                {(error as { data?: { message?: string } })?.data?.message ||
-                                    "Some aggregated metrics could not be loaded. Displaying verified store records."}
-                            </p>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleRefreshAll}
-                            className="btn btn-sm btn-outline border-rose-500/40 text-rose-300 hover:bg-rose-500 hover:text-white rounded-xl gap-2 font-bold cursor-pointer"
-                        >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                            <span>Retry</span>
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* 3. Primary KPI Cards & Action Compliance Strip */}
-            <VendorOverviewStats
-                totalRevenue={computedRevenue}
-                withdrawableBalance={vendorStats?.overview?.withdrawableBalance}
-                pendingBalance={vendorStats?.overview?.pendingBalance}
-                totalOrders={computedTotalOrders}
-                deliveredOrders={computedDeliveredOrders}
-                unshippedOrders={computedUnshippedOrders}
-                pendingOrders={computedPendingOrders}
-                inventoryCount={computedInventoryCount}
-                lowStockCount={computedLowStockCount}
-                healthScore={vendorStats?.performance?.accountHealthScore ?? healthData?.score}
-                healthStatus={vendorStats?.performance?.healthStatus ?? healthData?.status}
-                openDisputes={vendorStats?.disputes?.open}
-                orders={orders}
-                inventories={inventories}
-                healthData={healthData}
-                isLoading={isPageLoading}
-                showActionStrip={true}
-            />
-
-            {/* 4. Chart Row: Monthly Performance Velocity (AZLineChart) & Fulfillment Funnel (AZPieChart) */}
-            <VendorOverviewCharts
-                monthlyRevenue={monthlyRevenue}
-                monthlyOrders={monthlyOrders}
-                orders={orders}
-                isLoading={isPageLoading}
-            />
-
-            {/* 5. Health & Sales Velocity Hub: Radial Gauge & Financial Balances */}
-            <VendorOverviewHealthSales
-                performance={vendorStats?.performance}
-                sales={vendorStats?.sales}
-                sla={vendorStats?.sla}
-                customers={vendorStats?.customers}
-                withdrawableBalance={vendorStats?.overview?.withdrawableBalance}
-                pendingBalance={vendorStats?.overview?.pendingBalance}
-                isLoading={isPageLoading}
-            />
-
-            {/* 6. Lower Operational Section: Recent Orders & Stock Watchlist */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                {/* Left (7 cols): Recent Orders Table from DB */}
-                <div className="lg:col-span-7 flex flex-col">
-                    <VendorRecentOrders orders={recentOrdersList} isLoading={ordersLoading} />
-                </div>
-
-                {/* Right (5 cols): Low Stock & Buy Box Watchlist */}
-                <div className="lg:col-span-5 flex flex-col">
-                    <VendorStockAlerts
+            {/* Loading Skeleton */}
+            {isPageLoading ? (
+                <DashboardOverviewSkeleton />
+            ) : (
+                <Suspense fallback={<DashboardOverviewSkeleton />}>
+                    {/* 3. Primary KPI Cards & Action Compliance Strip */}
+                    <VendorOverviewStats
+                        totalRevenue={computedRevenue}
+                        withdrawableBalance={vendorStats?.overview?.withdrawableBalance}
+                        pendingBalance={vendorStats?.overview?.pendingBalance}
+                        totalOrders={computedTotalOrders}
+                        deliveredOrders={computedDeliveredOrders}
+                        unshippedOrders={computedUnshippedOrders}
+                        pendingOrders={computedPendingOrders}
+                        inventoryCount={computedInventoryCount}
+                        lowStockCount={computedLowStockCount}
+                        healthScore={vendorStats?.performance?.accountHealthScore ?? healthData?.score}
+                        healthStatus={vendorStats?.performance?.healthStatus ?? healthData?.status}
+                        openDisputes={vendorStats?.disputes?.open}
+                        orders={orders}
                         inventories={inventories}
-                        lowStockProducts={vendorStats?.products?.lowStockProducts}
-                        outOfStockProducts={vendorStats?.products?.outOfStockProducts}
-                        buyBoxWinners={vendorStats?.products?.buyBoxWinners}
-                        isLoading={inventoryLoading}
+                        healthData={healthData}
+                        isLoading={isPageLoading}
+                        showActionStrip={true}
                     />
-                </div>
-            </div>
+
+                    {/* 4. Chart Row: Monthly Performance Velocity (AZLineChart) & Fulfillment Funnel (AZPieChart) */}
+                    <VendorOverviewCharts
+                        monthlyRevenue={monthlyRevenue}
+                        monthlyOrders={monthlyOrders}
+                        orders={orders}
+                        isLoading={isPageLoading}
+                    />
+
+                    {/* 5. Health & Sales Velocity Hub: Radial Gauge & Financial Balances */}
+                    <VendorOverviewHealthSales
+                        performance={vendorStats?.performance}
+                        sales={vendorStats?.sales}
+                        sla={vendorStats?.sla}
+                        customers={vendorStats?.customers}
+                        withdrawableBalance={vendorStats?.overview?.withdrawableBalance}
+                        pendingBalance={vendorStats?.overview?.pendingBalance}
+                        isLoading={isPageLoading}
+                    />
+
+                    {/* 6. Lower Operational Section: Recent Orders & Stock Watchlist */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                        {/* Left (7 cols): Recent Orders Table from DB */}
+                        <div className="lg:col-span-7 flex flex-col">
+                            <VendorRecentOrders orders={recentOrdersList} isLoading={ordersLoading} />
+                        </div>
+
+                        {/* Right (5 cols): Low Stock & Buy Box Watchlist */}
+                        <div className="lg:col-span-5 flex flex-col">
+                            <VendorStockAlerts
+                                inventories={inventories}
+                                lowStockProducts={vendorStats?.products?.lowStockProducts}
+                                outOfStockProducts={vendorStats?.products?.outOfStockProducts}
+                                buyBoxWinners={vendorStats?.products?.buyBoxWinners}
+                                isLoading={inventoryLoading}
+                            />
+                        </div>
+                    </div>
+                </Suspense>
+            )}
         </div>
     );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, Suspense } from "react";
 import {
   Star,
   User,
@@ -428,7 +428,8 @@ const ProdVariantReviews: React.FC<ProductReviewSectionProps> = ({
               </p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <Suspense fallback={<ReviewListSkeleton count={3} />}>
+              <div className="space-y-6">
               {filteredReviews.map((item) => {
                 const customerName =
                   typeof item.customer === "object" && item.customer?.name
@@ -601,6 +602,7 @@ const ProdVariantReviews: React.FC<ProductReviewSectionProps> = ({
                 );
               })}
             </div>
+            </Suspense>
           )}
         </div>
       </div>

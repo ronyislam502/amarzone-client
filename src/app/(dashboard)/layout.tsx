@@ -6,7 +6,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
     return (
         <DashSidebar>
             <Background isDashboard className="flex-1 min-w-0">
-                <div> {children}</div>
+                <div className="w-full flex-1">{children}</div>
             </Background>
         </DashSidebar>
     );

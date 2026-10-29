@@ -38,6 +38,7 @@ export type TParticipant = {
     name: string;
     email: string;
     avatar?: string;
+    logo?: string;
     role?: "ADMIN" | "SUPER_ADMIN" | "VENDOR" | "CUSTOMER" | string;
     status?: string;
 };

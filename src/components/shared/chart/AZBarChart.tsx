@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { BarChart3, Info } from "lucide-react";
 import {
     BarChart,
@@ -104,6 +104,13 @@ export const AZBarChart: React.FC<BarChartProps> = ({
     const initialTabKey = defaultTab || (hasTabs ? tabs[0].key : "");
     const [internalTab, setInternalTab] = useState<string>(initialTabKey);
 
+    // Sync internal tab if defaultTab changes
+    useEffect(() => {
+        if (defaultTab) {
+            setInternalTab(defaultTab);
+        }
+    }, [defaultTab]);
+
     const currentTabKey = controlledTab || internalTab;
     const activeTabConfig = hasTabs
         ? tabs.find((t) => t.key === currentTabKey) || tabs[0]
@@ -137,18 +144,38 @@ export const AZBarChart: React.FC<BarChartProps> = ({
     const valueFormatter =
         customValFormatter ||
         activeTabConfig?.valueFormatter ||
-        ((v: number) => `${v.toLocaleString()} ${unitLabel || ""}`.trim());
+        ((v: number) => {
+            const num = Number(v);
+            const formatted = isNaN(num) ? "0" : num.toLocaleString();
+            const unit = activeTabConfig?.unitLabel || unitLabel || "";
+            return unit ? `${formatted} ${unit}` : formatted;
+        });
 
     const hasData = rawItems.length > 0;
 
+    // Safe dynamic max calculation to avoid [0, 0] division by zero in Recharts linear scales
+    const domainMax = useMemo(() => {
+        if (typeof customMaxVal === "number" && customMaxVal > 0) return customMaxVal;
+        const maxDataVal = rawItems.reduce(
+            (max, item) => Math.max(max, Number(item.value) || 0),
+            0
+        );
+        if (maxDataVal <= 0) return 5;
+        // Provide clean headroom so bars never touch or overflow the chart edge
+        const magnitude = Math.pow(10, Math.floor(Math.log10(maxDataVal)));
+        const step = magnitude >= 10 ? magnitude / 2 : 1;
+        const headroom = Math.ceil((maxDataVal * 1.1) / step) * step;
+        return Math.max(headroom, maxDataVal + 1);
+    }, [customMaxVal, rawItems]);
+
     // Chart height calculations
     const calculatedHeight = useMemo(() => {
-        if (height) return typeof height === "number" ? height : parseInt(height, 10) || 260;
+        if (height) return typeof height === "number" ? height : parseInt(height, 10) || 280;
         if (activeLayout === "horizontal") {
-            const perBar = compact ? 36 : 46;
-            return Math.max(compact ? 160 : 220, rawItems.length * perBar + 40);
+            const perBar = compact ? 38 : 48;
+            return Math.max(compact ? 180 : 260, rawItems.length * perBar + 40);
         }
-        return compact ? 180 : 260;
+        return compact ? 200 : 280;
     }, [height, activeLayout, compact, rawItems.length]);
 
     const uniqueId = React.useId().replace(/:/g, "_");
@@ -289,7 +316,8 @@ export const AZBarChart: React.FC<BarChartProps> = ({
                                     fontSize={10}
                                     tickLine={false}
                                     axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
-                                    domain={[0, customMaxVal ? customMaxVal : "auto"]}
+                                    domain={[0, customMaxVal ? customMaxVal : domainMax]}
+                                    allowDecimals={false}
                                 />
                                 <YAxis
                                     type="category"
@@ -298,19 +326,20 @@ export const AZBarChart: React.FC<BarChartProps> = ({
                                     fontSize={compact ? 10 : 11}
                                     tickLine={false}
                                     axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
-                                    width={compact ? 70 : 110}
+                                    width={compact ? 80 : 120}
                                     tick={({ x, y, payload }) => {
+                                        const valStr = String(payload?.value ?? "");
                                         const idx = rawItems.findIndex(
-                                            (item) => item.label === payload.value
+                                            (item) => String(item.label) === valStr
                                         );
-                                        const item = rawItems[idx];
-                                        const badge = item?.badgeNumber ?? idx + 1;
+                                        const item = idx >= 0 ? rawItems[idx] : undefined;
+                                        const badge = item?.badgeNumber ?? (idx >= 0 ? idx + 1 : 1);
                                         const truncated =
-                                            payload.value.length > 14
-                                                ? `${payload.value.slice(0, 13)}…`
-                                                : payload.value;
+                                            valStr.length > 15
+                                                ? `${valStr.slice(0, 14)}…`
+                                                : valStr;
                                         return (
-                                            <g transform={`translate(${x},${y})`}>
+                                            <g transform={`translate(${x || 0},${y || 0})`}>
                                                 <text
                                                     x={-8}
                                                     y={3}
@@ -360,7 +389,7 @@ export const AZBarChart: React.FC<BarChartProps> = ({
                                 <Bar
                                     dataKey="value"
                                     radius={[0, 6, 6, 0]}
-                                    maxBarSize={compact ? 18 : 26}
+                                    maxBarSize={compact ? 18 : 24}
                                     animationDuration={800}
                                 >
                                     {rawItems.map((item, idx) => (
@@ -381,10 +410,10 @@ export const AZBarChart: React.FC<BarChartProps> = ({
                                 layout="horizontal"
                                 data={rawItems}
                                 margin={{
-                                    top: 10,
-                                    right: 15,
-                                    left: compact ? -15 : -5,
-                                    bottom: compact ? 0 : 10,
+                                    top: 15,
+                                    right: 20,
+                                    left: compact ? 0 : 10,
+                                    bottom: compact ? 15 : 25,
                                 }}
                             >
                                 <defs>
@@ -422,14 +451,15 @@ export const AZBarChart: React.FC<BarChartProps> = ({
                                     axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
                                     interval={0}
                                     tick={({ x, y, payload }) => {
+                                        const valStr = String(payload?.value ?? "");
                                         const truncated =
-                                            payload.value.length > 8
-                                                ? `${payload.value.slice(0, 7)}…`
-                                                : payload.value;
+                                            valStr.length > 10
+                                                ? `${valStr.slice(0, 9)}…`
+                                                : valStr;
                                         return (
                                             <text
-                                                x={x}
-                                                y={Number(y) + 12}
+                                                x={x || 0}
+                                                y={Number(y || 0) + 12}
                                                 textAnchor="middle"
                                                 fill="#94a3b8"
                                                 fontSize={compact ? 10 : 11}
@@ -445,10 +475,13 @@ export const AZBarChart: React.FC<BarChartProps> = ({
                                     fontSize={10}
                                     tickLine={false}
                                     axisLine={{ stroke: "rgba(255, 255, 255, 0.1)" }}
-                                    domain={[0, customMaxVal ? customMaxVal : "auto"]}
-                                    tickFormatter={(val) =>
-                                        val >= 1000 ? `${(val / 1000).toFixed(1)}k` : val.toString()
-                                    }
+                                    domain={[0, customMaxVal ? customMaxVal : domainMax]}
+                                    allowDecimals={false}
+                                    tickFormatter={(val) => {
+                                        const num = Number(val);
+                                        if (isNaN(num)) return String(val ?? "");
+                                        return num >= 1000 ? `${(num / 1000).toFixed(1)}k` : num.toString();
+                                    }}
                                 />
                                 <Tooltip
                                     content={({ active, payload }) => {

@@ -50,13 +50,13 @@ export const DashSidebar = ({ children }: TDynamicSidebarProps) => {
 
     return (
         /* DaisyUI Component Drawer Implementation */
-        <div data-theme="dark" className="drawer lg:drawer-open min-h-screen bg-[#090d16] text-slate-100">
+        <div data-theme="dark" className="drawer lg:drawer-open h-screen overflow-hidden bg-[#090d16] text-slate-100">
             <input id="dashboard-drawer" type="checkbox" className="drawer-toggle" />
 
             {/* Main Content Page Wrapper */}
-            <div className="drawer-content flex flex-col min-w-0">
+            <div className="drawer-content flex flex-col h-screen min-w-0 overflow-hidden">
                 {/* Top Navigation Header Bar */}
-                <header className="w-full navbar relative bg-[#090d16] text-slate-100 border-b border-white/10 px-4 sm:px-6 justify-between sticky top-0 z-30 shadow-xl backdrop-blur-xl">
+                <header className="w-full navbar relative bg-[#090d16] text-slate-100 border-b border-white/10 px-4 sm:px-6 justify-between shrink-0 sticky top-0 z-30 shadow-xl backdrop-blur-xl">
                     {/* Ambient Background Effects (clipped) */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
                         {/* Base Radial Mesh Background Gradient */}
@@ -114,15 +114,15 @@ export const DashSidebar = ({ children }: TDynamicSidebarProps) => {
                 </header>
 
                 {/* Page View Body */}
-                <div className="flex-1 bg-[#090d16]">
+                <div className="flex-1 min-h-0 overflow-y-auto bg-[#090d16]">
                     {children}
                 </div>
             </div>
 
             {/* Sidebar Drawer Container */}
-            <div className="drawer-side z-40">
+            <div className="drawer-side z-40 h-screen overflow-hidden">
                 <label htmlFor="dashboard-drawer" aria-label="close sidebar" className="drawer-overlay"></label>
-                <aside className="w-80 min-h-full bg-[#0c1021] text-slate-100 flex flex-col justify-between border-r border-white/10 shadow-2xl font-sans antialiased">
+                <aside className="w-80 h-full max-h-screen bg-[#0c1021] text-slate-100 flex flex-col justify-between border-r border-white/10 shadow-2xl font-sans antialiased overflow-hidden">
                     {/* Inner Content Wrapper */}
                     <div className="flex flex-col justify-between h-full p-4">
                         <div className="w-full flex flex-col">

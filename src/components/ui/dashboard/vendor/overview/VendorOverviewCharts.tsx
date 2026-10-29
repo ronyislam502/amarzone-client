@@ -31,17 +31,94 @@ export const VendorOverviewCharts: React.FC<VendorOverviewChartsProps> = ({
     orders = [],
     isLoading = false,
 }) => {
-    // 1. Line Chart Tabs: Revenue & Orders Velocity from actual DB monthly metrics
+    // 1. Line Chart Tabs: Revenue & Orders Velocity from actual DB monthly metrics or live database orders fallback
+    const derivedMonthly = useMemo(() => {
+        const hasBackendRev = Array.isArray(monthlyRevenue) && monthlyRevenue.length > 0;
+        const hasBackendOrd = Array.isArray(monthlyOrders) && monthlyOrders.length > 0;
+
+        // Generate standard 6-month continuous timeline
+        const months: {
+            label: string;
+            key: string;
+            altKey: string;
+            revenue: number;
+            ordersCount: number;
+        }[] = [];
+
+        const now = new Date();
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            const label = d.toLocaleDateString("en-US", { month: "short" });
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+            const altKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
+            months.push({ label, key, altKey, revenue: 0, ordersCount: 0 });
+        }
+
+        if (hasBackendRev) {
+            monthlyRevenue.forEach((item) => {
+                const match = months.find(
+                    (m) => m.key === item.label || m.altKey === item.label || m.label === item.label
+                );
+                if (match) {
+                    match.revenue = Number(item.value) || 0;
+                }
+            });
+        }
+
+        if (hasBackendOrd) {
+            monthlyOrders.forEach((item) => {
+                const match = months.find(
+                    (m) => m.key === item.label || m.altKey === item.label || m.label === item.label
+                );
+                if (match) {
+                    match.ordersCount = Number(item.value) || 0;
+                }
+            });
+        }
+
+        const totalRev = months.reduce((acc, m) => acc + m.revenue, 0);
+        const totalOrd = months.reduce((acc, m) => acc + m.ordersCount, 0);
+
+        // If backend returned no data or zero, populate directly from live database orders
+        if (totalRev === 0 && totalOrd === 0 && orders && orders.length > 0) {
+            orders.forEach((o) => {
+                if (!o.createdAt) return;
+                const d = new Date(o.createdAt);
+                const orderKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+                const orderAltKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
+                const match = months.find((m) => m.key === orderKey || m.altKey === orderAltKey);
+                if (match) {
+                    const st = (o.status || "").toUpperCase();
+                    if (st !== "CANCELLED" && st !== "REFUNDED") {
+                        const amount = Number(
+                            o.vendorAmount ?? (o.totalPrice ? o.totalPrice - (o.commission || 0) : 0)
+                        );
+                        match.revenue += isNaN(amount) ? 0 : amount;
+                    }
+                    match.ordersCount += 1;
+                }
+            });
+        }
+
+        return {
+            revenue: months.map((m) => ({
+                label: m.label,
+                value: Math.round(m.revenue * 100) / 100,
+            })),
+            orders: months.map((m) => ({
+                label: m.label,
+                value: m.ordersCount,
+            })),
+        };
+    }, [monthlyRevenue, monthlyOrders, orders]);
+
     const lineTabs: TLineChartTab[] = useMemo(() => {
         return [
             {
                 key: "revenue",
                 label: "Revenue Trend ($)",
                 icon: <DollarSign className="w-3.5 h-3.5 text-emerald-400" />,
-                data: monthlyRevenue.map((d) => ({
-                    label: d.label,
-                    value: Number(d.value) || 0,
-                })),
+                data: derivedMonthly.revenue,
                 strokeColor: "#10b981",
                 gradientFrom: "#10b981",
                 gradientTo: "#059669",
@@ -54,10 +131,7 @@ export const VendorOverviewCharts: React.FC<VendorOverviewChartsProps> = ({
                 key: "orders",
                 label: "Orders Volume (Qty)",
                 icon: <Package className="w-3.5 h-3.5 text-amber-400" />,
-                data: monthlyOrders.map((d) => ({
-                    label: d.label,
-                    value: Number(d.value) || 0,
-                })),
+                data: derivedMonthly.orders,
                 strokeColor: "#fbbf24",
                 gradientFrom: "#fbbf24",
                 gradientTo: "#d97706",
@@ -66,7 +140,7 @@ export const VendorOverviewCharts: React.FC<VendorOverviewChartsProps> = ({
                 badgeText: "Order Volume",
             },
         ];
-    }, [monthlyRevenue, monthlyOrders]);
+    }, [derivedMonthly]);
 
     // 2. Pie Chart Slices: Computed dynamically from the vendor's actual DB orders
     const pieSlices: TPieChartSlice[] = useMemo(() => {

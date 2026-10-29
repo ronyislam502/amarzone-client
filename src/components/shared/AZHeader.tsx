@@ -1,11 +1,11 @@
-
+import React, { Suspense, ReactNode } from "react";
 import {
     Download,
     Plus,
     RotateCcw,
     Sparkles,
 } from "lucide-react";
-import { ReactNode } from "react";
+import BadgeSkeleton from "./skeleton/BadgeSkeleton";
 
 export interface AZHeaderProps {
     badgeLabel?: string;
@@ -55,21 +55,29 @@ const AZHeader = ({
 
             <div className="card-body relative z-10 flex-col lg:flex-row lg:items-center justify-between gap-6 p-6 sm:p-7">
                 <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                        {badgeLabel && (
-                            <span className="badge badge-warning gap-1 px-3 py-2 text-xs font-black shadow text-slate-900">
-                                {badgeIcon}
-                                {badgeLabel}
-                            </span>
-                        )}
+                    <Suspense fallback={<BadgeSkeleton widthClassName="w-24" heightClassName="h-6" className="bg-white/10 rounded-full" />}>
+                        <div className="flex flex-wrap items-center gap-2">
+                            {isRefreshing ? (
+                                <BadgeSkeleton widthClassName="w-24" heightClassName="h-6" className="bg-white/10 rounded-full" />
+                            ) : (
+                                <>
+                                    {badgeLabel && (
+                                        <span className="badge badge-warning gap-1 px-3 py-2 text-xs font-black shadow text-slate-900">
+                                            {badgeIcon}
+                                            {badgeLabel}
+                                        </span>
+                                    )}
 
-                        {statusLabel && (
-                            <span className="badge badge-success badge-outline gap-1 font-bold text-xs bg-success/10 border-success/30 text-success">
-                                <span className="w-2 h-2 rounded-full bg-success animate-ping" />
-                                {statusLabel}
-                            </span>
-                        )}
-                    </div>
+                                    {statusLabel && (
+                                        <span className="badge badge-success badge-outline gap-1 font-bold text-xs bg-success/10 border-success/30 text-success">
+                                            <span className="w-2 h-2 rounded-full bg-success animate-ping" />
+                                            {statusLabel}
+                                        </span>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </Suspense>
 
                     {(title || highlightTitle) && (
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">

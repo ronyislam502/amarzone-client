@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import React, { Suspense, useState } from "react";
 import {
     Calendar,
     CheckCircle2,
@@ -8,6 +8,7 @@ import {
     DollarSign,
     Eye,
     Mail,
+    MessageSquare,
     Package,
     RotateCcw,
     ShoppingBag,
@@ -17,11 +18,15 @@ import {
     XCircle,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 import { TOrder } from "@/types/order";
 import { TColumn } from "@/types/table";
 import AZTable from "@/components/shared/AZTable";
 import AZModal from "@/components/shared/AZModal";
 import { TMeta } from "@/types/global";
+import { useCreateConversationMutation } from "@/redux/features/chat/chatApi";
+import OrderSummarySkeleton from "@/components/shared/skeleton/OrderSummarySkeleton";
 
 export interface CustomerOrdersTableProps {
     orders?: TOrder[];
@@ -36,6 +41,7 @@ export interface CustomerOrdersTableProps {
     onPageChange?: (page: number) => void;
     onViewOrder?: (order: TOrder) => void;
     onCancelOrder?: (orderId: string, orderNo: string) => void;
+    onMessageVendor?: (order: TOrder) => void;
 }
 
 const CustomerOrdersTable = ({
@@ -51,8 +57,13 @@ const CustomerOrdersTable = ({
     onPageChange,
     onViewOrder,
     onCancelOrder,
+    onMessageVendor,
 }: CustomerOrdersTableProps) => {
+    const router = useRouter();
     const [selectedOrder, setSelectedOrder] = useState<TOrder | null>(null);
+    const [connectingOrderId, setConnectingOrderId] = useState<string | null>(null);
+
+    const [createConversationApi] = useCreateConversationMutation();
 
     const handleView = (order: TOrder) => {
         if (onViewOrder) {
@@ -60,6 +71,42 @@ const CustomerOrdersTable = ({
         } else {
             setSelectedOrder(order);
         }
+    };
+
+    const handleMessageVendor = async (order: TOrder) => {
+        if (onMessageVendor) {
+            onMessageVendor(order);
+            return;
+        }
+
+        const vendorUserId =
+            typeof order.vendor === "object" ? order.vendor?._id : order.vendor;
+
+        if (vendorUserId) {
+            try {
+                setConnectingOrderId(order._id);
+                const res = await createConversationApi({
+                    participants: [vendorUserId],
+                    conversationType: "ORDER",
+                    order: order._id,
+                }).unwrap();
+
+                const conv = res?.data || (res as any);
+                const convId = conv?._id;
+
+                if (convId) {
+                    router.push(`/customer/chat?conversationId=${convId}`);
+                    return;
+                }
+            } catch (err: any) {
+                console.error("Direct connect to vendor error:", err);
+            } finally {
+                setConnectingOrderId(null);
+            }
+        }
+
+        // Direct route fallback with order ID
+        router.push(`/customer/chat?orderId=${order._id}`);
     };
 
     const getFulfillmentBadge = (status: string) => {
@@ -255,9 +302,12 @@ const CustomerOrdersTable = ({
                 const displayOrderNo = order.orderNo || `#ORD-${order._id.slice(-6).toUpperCase()}`;
                 const canCancel =
                     order.status === "PENDING" || order.status === "UNSHIPPED";
+                const vendorName =
+                    typeof order.vendor === "object" ? order.vendor?.name || "Merchant" : "Merchant";
+                const isConnecting = connectingOrderId === order._id;
 
                 return (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                         {/* Quick View Details */}
                         <button
                             onClick={() => handleView(order)}
@@ -265,6 +315,20 @@ const CustomerOrdersTable = ({
                             className="p-1.5 rounded-lg bg-white/5 border border-white/10 hover:border-amber-400/40 hover:bg-amber-400/10 text-slate-300 hover:text-amber-400 transition-all duration-200 cursor-pointer"
                         >
                             <Eye className="w-3.5 h-3.5" />
+                        </button>
+
+                        {/* Direct Connect / Message Vendor */}
+                        <button
+                            onClick={() => handleMessageVendor(order)}
+                            disabled={isConnecting}
+                            title={`Direct Message Vendor (${vendorName})`}
+                            className="p-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 hover:border-indigo-400/50 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 transition-all duration-200 cursor-pointer disabled:opacity-50"
+                        >
+                            {isConnecting ? (
+                                <span className="loading loading-spinner loading-xs text-indigo-400" />
+                            ) : (
+                                <MessageSquare className="w-3.5 h-3.5" />
+                            )}
                         </button>
 
                         {/* Cancel Order (Allowed if pending or unshipped) */}
@@ -342,7 +406,8 @@ const CustomerOrdersTable = ({
                 size="lg"
             >
                 {selectedOrder && (
-                    <div className="space-y-4 pt-1">
+                    <Suspense fallback={<OrderSummarySkeleton barsCount={4} />}>
+                        <div className="space-y-4 pt-1">
                         {/* Status Highlights */}
                         <div className="p-3.5 rounded-2xl bg-[#100722] border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
                             <div className="flex items-center gap-2">
@@ -356,20 +421,37 @@ const CustomerOrdersTable = ({
                         </div>
 
                         {/* Merchant Seller Info */}
-                        <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/10 space-y-1 text-xs">
-                            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400 flex items-center gap-1">
-                                <Store className="w-3 h-3" />
-                                Fulfilled By
-                            </span>
-                            <p className="font-bold text-white text-xs truncate">
-                                {(typeof selectedOrder.vendor === "object" && selectedOrder.vendor?.name) || "Marketplace Merchant"}
-                            </p>
-                            {typeof selectedOrder.vendor === "object" && selectedOrder.vendor?.email && (
-                                <p className="text-[11px] text-slate-400 truncate flex items-center gap-1">
-                                    <Mail className="w-3 h-3 text-slate-500" />
-                                    {selectedOrder.vendor.email}
+                        <div className="p-3 rounded-2xl bg-white/[0.02] border border-white/10 space-y-2 text-xs">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-black uppercase tracking-wider text-indigo-400 flex items-center gap-1">
+                                    <Store className="w-3.5 h-3.5" />
+                                    Fulfilled By
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => handleMessageVendor(selectedOrder)}
+                                    disabled={connectingOrderId === selectedOrder._id}
+                                    className="btn btn-xs bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 hover:text-white border border-indigo-500/30 gap-1.5 rounded-xl cursor-pointer"
+                                >
+                                    {connectingOrderId === selectedOrder._id ? (
+                                        <span className="loading loading-spinner loading-xs text-indigo-400" />
+                                    ) : (
+                                        <MessageSquare className="w-3.5 h-3.5 text-indigo-400" />
+                                    )}
+                                    <span>Message Vendor</span>
+                                </button>
+                            </div>
+                            <div>
+                                <p className="font-bold text-white text-xs truncate">
+                                    {(typeof selectedOrder.vendor === "object" && selectedOrder.vendor?.name) || "Marketplace Merchant"}
                                 </p>
-                            )}
+                                {typeof selectedOrder.vendor === "object" && selectedOrder.vendor?.email && (
+                                    <p className="text-[11px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                                        <Mail className="w-3 h-3 text-slate-500" />
+                                        {selectedOrder.vendor.email}
+                                    </p>
+                                )}
+                            </div>
                         </div>
 
                         {/* Ordered Items List */}
@@ -476,6 +558,7 @@ const CustomerOrdersTable = ({
                             </button>
                         </div>
                     </div>
+                    </Suspense>
                 )}
             </AZModal>
         </div>

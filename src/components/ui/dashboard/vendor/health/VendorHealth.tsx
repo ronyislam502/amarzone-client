@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { Suspense, useState } from "react";
 import { RefreshCw, ShieldAlert } from "lucide-react";
 import HealthActionTips from "./HealthActionTips";
 import HealthViolationsList from "./HealthViolationsList";
@@ -81,7 +81,7 @@ const VendorHealth = () => {
                     </button>
                 </div>
             ) : (
-                <>
+                <Suspense fallback={<VendorHealthSkeleton />}>
                     {/* 3. Central Account Health Score Gauge & Standing Tier */}
                     <VendorHealthScoreCard
                         score={healthData?.score}
@@ -107,7 +107,7 @@ const VendorHealth = () => {
 
                     {/* 7. Actionable SLA Protection Advice */}
                     <HealthActionTips />
-                </>
+                </Suspense>
             )}
         </div>
     );

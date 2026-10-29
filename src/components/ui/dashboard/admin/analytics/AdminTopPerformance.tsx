@@ -26,8 +26,8 @@ export const AdminTopPerformance: React.FC<AdminTopPerformanceProps> = ({
   const topVendors = topLists?.topVendors || [];
   const topCustomers = topLists?.topCustomers || [];
 
-  const averageRating = reviews?.averageRating ?? 5.0;
   const totalReviews = reviews?.totalReviews ?? 0;
+  const averageRating = totalReviews > 0 ? (reviews?.averageRating ?? 0) : 0;
   const ratingDist = reviews?.ratingDistribution || {};
 
   const formatCurrency = (amount: number) => {

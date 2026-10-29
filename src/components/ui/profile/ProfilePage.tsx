@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import {
     User,
     Lock,
@@ -21,7 +21,7 @@ import ProfileSecurity from './ProfileSecurity';
 import ProfileRoleHub from './ProfileRoleHub';
 import ProfileOverview from './ProfileOverview';
 import ProfileEditModal from './ProfileEditModal';
-
+import ProfileSkeleton from '@/components/shared/skeleton/ProfileSkeleton';
 
 export const ProfilePage = () => {
     // শুধুমাত্র Redux ও API থেকে ডাটা নিচ্ছি
@@ -42,7 +42,7 @@ export const ProfilePage = () => {
     if (isLoading) {
         return (
             <div className="w-full">
-                {/* <ProfileSkeleton /> */}
+                <ProfileSkeleton />
             </div>
         );
     }
@@ -157,30 +157,32 @@ export const ProfilePage = () => {
             </div>
 
             {/* Tab Views */}
-            <div className="transition-opacity duration-300">
-                {activeTab === 'overview' && (
-                    <ProfileOverview
-                        profile={profile}
-                        role={normalizedRole}
-                        onEdit={() => setIsEditModalOpen(true)}
-                    />
-                )}
+            <Suspense fallback={<ProfileSkeleton />}>
+                <div className="transition-opacity duration-300">
+                    {activeTab === 'overview' && (
+                        <ProfileOverview
+                            profile={profile}
+                            role={normalizedRole}
+                            onEdit={() => setIsEditModalOpen(true)}
+                        />
+                    )}
 
-                {activeTab === 'security' && (
-                    <ProfileSecurity
-                        profile={profile}
-                        role={normalizedRole}
-                    />
-                )}
+                    {activeTab === 'security' && (
+                        <ProfileSecurity
+                            profile={profile}
+                            role={normalizedRole}
+                        />
+                    )}
 
-                {activeTab === 'role_details' && (
-                    <ProfileRoleHub
-                        profile={profile}
-                        role={normalizedRole}
-                        onEdit={() => setIsEditModalOpen(true)}
-                    />
-                )}
-            </div>
+                    {activeTab === 'role_details' && (
+                        <ProfileRoleHub
+                            profile={profile}
+                            role={normalizedRole}
+                            onEdit={() => setIsEditModalOpen(true)}
+                        />
+                    )}
+                </div>
+            </Suspense>
 
             {/* Modal for Editing Profile Info */}
             <ProfileEditModal

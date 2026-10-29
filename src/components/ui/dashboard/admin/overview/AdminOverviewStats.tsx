@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -12,21 +11,14 @@ import {
 import { TDashboardOverviewCards } from "@/types/dashboard";
 import AZStats, { TAZStat } from "@/components/shared/AZStats";
 
-
-
 interface RevenueBreakdownCardProps {
     overviewCards?: TDashboardOverviewCards;
 }
 
-const AdminOverviewStats: React.FC<
-    RevenueBreakdownCardProps
-> = ({ overviewCards }) => {
+const AdminOverviewStats: React.FC<RevenueBreakdownCardProps> = ({ overviewCards }) => {
     const grossRevenue = overviewCards?.totalRevenue ?? 0;
 
-    const commission =
-        overviewCards?.marketplaceCommission !== undefined
-            ? overviewCards.marketplaceCommission
-            : grossRevenue * 0.1;
+    const commission = overviewCards?.marketplaceCommission ?? 0;
 
     const netVendorEarnings =
         overviewCards?.vendorEarnings !== undefined
@@ -169,8 +161,7 @@ const AdminOverviewStats: React.FC<
                                 width: `${Math.min(
                                     Math.max(Number(commissionPercent), 0),
                                     100
-                                )
-                                    }% `,
+                                )}%`,
                             }}
                             title={`Commission: ${formatCurrency(commission)} (${commissionPercent}%)`}
                         />
@@ -181,8 +172,7 @@ const AdminOverviewStats: React.FC<
                                 width: `${Math.min(
                                     Math.max(Number(vendorPercent), 0),
                                     100
-                                )
-                                    }% `,
+                                )}%`,
                             }}
                             title={`Vendor Payouts: ${formatCurrency(netVendorEarnings)} (${vendorPercent}%)`}
                         />

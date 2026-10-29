@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import {
     Sparkles,
     TrendingUp,
@@ -31,6 +31,7 @@ import { toast } from "react-toastify";
 import AZModal from "@/components/shared/AZModal";
 import { TDashboardInsightsInput, TDashboardInsightsOutput } from "@/types/artificial";
 import { useGetDashboardInsightsMutation } from "@/redux/features/artificial/artificialApi";
+import AiScanSkeleton from "@/components/shared/skeleton/AiScanSkeleton";
 
 interface AiDashboardInsightsWidgetProps {
     isOpen?: boolean;
@@ -310,6 +311,7 @@ const AiDashboardInsights: React.FC<AiDashboardInsightsWidgetProps> = ({
                                 <div className="w-64 h-1.5 bg-black/40 rounded-full overflow-hidden border border-white/10">
                                     <div className="w-full h-full bg-gradient-to-r from-amber-400 via-violet-400 to-emerald-400 animate-pulse" />
                                 </div>
+                                <AiScanSkeleton className="w-full max-w-md mx-auto pt-2 space-y-3" />
                             </div>
                         )}
 
@@ -380,7 +382,8 @@ const AiDashboardInsights: React.FC<AiDashboardInsightsWidgetProps> = ({
 
                         {/* Active Diagnostic View (When insights are available) */}
                         {insights && !isLoading && (
-                            <div className="space-y-6">
+                            <Suspense fallback={<AiScanSkeleton />}>
+                                <div className="space-y-6">
                                 {/* 1. Executive Summary Hero Card */}
                                 <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1d103b] to-[#120826] border border-amber-400/30 p-5 sm:p-6 shadow-xl">
                                     <div className="absolute top-0 right-0 w-48 h-48 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
@@ -812,6 +815,7 @@ const AiDashboardInsights: React.FC<AiDashboardInsightsWidgetProps> = ({
                                     </div>
                                 )}
                             </div>
+                            </Suspense>
                         )}
                     </div>
                 )}

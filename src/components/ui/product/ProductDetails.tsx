@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSingleProductQuery } from "@/redux/features/product/productApi";
 import { useAllVariantsByProductQuery } from "@/redux/features/variant/variantApi";
@@ -21,6 +21,7 @@ import ProductDescriptionSection from "./ProductDescriptionSection";
 import ProdVariantReviews from "./ProdVariantReviews";
 import { ShoppingCart, Zap } from "lucide-react";
 import { toast } from "react-toastify";
+import ProductPageSkeleton from "@/components/shared/skeleton/ProductPageSkeleton";
 
 const ProductDetails = () => {
   const params = useParams();
@@ -228,11 +229,8 @@ const ProductDetails = () => {
 
   if ((isLoadingVariants || isLoadingProduct) && !product && variants.length === 0) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-8">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-[#e77600] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-slate-600 font-medium">Loading product details...</p>
-        </div>
+      <div className="min-h-screen bg-white p-8">
+        <ProductPageSkeleton />
       </div>
     );
   }
@@ -261,7 +259,8 @@ const ProductDetails = () => {
         />
 
         {/* 3-Column Hero Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <Suspense fallback={<ProductPageSkeleton />}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           {/* Column 1: Image Gallery (Left ~42%) */}
           <div className="lg:col-span-5">
             <ProductImageGallery
@@ -334,6 +333,7 @@ const ProductDetails = () => {
             </div>
           </div>
         </div>
+        </Suspense>
 
         {/* Middle Section: Product Details & Specifications */}
         <ProductDetailsTable

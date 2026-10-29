@@ -1,4 +1,3 @@
-
 "use client";
 
 import React from "react";
@@ -26,8 +25,8 @@ export const AdminQuickStats: React.FC<QuickStatsStripProps> = ({
     const lowStock = inventory?.lowStockProducts ?? 0;
     const outOfStock = inventory?.outOfStockInventory ?? 0;
 
-    const avgRating = reviews?.averageRating ?? 5.0;
     const totalReviews = reviews?.totalReviews ?? 0;
+    const avgRating = totalReviews > 0 ? (reviews?.averageRating ?? 0) : 0;
 
     const openDisputes = marketplaceHealth?.openDisputes ?? 0;
     const slaViolations = marketplaceHealth?.activeSlaViolations ?? 0;
@@ -52,11 +51,14 @@ export const AdminQuickStats: React.FC<QuickStatsStripProps> = ({
             label: "Customer Satisfaction",
             value: (
                 <span className="inline-flex items-center gap-1.5">
-                    {avgRating.toFixed(1)}
+                    {avgRating > 0 ? avgRating.toFixed(1) : "0.0"}
                     <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
                 </span>
             ) as unknown as string,
-            description: `Across ${totalReviews.toLocaleString()} verified reviews`,
+            description:
+                totalReviews > 0
+                    ? `Across ${totalReviews.toLocaleString()} verified reviews`
+                    : "No verified reviews yet",
             icon: <Star className="w-5 h-5 fill-amber-400" />,
             lineColor: "via-amber-400/60",
             glowColor: "from-amber-500/20",

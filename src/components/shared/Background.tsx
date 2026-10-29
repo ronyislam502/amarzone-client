@@ -15,7 +15,7 @@ export const Background = ({
         <div
             data-theme="dark"
             className={`relative w-full bg-[#090d16] text-slate-100 font-sans antialiased ${isDashboard
-                ? "min-h-screen overflow-y-auto flex flex-col justify-start"
+                ? "min-h-full flex flex-col justify-start"
                 : "h-screen overflow-hidden flex items-center justify-center"
                 } ${className}`}
         >

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
 import {
     ShoppingBag,
@@ -15,6 +15,8 @@ import {
     XCircle,
 } from "lucide-react";
 import { TOrder } from "@/types/order";
+import AZTable from "@/components/shared/AZTable";
+import { TColumn } from "@/types/table";
 
 export interface VendorRecentOrdersProps {
     orders?: (TOrder | any)[];
@@ -72,10 +74,18 @@ const ORDER_STATUS_CONFIG: Record<
     },
 };
 
+const PAYMENT_STATUS_CLASSES: Record<string, string> = {
+    PAID: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    UNPAID: "text-rose-400 bg-rose-400/10 border-rose-400/20",
+    REFUNDED: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+};
+
 export const VendorRecentOrders: React.FC<VendorRecentOrdersProps> = ({
     orders = [],
     isLoading = false,
 }) => {
+    const [searchValue, setSearchValue] = useState("");
+
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat("en-US", {
             style: "currency",
@@ -95,156 +105,195 @@ export const VendorRecentOrders: React.FC<VendorRecentOrdersProps> = ({
         });
     };
 
-    const displayOrders = orders.slice(0, 6);
+    const filteredOrders = useMemo(() => {
+        const list = Array.isArray(orders) ? orders : [];
+        if (!searchValue.trim()) {
+            return list.slice(0, 8);
+        }
+        const term = searchValue.toLowerCase();
+        return list
+            .filter((o) => {
+                const orderNo = (o.orderNo || o._id || "").toLowerCase();
+                const customerName = (o.customer?.name || "").toLowerCase();
+                const customerEmail = (o.customer?.email || "").toLowerCase();
+                const status = (o.status || "").toLowerCase();
+                const paymentStatus = (o.paymentStatus || "").toLowerCase();
+                return (
+                    orderNo.includes(term) ||
+                    customerName.includes(term) ||
+                    customerEmail.includes(term) ||
+                    status.includes(term) ||
+                    paymentStatus.includes(term)
+                );
+            })
+            .slice(0, 8);
+    }, [orders, searchValue]);
+
+    const columns: TColumn<TOrder | any>[] = useMemo(
+        () => [
+            {
+                header: "Order Ref",
+                accessor: (order, idx) => {
+                    const displayRef =
+                        order.orderNo || (order._id ? `#${order._id.slice(-6).toUpperCase()}` : `#${idx + 1}`);
+                    return (
+                        <div className="font-mono">
+                            <div className="font-black text-white text-xs hover:text-amber-400 transition-colors">
+                                {displayRef}
+                            </div>
+                            <div className="text-[10px] text-slate-400 flex items-center gap-1 font-sans mt-0.5">
+                                <Clock className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                <span>{formatDate(order.createdAt)}</span>
+                            </div>
+                        </div>
+                    );
+                },
+            },
+            {
+                header: "Customer",
+                accessor: (order) => {
+                    const customerName =
+                        order.customer?.name ||
+                        order.customer?.email?.split("@")[0] ||
+                        "Customer";
+                    return (
+                        <div className="flex items-center gap-2 min-w-0 max-w-[150px]">
+                            <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                <User className="w-3 h-3 text-slate-400" />
+                            </div>
+                            <div className="min-w-0">
+                                <div className="font-semibold text-slate-200 truncate text-xs">
+                                    {customerName}
+                                </div>
+                                {order.customer?.email && (
+                                    <div className="text-[10px] text-slate-400 truncate">
+                                        {order.customer.email}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    );
+                },
+            },
+            {
+                header: "Items",
+                align: "center",
+                accessor: (order) => {
+                    const count = Array.isArray(order.products) ? order.products.length : 1;
+                    const qty = Number(order.totalQuantity ?? count);
+                    return (
+                        <span className="text-xs font-mono font-bold text-slate-300">
+                            {qty} {qty === 1 ? "unit" : "units"}
+                        </span>
+                    );
+                },
+            },
+            {
+                header: "Amount",
+                align: "right",
+                accessor: (order) => {
+                    const orderPrice = Number(order.vendorAmount ?? order.totalPrice ?? 0);
+                    return (
+                        <div>
+                            <div className="font-mono font-black text-amber-400 text-xs">
+                                {formatCurrency(orderPrice)}
+                            </div>
+                            <div className="text-[10px] text-slate-400">payout</div>
+                        </div>
+                    );
+                },
+            },
+            {
+                header: "Status",
+                align: "center",
+                accessor: (order) => {
+                    const statusKey = (order.status || "PENDING").toUpperCase();
+                    const statusConfig = ORDER_STATUS_CONFIG[statusKey] || {
+                        label: statusKey,
+                        badgeClass: "bg-slate-500/15 border-slate-500/30 text-slate-300",
+                        icon: <AlertCircle className="w-3 h-3 text-slate-400" />,
+                    };
+                    return (
+                        <span
+                            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusConfig.badgeClass}`}
+                        >
+                            {statusConfig.icon}
+                            <span>{statusConfig.label}</span>
+                        </span>
+                    );
+                },
+            },
+            {
+                header: "Payment",
+                align: "center",
+                accessor: (order) => {
+                    const payKey = (order.paymentStatus || "UNPAID").toUpperCase();
+                    const payBadgeClass =
+                        PAYMENT_STATUS_CLASSES[payKey] || PAYMENT_STATUS_CLASSES.UNPAID;
+                    return (
+                        <span
+                            className={`badge badge-xs uppercase font-bold px-2 py-0.5 border ${payBadgeClass}`}
+                        >
+                            {order.paymentStatus || "UNPAID"}
+                        </span>
+                    );
+                },
+            },
+            {
+                header: "Action",
+                align: "right",
+                accessor: () => {
+                    return (
+                        <Link
+                            href="/vendor/orders"
+                            className="btn btn-xs gap-1 font-bold text-amber-400 hover:text-slate-950 bg-amber-400/10 hover:bg-amber-400 border border-amber-400/20 rounded-lg transition-all"
+                        >
+                            <span>Manage</span>
+                            <ArrowUpRight className="w-3 h-3" />
+                        </Link>
+                    );
+                },
+            },
+        ],
+        []
+    );
 
     return (
-        <div className="card relative overflow-hidden bg-[#170d2f] shadow-2xl border border-white/10 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col justify-between">
-            {/* Glowing top line */}
-            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-20" />
-            <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)] pointer-events-none" />
-
-            <div className="relative z-10 space-y-4">
-                {/* Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-                            <ShoppingBag className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="text-sm sm:text-base font-extrabold text-white">
-                                Incoming & Recent Orders
-                            </h3>
-                            <p className="text-xs text-slate-400">
-                                Latest confirmed purchase orders awaiting packaging, transit, or delivery.
-                            </p>
-                        </div>
-                    </div>
-
+        <div className="w-full">
+            <AZTable<TOrder | any>
+                title="Incoming & Recent Orders"
+                subtitle="Latest confirmed purchase orders awaiting packaging, transit, or delivery."
+                badgeText={orders.length > 0 ? orders.length : undefined}
+                icon={<ShoppingBag className="w-5 h-5 text-amber-400" />}
+                data={filteredOrders}
+                columns={columns}
+                keyExtractor={(order, idx) => order._id || String(idx)}
+                searchValue={searchValue}
+                onSearchChange={setSearchValue}
+                searchPlaceholder="Search orders by ref, customer, status..."
+                headerActions={
                     <Link
                         href="/vendor/orders"
-                        className="text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1 group transition-colors"
+                        className="btn btn-xs sm:btn-sm gap-1 text-amber-400 hover:bg-amber-400 hover:text-slate-950 font-bold border border-amber-400/30 rounded-xl transition-all"
                     >
                         <span>View All Orders</span>
-                        <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        <ArrowUpRight className="w-3.5 h-3.5" />
                     </Link>
-                </div>
-
-                {/* Table or Empty State */}
-                {isLoading ? (
-                    <div className="py-12 flex flex-col items-center justify-center text-center">
-                        <div className="w-8 h-8 rounded-full border-2 border-amber-400 border-t-transparent animate-spin mb-3" />
-                        <span className="text-xs text-slate-400">Loading database orders...</span>
-                    </div>
-                ) : displayOrders.length === 0 ? (
-                    <div className="py-10 px-4 rounded-2xl bg-white/[0.02] border border-white/10 text-center flex flex-col items-center justify-center space-y-2.5">
-                        <div className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400">
-                            <Package className="w-5 h-5" />
-                        </div>
-                        <h4 className="text-sm font-extrabold text-white">No Orders Found</h4>
-                        <p className="text-xs text-slate-400 max-w-sm">
-                            No customer transactions recorded in your store database yet. As soon as shoppers
-                            place orders, they will appear here in real-time.
-                        </p>
-                        <Link
-                            href="/vendor/inventory"
-                            className="btn btn-xs btn-outline border-amber-400/40 text-amber-300 hover:bg-amber-400 hover:text-slate-950 rounded-lg mt-2 font-bold"
-                        >
-                            Manage Product Catalog
-                        </Link>
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto -mx-5 sm:-mx-6 px-5 sm:px-6">
-                        <table className="table table-sm w-full text-left">
-                            <thead>
-                                <tr className="border-b border-white/10 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                                    <th className="py-2.5 px-3">Order #</th>
-                                    <th className="py-2.5 px-3">Customer</th>
-                                    <th className="py-2.5 px-3">Date</th>
-                                    <th className="py-2.5 px-3 text-right">Amount</th>
-                                    <th className="py-2.5 px-3 text-center">Status</th>
-                                    <th className="py-2.5 px-3 text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5 text-xs font-medium">
-                                {displayOrders.map((order, idx) => {
-                                    const statusKey = (order.status || "PENDING").toUpperCase();
-                                    const statusConfig = ORDER_STATUS_CONFIG[statusKey] || {
-                                        label: statusKey,
-                                        badgeClass: "bg-slate-500/15 border-slate-500/30 text-slate-300",
-                                        icon: <AlertCircle className="w-3 h-3 text-slate-400" />,
-                                    };
-
-                                    const customerName =
-                                        order.customer?.name ||
-                                        order.customer?.email?.split("@")[0] ||
-                                        "Customer";
-
-                                    const orderIdentifier =
-                                        order.orderNo || (order._id ? `#${order._id.slice(-6)}` : `#${idx + 1}`);
-
-                                    const orderPrice = Number(
-                                        order.vendorAmount ?? order.totalPrice ?? 0
-                                    );
-
-                                    return (
-                                        <tr
-                                            key={order._id || idx}
-                                            className="hover:bg-white/[0.03] transition-colors group"
-                                        >
-                                            {/* Order identifier */}
-                                            <td className="py-3 px-3 font-mono font-black text-amber-400">
-                                                {orderIdentifier}
-                                            </td>
-
-                                            {/* Customer name */}
-                                            <td className="py-3 px-3 text-slate-200">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                                                        <User className="w-3 h-3 text-slate-400" />
-                                                    </div>
-                                                    <span className="truncate max-w-[130px] font-semibold">
-                                                        {customerName}
-                                                    </span>
-                                                </div>
-                                            </td>
-
-                                            {/* Date */}
-                                            <td className="py-3 px-3 text-slate-400 text-[11px] whitespace-nowrap">
-                                                {formatDate(order.createdAt)}
-                                            </td>
-
-                                            {/* Amount */}
-                                            <td className="py-3 px-3 text-right font-mono font-black text-white">
-                                                {formatCurrency(orderPrice)}
-                                            </td>
-
-                                            {/* Status Badge */}
-                                            <td className="py-3 px-3 text-center">
-                                                <span
-                                                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${statusConfig.badgeClass}`}
-                                                >
-                                                    {statusConfig.icon}
-                                                    <span>{statusConfig.label}</span>
-                                                </span>
-                                            </td>
-
-                                            {/* Action Link */}
-                                            <td className="py-3 px-3 text-right">
-                                                <Link
-                                                    href="/vendor/orders"
-                                                    className="btn btn-xs btn-ghost text-slate-300 hover:text-white hover:bg-white/10 rounded-lg text-[11px] font-bold"
-                                                >
-                                                    Manage
-                                                </Link>
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
+                }
+                emptyTitle="No Orders Found"
+                emptyMessage="No customer transactions recorded in your store database yet. As soon as shoppers place orders, they will appear here in real-time."
+                emptyIcon={<Package className="w-6 h-6 text-amber-400" />}
+                emptyAction={
+                    <Link
+                        href="/vendor/inventory"
+                        className="btn btn-xs btn-outline border-amber-400/40 text-amber-300 hover:bg-amber-400 hover:text-slate-950 rounded-lg font-bold"
+                    >
+                        Manage Product Catalog
+                    </Link>
+                }
+                isLoading={isLoading}
+                className="my-0"
+            />
         </div>
     );
 };

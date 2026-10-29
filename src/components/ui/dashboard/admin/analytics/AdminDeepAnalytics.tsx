@@ -104,11 +104,11 @@ export const AdminDeepAnalytics: React.FC<AdminDeepAnalyticsProps> = ({
     const productActiveRate = totalProducts > 0 ? ((activeProducts / totalProducts) * 100).toFixed(1) : "100.0";
 
     // Financial commission
-    const marketplaceCommission = overviewCards?.marketplaceCommission ?? totalRevenue * 0.1;
-    const netVendorPayouts = overviewCards?.vendorEarnings ?? totalRevenue - marketplaceCommission;
+    const marketplaceCommission = overviewCards?.marketplaceCommission ?? 0;
+    const netVendorPayouts = overviewCards?.vendorEarnings ?? Math.max(totalRevenue - marketplaceCommission, 0);
 
     // Trust & satisfaction
-    const averageRating = reviews?.averageRating ?? 4.9;
+    const averageRating = (reviews?.totalReviews && reviews.totalReviews > 0) ? (reviews?.averageRating ?? 0) : 0;
     const totalReviews = reviews?.totalReviews ?? 0;
     const ratingDist = reviews?.ratingDistribution || {};
 

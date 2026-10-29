@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from "react";
+import React, { Suspense, useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import CustomerOrdersBread from "./CustomerOrdersBread";
 import CustomerOrdersHeader from "./CustomerOrdersHeader";
@@ -10,6 +10,7 @@ import CustomerOrdersTable from "./CustomerOrdersTable";
 import { useDebounce } from "@/components/shared/Debaounce";
 import { useMyOrdersQuery, useUpdateOrderMutation } from "@/redux/features/order/orderApi";
 import { TOrder } from "@/types/order";
+import OrderListSkeleton from "@/components/shared/skeleton/OrderListSkeleton";
 
 const LIMIT = 10;
 
@@ -166,19 +167,21 @@ const CustomerOrdersData = () => {
             />
 
             {/* Orders Table */}
-            <CustomerOrdersTable
-                orders={filteredOrders}
-                meta={meta}
-                isLoading={isLoading}
-                isError={isError}
-                error={error}
-                refetch={refetch}
-                isFetching={isFetching}
-                page={page}
-                limit={LIMIT}
-                onPageChange={setPage}
-                onCancelOrder={handleCancelOrder}
-            />
+            <Suspense fallback={<OrderListSkeleton count={5} />}>
+                <CustomerOrdersTable
+                    orders={filteredOrders}
+                    meta={meta}
+                    isLoading={isLoading}
+                    isError={isError}
+                    error={error}
+                    refetch={refetch}
+                    isFetching={isFetching}
+                    page={page}
+                    limit={LIMIT}
+                    onPageChange={setPage}
+                    onCancelOrder={handleCancelOrder}
+                />
+            </Suspense>
         </div>
     );
 };

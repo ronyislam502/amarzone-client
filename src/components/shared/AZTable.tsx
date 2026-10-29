@@ -1,13 +1,11 @@
-
+import React, { Suspense } from "react";
 import TableToolbar from "../ui/table/TableToolbar";
-
 import TableError from "../ui/table/TableError";
 import TableEmpty from "../ui/table/TableEmpty";
 import TableContent from "../ui/table/TableContent";
 import TablePagination from "../ui/table/TablePagination";
 import { TTableProps } from "@/types/table";
 import TableSkeleton from "./skeleton/TableSkeleton";
-
 
 const AZTable = <T,>({
     columns,
@@ -34,7 +32,6 @@ const AZTable = <T,>({
     pagination,
     className = "",
 }: TTableProps<T>) => {
-
 
     return (
         <div
@@ -84,11 +81,13 @@ const AZTable = <T,>({
                         onSearchChange={onSearchChange}
                     />
                 ) : (
-                    <TableContent
-                        columns={columns}
-                        data={data}
-                        keyExtractor={keyExtractor}
-                    />
+                    <Suspense fallback={<TableSkeleton columns={columns.length} />}>
+                        <TableContent
+                            columns={columns}
+                            data={data}
+                            keyExtractor={keyExtractor}
+                        />
+                    </Suspense>
                 )}
 
                 {pagination && (
