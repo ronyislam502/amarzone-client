@@ -105,7 +105,7 @@ const VendorAnalyticsPage: React.FC = () => {
         if (!ordersList || ordersList.length === 0) return [];
         const now = new Date();
 
-        return ordersList.filter((order) => {
+        const filtered = ordersList.filter((order) => {
             if (!order?.createdAt) return true;
             const orderDate = new Date(order.createdAt);
 
@@ -132,6 +132,12 @@ const VendorAnalyticsPage: React.FC = () => {
             }
             return true;
         });
+
+        if (filtered.length === 0 && ordersList.length > 0) {
+            return ordersList;
+        }
+
+        return filtered;
     }, [ordersList, dateRange, customStartDate, customEndDate]);
 
     // 2. Summarized Store Revenue calculated strictly from real database records
@@ -488,6 +494,10 @@ const VendorAnalyticsPage: React.FC = () => {
                         revenueOverTime={revenueOverTime}
                         ordersOverTime={ordersOverTime}
                         ordersByStatus={ordersByStatus}
+                        orders={ordersList}
+                        monthlyRevenue={vendorStats?.charts?.monthlyRevenue}
+                        monthlyOrders={vendorStats?.charts?.monthlyOrders}
+                        isLoading={isPageLoading}
                     />
 
                     {/* 5. Department & Category Breakdown (Bar Charts) */}

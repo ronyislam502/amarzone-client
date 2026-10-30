@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { TrendingUp, Info } from "lucide-react";
 import {
     AreaChart,
@@ -88,6 +88,11 @@ export const AZLineChart: React.FC<LineChartProps> = ({
     emptyMessage = "No activity or records found in the active timeframe.",
     className = "",
 }) => {
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     const hasTabs = Array.isArray(tabs) && tabs.length > 0;
     const initialTabKey = defaultTab || (hasTabs ? tabs[0].key : "");
     const [internalTab, setInternalTab] = useState<string>(initialTabKey);
@@ -108,7 +113,18 @@ export const AZLineChart: React.FC<LineChartProps> = ({
     }, [activeTabConfig, data]);
 
     const sortedPoints = useMemo(() => {
-        return [...rawPoints].sort((a, b) => a.label.localeCompare(b.label));
+        if (!Array.isArray(rawPoints) || rawPoints.length === 0) return [];
+        return rawPoints;
+    }, [rawPoints]);
+
+    const chartDisplayPoints = useMemo(() => {
+        if (sortedPoints.length === 1) {
+            return [
+                { label: "Start", value: 0 },
+                sortedPoints[0],
+            ];
+        }
+        return sortedPoints;
     }, [rawPoints]);
 
     const strokeColor =
@@ -270,6 +286,10 @@ export const AZLineChart: React.FC<LineChartProps> = ({
                         <div className="text-sm font-extrabold text-white">No Activity in Range</div>
                         <div className="text-xs max-w-xs text-slate-400">{emptyMessage}</div>
                     </div>
+                ) : !isMounted ? (
+                    <div className="w-full flex items-center justify-center" style={{ height: chartHeight }}>
+                        <div className="animate-pulse text-xs text-slate-500">Loading chart...</div>
+                    </div>
                 ) : (
                     <>
                         {/* Quick Metrics Bar above chart */}
@@ -294,7 +314,7 @@ export const AZLineChart: React.FC<LineChartProps> = ({
                         <div className="w-full" style={{ height: chartHeight }}>
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart
-                                    data={sortedPoints}
+                                    data={chartDisplayPoints}
                                     margin={{
                                         top: 10,
                                         right: compact ? 10 : 20,
@@ -405,6 +425,7 @@ export const AZLineChart: React.FC<LineChartProps> = ({
                                         stroke={strokeColor}
                                         strokeWidth={2.5}
                                         fill={`url(#lineGrad_${uniqueId})`}
+                                        isAnimationActive={false}
                                         dot={
                                             showDots
                                                 ? {
