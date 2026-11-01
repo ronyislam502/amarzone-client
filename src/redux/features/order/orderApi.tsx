@@ -64,16 +64,15 @@ const orderApi = baseApi?.injectEndpoints({
             }),
             invalidatesTags: ["order"],
         }),
-        singleOrder: builder.query({
-            query: (id) => ({
-                url: `/orders/order/${id}`,
-                method: "GET",
-            }),
-            providesTags: ["order"],
-        }),
-        myOrders: builder.query<any, void | { search?: string; sort?: string; page?: string | number; limit?: string | number; status?: string }>({
-            query: (args = {}) => {
-                const { search, sort, page, limit, status } = (args || {}) as any;
+        // singleOrder: builder.query({
+        //     query: (id) => ({
+        //         url: `/orders/order/${id}`,
+        //         method: "GET",
+        //     }),
+        //     providesTags: ["order"],
+        // }),
+        myOrders: builder.query({
+            query: ({ search, sort, page, limit, status }) => {
                 const params = new URLSearchParams();
 
                 if (search) {
@@ -114,7 +113,6 @@ const orderApi = baseApi?.injectEndpoints({
 export const {
     useAllOrdersQuery,
     useUpdateOrderMutation,
-    useSingleOrderQuery,
     useMyOrdersQuery
 } = orderApi;
 
