@@ -1,22 +1,28 @@
 import { TVariant } from "./product";
 
+/**
+ * Lean cart item — only IDs + quantity are persisted in Redux.
+ * Full product details (title, price, thumbnail, etc.) are fetched
+ * at display-time in CartData.tsx using the stored IDs.
+ */
 export type TCartItem = {
-    _id: string;
+    _id: string;          // product._id (required)
+    variantId: string;    // variant._id (required — used to fetch inventory/price)
+    vendorId: string;     // vendor user._id (required — used to group orders by vendor)
+    quantity: number;     // ordered quantity
+    // Optional enrichment fields populated at display-time (NOT persisted)
     productId?: string;
-    variantId?: string;
     variant?: TVariant | any;
-    title: string;
+    title?: string;
     thumbnail?: string;
     image?: string;
     brand?: string;
     category?: any;
-    price: number;
+    price?: number;
     originalPrice?: number;
-    quantity: number;
     maxQuantity?: number;
     seller?: any;
     vendor?: any;
-    vendorId?: string;
     inStock?: boolean;
     stockNote?: string;
     shippingTime?: number;
@@ -100,3 +106,42 @@ export type TOdrDeliveryDate = {
     from: string
     to: string
 }
+
+
+export interface TCartProduct extends Partial<TCartItem> {
+    _id?: string;
+    id?: string;
+    productId?: string;
+    variantId?: string;
+    variant?: any;
+    title?: string;
+    brand?: string;
+    category?: any;
+    thumbnail?: string;
+    image?: string;
+    price?: number;
+    originalPrice?: number;
+    quantity: number;
+    maxQuantity?: number;
+    inStock?: boolean;
+    stockNote?: string;
+    variantInfo?: string;
+    seller?: any;
+    vendor?: any;
+    vendorId?: string;
+    sellerName?: string;
+    fulfilledBy?: string;
+    shippingTime?: number;
+    attributes?: { type: string; value: string }[];
+    isSelected?: boolean;
+    isGift?: boolean;
+}
+
+/** Payload shape for the Create Order API endpoint */
+export type TCreateOrderPayload = {
+    vendor: string;
+    products: {
+        variant: string;
+        quantity: number;
+    }[];
+};

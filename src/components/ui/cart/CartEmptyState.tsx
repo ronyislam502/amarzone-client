@@ -2,13 +2,13 @@
 
 import React from "react";
 import Link from "next/link";
-import { ShoppingCart, ShoppingBag, ArrowRight, Sparkles } from "lucide-react";
+import { ShoppingCart, ShoppingBag, ArrowRight } from "lucide-react";
 
 interface CartEmptyStateProps {
   onExploreProducts?: () => void;
 }
 
-const CartEmptyState: React.FC<CartEmptyStateProps> = () => {
+export const CartEmptyState: React.FC<CartEmptyStateProps> = () => {
   return (
     <div className="bg-white rounded-3xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs space-y-6 select-none max-w-2xl mx-auto">
       <div className="w-20 h-20 rounded-full bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-[#e77600] shadow-xs">

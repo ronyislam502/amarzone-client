@@ -41,6 +41,24 @@ const orderApi = baseApi?.injectEndpoints({
                 };
             },
         }),
+        /**
+         * Create Order API — POST /orders/create-order
+         *
+         * Body shape (per vendor group):
+         * {
+         *   vendor: string,          // vendor user._id
+         *   products: [
+         *     { variant: string, quantity: number }
+         *   ]
+         * }
+         *
+         * The server validates stock, creates a Stripe PaymentIntent,
+         * and returns { order, clientSecret }.
+         *
+         * NOTE: Multi-product carts with items from DIFFERENT vendors must
+         * call this endpoint ONCE PER VENDOR GROUP. CartData.tsx handles
+         * the grouping before calling this mutation.
+         */
         createOrder: builder.mutation({
             query: (data) => ({
                 url: "/orders/create-order",
@@ -64,13 +82,6 @@ const orderApi = baseApi?.injectEndpoints({
             }),
             invalidatesTags: ["order"],
         }),
-        // singleOrder: builder.query({
-        //     query: (id) => ({
-        //         url: `/orders/order/${id}`,
-        //         method: "GET",
-        //     }),
-        //     providesTags: ["order"],
-        // }),
         myOrders: builder.query({
             query: ({ search, sort, page, limit, status }) => {
                 const params = new URLSearchParams();
@@ -112,9 +123,7 @@ const orderApi = baseApi?.injectEndpoints({
 
 export const {
     useAllOrdersQuery,
+    useCreateOrderMutation,
     useUpdateOrderMutation,
-    useMyOrdersQuery
+    useMyOrdersQuery,
 } = orderApi;
-
-
-

@@ -22,11 +22,14 @@ import ProdVariantReviews from "./ProdVariantReviews";
 import { ShoppingCart, Zap } from "lucide-react";
 import { toast } from "react-toastify";
 import ProductPageSkeleton from "@/components/shared/skeleton/ProductPageSkeleton";
+import { useAppDispatch } from "@/redux/hooks";
+import { addToCart } from "@/redux/features/order/orderSlice";
 
 const ProductDetails = () => {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const productId = params?.id as string | undefined;
   const variantIdFromQuery = searchParams.get("variantId") || searchParams.get("variant");
 
@@ -221,6 +224,20 @@ const ProductDetails = () => {
   };
 
   const handleMobileAddToCart = () => {
+    if (!productId || !activeVariant?._id) {
+      toast.error("Product information not available");
+      return;
+    }
+    const vendorId =
+      typeof resolvedVendorId === "string" ? resolvedVendorId : "";
+    dispatch(
+      addToCart({
+        _id: productId,
+        variantId: activeVariant._id,
+        vendorId,
+        quantity: 1,
+      })
+    );
     toast.success("Added to Cart!", {
       position: "bottom-right",
       autoClose: 2000,
@@ -313,6 +330,26 @@ const ProductDetails = () => {
                 selectedVariant={activeVariant}
                 isLoadingInventory={isLoadingInventory || isLoadingVariants}
                 inStock={true}
+                onAddToCart={(qty: number) => {
+                  if (!productId || !activeVariant?._id) {
+                    toast.error("Product information not available");
+                    return;
+                  }
+                  const vendorId =
+                    typeof resolvedVendorId === "string" ? resolvedVendorId : "";
+                  dispatch(
+                    addToCart({
+                      _id: productId,
+                      variantId: activeVariant._id,
+                      vendorId,
+                      quantity: qty,
+                    })
+                  );
+                  toast.success(`Added ${qty} item(s) to Cart!`, {
+                    position: "bottom-right",
+                    autoClose: 2000,
+                  });
+                }}
               />
 
               {/* Multi-Vendor Comparison: Other Sellers on Amarzone */}
