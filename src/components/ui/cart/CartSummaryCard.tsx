@@ -1,20 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
-import { CheckCircle2, Lock, ShieldCheck, Tag, ArrowRight } from "lucide-react";
+import { CheckCircle2, Lock, ShieldCheck, Tag } from "lucide-react";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
 
 interface CartSummaryCardProps {
   subtotal: number;
   selectedCount: number;
-  discount: number;
-  discountCode: string;
-  onApplyDiscount: (code: string) => boolean;
-  onRemoveDiscount: () => void;
-  taxRate?: number;
-  tax?: number;
-  grandTotal?: number;
   onProceedToCheckout?: () => void;
   isCheckoutLoading?: boolean;
 }
@@ -22,20 +14,12 @@ interface CartSummaryCardProps {
 export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
   subtotal,
   selectedCount,
-  discount,
-  discountCode,
-  onApplyDiscount,
-  onRemoveDiscount,
-  taxRate = 0.05,
-  tax: propTax,
-  grandTotal: propGrandTotal,
   onProceedToCheckout,
   isCheckoutLoading = false,
 }) => {
-  const router = useRouter();
   const [promoInput, setPromoInput] = useState("");
+  const [discountCode, setDiscountCode] = useState("");
   const [isGift, setIsGift] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const freeShippingThreshold = 35.0;
   const qualifiesForFreeShipping = subtotal >= freeShippingThreshold;
@@ -45,20 +29,22 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
   );
   const amountNeededForFreeShipping = (freeShippingThreshold - subtotal).toFixed(2);
 
-  const discountedSubtotal = Math.max(0, subtotal - discount);
-  const estimatedTax = propTax !== undefined ? propTax : discountedSubtotal * taxRate;
-  const finalGrandTotal =
-    propGrandTotal !== undefined
-      ? propGrandTotal
-      : discountedSubtotal + estimatedTax;
+  const discount = Number(
+    (subtotal * (discountCode ? 0.1 : 0)).toFixed(2)
+  );
+  const estimatedTax = selectedCount > 0 ? 0.88 : 0;
+  const finalGrandTotal = Number(
+    Math.max(0, subtotal - discount + estimatedTax).toFixed(2)
+  );
 
   const handlePromoSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!promoInput.trim()) return;
 
-    const success = onApplyDiscount(promoInput.trim().toUpperCase());
-    if (success) {
-      toast.success(`Promo code "${promoInput.toUpperCase()}" applied!`, {
+    const code = promoInput.trim().toUpperCase();
+    if (code === "AMARZONE10" || code === "SAVE10") {
+      setDiscountCode(code);
+      toast.success(`Promo code "${code}" applied!`, {
         position: "bottom-right",
       });
       setPromoInput("");
@@ -78,10 +64,12 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
       onProceedToCheckout();
       return;
     }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      router.push("/checkout");
-    }, 400);
+  };
+
+  const handleRemoveDiscount = () => {
+    setDiscountCode("");
+    setPromoInput("");
+    toast.info("Promo code removed.");
   };
 
   return (
@@ -146,12 +134,13 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
         {/* Primary Checkout CTA */}
         <button
           type="button"
-          disabled={selectedCount === 0 || isSubmitting || isCheckoutLoading}
+          disabled={selectedCount === 0 || isCheckoutLoading}
           onClick={handleProceedToCheckout}
-          className={`w-full py-3 px-4 rounded-full text-xs sm:text-sm font-bold shadow-xs transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${selectedCount > 0 && !isCheckoutLoading
+          className={`w-full py-3 px-4 rounded-full text-xs sm:text-sm font-bold shadow-xs transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+            selectedCount > 0 && !isCheckoutLoading
               ? "bg-[#ffd814] hover:bg-[#f7ca00] active:bg-[#f0b800] text-slate-900 border border-[#fcd200]"
               : "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
-            }`}
+          }`}
         >
           {isCheckoutLoading ? (
             <span className="loading loading-spinner loading-xs text-slate-900" />
@@ -161,9 +150,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
           <span>
             {isCheckoutLoading
               ? "Preparing Checkout..."
-              : isSubmitting
-                ? "Proceeding..."
-                : "Proceed to checkout"}
+              : "Proceed to checkout"}
           </span>
         </button>
 
@@ -177,7 +164,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
               </div>
               <button
                 type="button"
-                onClick={onRemoveDiscount}
+                onClick={handleRemoveDiscount}
                 className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer"
               >
                 Remove
