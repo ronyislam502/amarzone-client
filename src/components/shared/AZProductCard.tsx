@@ -1,4 +1,6 @@
+"use client";
 
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -8,6 +10,9 @@ import {
     BadgePercent,
     ShieldCheck,
 } from "lucide-react";
+import { toast } from "react-toastify";
+import { useAppDispatch } from "@/redux/hooks";
+import { addToCart } from "@/redux/features/order/orderSlice";
 
 interface AZProductCardProps {
     product: any;
@@ -16,7 +21,7 @@ interface AZProductCardProps {
 }
 
 const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardProps) => {
-
+    const dispatch = useAppDispatch();
 
     const discountPercentage = product?.discountPercentage || 0;
     const currentPrice = product?.price || 0;
@@ -29,13 +34,45 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
         ? `/products/${product?.productId || product?._id}?variant=${product?.variantId}`
         : `/products/${product?.productId || product?._id}`;
 
+    const handleAddToCart = (product: any) => {
+
+        console.log("pro", product)
+        const canonicalId = product?.productId || product?._id || product?.id || "";
+        const variantId = product?.variantId || product?.variants?.[0]?._id || "";
+        const vendorId =
+            (typeof product?.vendor === "object" ? product?.vendor?._id : product?.vendor) ||
+            product?.vendorId ||
+            (typeof product?.seller?.vendor === "object" ? product?.seller?.vendor?._id : product?.seller?.vendor) ||
+            "";
+
+        const cartItem = {
+            ...product,
+            _id: canonicalId,
+            productId: canonicalId,
+            variantId,
+            vendorId,
+            quantity: 1,
+            title: product?.title,
+            image: product?.thumbnail,
+            price: currentPrice,
+            originalPrice,
+            vendor: product?.vendor,
+            inStock: true,
+        };
+
+        dispatch(addToCart(cartItem));
+        toast.success(`🛒 ${cartItem.title} in your cart!`, {
+            autoClose: 1000,
+        });
+    };
+
     return (
-        <Link
-            key={product?._id}
-            href={productHref}
-            className="flex h-full"
-        >
-            <div className="card w-full bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col h-full justify-between">
+        <div className="card w-full bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col h-full justify-between">
+            <Link
+                key={product?._id}
+                href={productHref}
+                className="flex h-full"
+            >
                 <div>
                     {/* Image */}
                     <figure className="relative aspect-square overflow-hidden">
@@ -139,16 +176,20 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
                         </div>
                     </div>
                 </div>
+            </Link>
 
-                {/* Action Button */}
-                <div className="card-actions p-4 pt-0 mt-auto">
-                    <button className="btn btn-warning btn-sm w-full">
-                        <ShoppingCart className="h-4 w-4" />
-                        Add
-                    </button>
-                </div>
+            {/* Action Button */}
+            <div className="card-actions p-4 pt-0 mt-auto">
+                <button
+                    type="button"
+                    onClick={() => handleAddToCart(product)}
+                    className="btn btn-warning btn-sm w-full cursor-pointer"
+                >
+                    <ShoppingCart className="h-4 w-4" />
+                    Add
+                </button>
             </div>
-        </Link>
+        </div>
     );
 };
 

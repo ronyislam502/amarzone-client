@@ -8,7 +8,6 @@ import { TCartProduct } from "@/types/order";
 import { useAppDispatch } from "@/redux/hooks";
 import { addToCart, removeFromCart, updateQuantity } from "@/redux/features/order/orderSlice";
 
-
 interface CartItemListProps {
   items: TCartProduct[];
   onSelectionChange?: (
@@ -22,7 +21,6 @@ export const CartItemList: React.FC<CartItemListProps> = ({
   items,
   onSelectionChange,
 }) => {
-
   const dispatch = useAppDispatch();
   const [deselectedIds, setDeselectedIds] = useState<Set<string>>(new Set());
   const [savedItems, setSavedItems] = useState<TCartProduct[]>([]);
@@ -192,7 +190,7 @@ export const CartItemList: React.FC<CartItemListProps> = ({
           </div>
 
           <div className="hidden sm:block text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Price
+            PRICE
           </div>
         </div>
 
@@ -219,7 +217,7 @@ export const CartItemList: React.FC<CartItemListProps> = ({
 
         {/* Cart Subtotal Footer */}
         <div className="border-t border-slate-200 pt-4 flex items-center justify-end text-sm sm:text-base select-none">
-          <span className="text-slate-700 font-normal mr-1.5">
+          <span className="text-slate-800 font-normal mr-1.5 text-base sm:text-lg">
             Subtotal ({selectedCount} {selectedCount === 1 ? "item" : "items"}):
           </span>
           <span className="font-extrabold text-slate-900 text-lg sm:text-xl">

@@ -1,11 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Trash2, Bookmark, Share2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { TCartProduct } from "@/types/order";
+import { useAppDispatch } from "@/redux/hooks";
+import { updateCartItemDetails } from "@/redux/features/order/orderSlice";
+import { useSingleProductQuery } from "@/redux/features/product/productApi";
 
 interface CartItemCardProps {
   item: TCartProduct;
@@ -22,8 +25,39 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
   onDeleteItem,
   onSaveForLater,
 }) => {
+  const dispatch = useAppDispatch();
   const itemId = item._id || item.variantId || item.id || "";
-  const price = item.price || 0;
+  const targetProductId = item.productId || item._id || item.id || "";
+
+  // If item is missing title or thumbnail, fetch product details by targetProductId
+  const needsFetch = !item.title || (!item.thumbnail && !item.image);
+  const { data: productData } = useSingleProductQuery(targetProductId, {
+    skip: !needsFetch || !targetProductId,
+  });
+
+  const fetchedProduct = productData?.data;
+
+  useEffect(() => {
+    if (fetchedProduct && needsFetch) {
+      const fetchedImg =
+        fetchedProduct.thumbnail ||
+        (Array.isArray(fetchedProduct.images) ? fetchedProduct.images[0] : "") ||
+        "";
+      dispatch(
+        updateCartItemDetails({
+          _id: targetProductId,
+          variantId: item.variantId,
+          title: fetchedProduct.title,
+          thumbnail: fetchedImg,
+          image: fetchedImg,
+          price: item.price || fetchedProduct.price || 0,
+        })
+      );
+    }
+  }, [fetchedProduct, needsFetch, dispatch, targetProductId, item.variantId, item.price]);
+
+  const displayTitle = item.title || fetchedProduct?.title || "Product";
+  const price = item.price || fetchedProduct?.price || 0;
   const originalPrice =
     item.originalPrice && item.originalPrice > price
       ? item.originalPrice
@@ -45,6 +79,8 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
     item.image ||
     item.variant?.thumbnail ||
     item.variant?.images?.[0] ||
+    fetchedProduct?.thumbnail ||
+    (Array.isArray(fetchedProduct?.images) ? fetchedProduct.images[0] : "") ||
     "https://m.media-amazon.com/images/I/81TsMF0Zr4L.jpg";
 
   const sellerName =
@@ -52,10 +88,10 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
     item.vendor?.name ||
     item.sellerName ||
     item.brand ||
-    "Amarzone Direct";
+    "Dhaka Silicon Solutions";
 
   const fulfilledBy =
-    item.seller?.fulfillmentBy || item.fulfilledBy || "Amarzone Logistics";
+    item.seller?.fulfillmentBy || item.fulfilledBy || sellerName;
 
   const variantText =
     item.variantInfo ||
@@ -75,7 +111,7 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
     if (typeof window !== "undefined") {
       navigator.clipboard?.writeText(window.location.origin + productHref);
     }
-    toast.success(`Copied share link for "${item?.title?.slice(0, 24)}..."`, {
+    toast.success(`Copied share link for "${displayTitle.slice(0, 24)}..."`, {
       position: "bottom-right",
       autoClose: 1800,
     });
@@ -83,8 +119,9 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
 
   return (
     <div
-      className={`py-5 border-b border-slate-200 last:border-none transition-colors select-none ${!isSelected ? "opacity-60 bg-slate-50/40 rounded-xl p-3" : ""
-        }`}
+      className={`py-5 border-b border-slate-200 last:border-none transition-colors select-none ${
+        !isSelected ? "opacity-60 bg-slate-50/40 rounded-xl p-3" : ""
+      }`}
     >
       <div className="flex items-start gap-3 sm:gap-4">
         {/* Checkbox */}
@@ -93,8 +130,8 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
             type="checkbox"
             checked={isSelected}
             onChange={() => onToggleSelect(itemId)}
-            aria-label={`Select ${item.title}`}
-            className="checkbox checkbox-sm checkbox-warning rounded-sm border-slate-400 checked:border-amber-500 checked:bg-amber-500 cursor-pointer"
+            aria-label={`Select ${displayTitle}`}
+            className="w-4 h-4 rounded-sm border-slate-300 accent-[#f08804] checked:bg-[#f08804] checked:border-[#f08804] cursor-pointer"
           />
         </div>
 
@@ -105,7 +142,7 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
         >
           <Image
             src={imageUrl}
-            alt={item.title || "Product"}
+            alt={displayTitle}
             fill
             sizes="(max-width: 640px) 96px, 128px"
             className="object-contain p-1"
@@ -118,21 +155,21 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
           <div className="flex items-start justify-between gap-4">
             <Link
               href={productHref}
-              className="text-sm sm:text-base font-semibold text-slate-900 leading-snug line-clamp-2 hover:text-[#c7511f] cursor-pointer transition-colors"
+              className="text-sm sm:text-base font-bold text-slate-900 leading-snug line-clamp-2 hover:text-[#007185] cursor-pointer transition-colors"
             >
-              {item.title}
+              {displayTitle}
             </Link>
 
             {/* Desktop Price */}
             <div className="hidden sm:block text-right shrink-0">
               <div className="flex items-start text-slate-900 font-extrabold justify-end">
-                <span className="text-xs font-bold mt-0.5">$</span>
-                <span className="text-xl font-black">{dollars}</span>
-                <span className="text-xs font-bold mt-0.5">{cents}</span>
+                <span className="text-xs font-bold mt-1">$</span>
+                <span className="text-2xl font-black">{dollars}</span>
+                <span className="text-xs font-bold mt-1">{cents}</span>
               </div>
 
               {savings > 0 && (
-                <div className="text-[11px] text-slate-500 space-x-1">
+                <div className="text-[11px] text-slate-500 space-x-1 mt-0.5">
                   <span className="line-through">${originalPrice.toFixed(2)}</span>
                   <span className="text-[#cc0c39] font-semibold">(-{savingsPercent}%)</span>
                 </div>
@@ -150,15 +187,14 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
           </div>
 
           {/* Free Shipping Badge */}
-          <div className="text-[11px] text-slate-500 flex items-center gap-1">
-            <span>Eligible for</span>
-            <span className="font-bold text-slate-700">FREE Shipping</span>
+          <div className="text-[11px] text-slate-500">
+            <span>Eligible for FREE Shipping</span>
           </div>
 
           {/* Variant specifications */}
           {variantText && (
             <div className="text-xs text-slate-600 font-medium">
-              <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md text-[11px]">
+              <span className="bg-[#f0f2f2] text-slate-700 px-2.5 py-0.5 rounded-md text-[11px] inline-block">
                 {variantText}
               </span>
             </div>
@@ -166,12 +202,15 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
 
           {/* Sold & Shipped by */}
           <div className="text-[11px] text-slate-500 flex items-center gap-1 flex-wrap">
-            <span>Sold by: </span>
-            <span className="text-[#007185] font-semibold hover:underline cursor-pointer">
+            <span>Sold by:</span>
+            <span className="text-[#007185] hover:underline cursor-pointer">
               {sellerName}
             </span>
-            <span>•</span>
-            <span>Fulfilled by {fulfilledBy}</span>
+            <span className="mx-0.5">•</span>
+            <span>Fulfilled by</span>
+            <span className="text-[#007185] hover:underline cursor-pointer">
+              {fulfilledBy}
+            </span>
           </div>
 
           {/* Mobile Price Display */}
@@ -186,7 +225,7 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
             )}
           </div>
 
-          {/* Action Row: Quantity Stepper, Delete, Save for Later */}
+          {/* Action Row: Quantity Stepper, Delete, Save for Later, Share */}
           <div className="flex items-center flex-wrap gap-2 sm:gap-3 pt-3">
             {/* Quantity Selector */}
             <div className="flex items-center bg-slate-100 rounded-lg border border-slate-300 px-2 py-0.5">

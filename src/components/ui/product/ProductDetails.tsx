@@ -223,24 +223,39 @@ const ProductDetails = () => {
     }
   };
 
-  const handleMobileAddToCart = () => {
-    if (!productId || !activeVariant?._id) {
-      toast.error("Product information not available");
-      return;
-    }
-    const vendorId =
-      typeof resolvedVendorId === "string" ? resolvedVendorId : "";
-    dispatch(
-      addToCart({
-        _id: productId,
-        variantId: activeVariant._id,
-        vendorId,
-        quantity: 1,
-      })
-    );
-    toast.success("Added to Cart!", {
-      position: "bottom-right",
-      autoClose: 2000,
+  const handleAddToCart = (itemOrQty?: any) => {
+    const qty = typeof itemOrQty === "number" ? itemOrQty : itemOrQty?.quantity || 1;
+    const baseItem = typeof itemOrQty === "object" && itemOrQty !== null ? itemOrQty : {};
+
+    const img =
+      baseItem.thumbnail ||
+      baseItem.image ||
+      resolvedImages[0] ||
+      activeVariant?.images?.[0] ||
+      product?.thumbnail ||
+      "";
+
+    const productItem = {
+      ...baseItem,
+      _id: baseItem._id || productId || "",
+      productId: baseItem.productId || productId || "",
+      variantId: baseItem.variantId || activeVariant?._id || "",
+      vendorId: baseItem.vendorId || resolvedVendorId || "",
+      quantity: qty,
+      title: baseItem.title || resolvedTitle || product?.title || "Product",
+      name: baseItem.name || baseItem.title || resolvedTitle || product?.title || "Product",
+      thumbnail: img,
+      image: img,
+      price: baseItem.price !== undefined ? baseItem.price : resolvedPrice,
+      originalPrice: baseItem.originalPrice !== undefined ? baseItem.originalPrice : resolvedOriginalPrice,
+      vendor: baseItem.vendor || resolvedVendor,
+      attributes: baseItem.attributes || activeVariant?.attributes,
+      inStock: true,
+    };
+
+    dispatch(addToCart(productItem));
+    toast.success(`🛒 ${productItem?.title} in your cart!`, {
+      autoClose: 1000,
     });
   };
 
@@ -278,98 +293,79 @@ const ProductDetails = () => {
         {/* 3-Column Hero Section */}
         <Suspense fallback={<ProductPageSkeleton />}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
-          {/* Column 1: Image Gallery (Left ~42%) */}
-          <div className="lg:col-span-5">
-            <ProductImageGallery
-              key={activeVariant?._id || "main-gallery"}
-              images={resolvedImages}
-              thumbnail={resolvedImages[0] || product?.thumbnail}
-              title={product?.title || resolvedTitle}
-              isBestSeller={product?.isBestSeller}
-              isPrivateLevel={activeVariant?.isPrivateLevel}
-            />
-          </div>
-
-          {/* Column 2: Product Core Info & Options (Center ~33%) */}
-          <div className="lg:col-span-4 space-y-1">
-            <ProductHeader
-              brand={product?.brand || resolvedBrand}
-              title={product?.title || resolvedTitle}
-              averageRating={resolvedRating}
-              totalRatings={resolvedReviewsCount}
-              categoryName={product?.category?.name || resolvedCategory}
-              isBestSeller={product?.isBestSeller}
-            />
-
-            <ProductPriceBlock
-              price={resolvedPrice}
-              originalPrice={resolvedOriginalPrice}
-            />
-
-            <ProductVariantSelector
-              variants={variants}
-              selectedVariant={activeVariant}
-              averageRating={resolvedRating}
-              totalRatings={resolvedReviewsCount}
-              onSelectVariant={handleVariantSelection}
-            />
-
-            <ProductFeatures features={product?.features} />
-          </div>
-
-          {/* Column 3: Buy Box (Right ~25%) */}
-          <div className="lg:col-span-3">
-            <div className="sticky top-20 space-y-4">
-              <ProductBuyBox
-                buyBoxListing={buyBoxWinner}
-                price={resolvedPrice}
-                vendorName={resolvedVendor}
-                vendorId={resolvedVendorId}
-                totalSellers={totalSellers}
-                product={product}
-                selectedVariant={activeVariant}
-                isLoadingInventory={isLoadingInventory || isLoadingVariants}
-                inStock={true}
-                onAddToCart={(qty: number) => {
-                  if (!productId || !activeVariant?._id) {
-                    toast.error("Product information not available");
-                    return;
-                  }
-                  const vendorId =
-                    typeof resolvedVendorId === "string" ? resolvedVendorId : "";
-                  dispatch(
-                    addToCart({
-                      _id: productId,
-                      variantId: activeVariant._id,
-                      vendorId,
-                      quantity: qty,
-                    })
-                  );
-                  toast.success(`Added ${qty} item(s) to Cart!`, {
-                    position: "bottom-right",
-                    autoClose: 2000,
-                  });
-                }}
-              />
-
-              {/* Multi-Vendor Comparison: Other Sellers on Amarzone */}
-              {totalSellers > 1 && (
-                <ProductSellerOffers
-                  sellers={sellers as any}
-                  buyBoxWinnerId={(buyBoxWinner as any)?._id}
-                  product={product}
-                  selectedVariant={activeVariant}
-                />
-              )}
-
-              {/* AI Product Assistant Advisor Card */}
-              <ProductAIAdvisor
-                productTitle={resolvedTitle}
-                categoryName={resolvedCategory}
+            {/* Column 1: Image Gallery (Left ~42%) */}
+            <div className="lg:col-span-5">
+              <ProductImageGallery
+                key={activeVariant?._id || "main-gallery"}
+                images={resolvedImages}
+                thumbnail={resolvedImages[0] || product?.thumbnail}
+                title={product?.title || resolvedTitle}
+                isBestSeller={product?.isBestSeller}
+                isPrivateLevel={activeVariant?.isPrivateLevel}
               />
             </div>
+
+            {/* Column 2: Product Core Info & Options (Center ~33%) */}
+            <div className="lg:col-span-4 space-y-1">
+              <ProductHeader
+                brand={product?.brand || resolvedBrand}
+                title={product?.title || resolvedTitle}
+                averageRating={resolvedRating}
+                totalRatings={resolvedReviewsCount}
+                categoryName={product?.category?.name || resolvedCategory}
+                isBestSeller={product?.isBestSeller}
+              />
+
+              <ProductPriceBlock
+                price={resolvedPrice}
+                originalPrice={resolvedOriginalPrice}
+              />
+
+              <ProductVariantSelector
+                variants={variants}
+                selectedVariant={activeVariant}
+                averageRating={resolvedRating}
+                totalRatings={resolvedReviewsCount}
+                onSelectVariant={handleVariantSelection}
+              />
+
+              <ProductFeatures features={product?.features} />
+            </div>
+
+            {/* Column 3: Buy Box (Right ~25%) */}
+            <div className="lg:col-span-3">
+              <div className="sticky top-20 space-y-4">
+                <ProductBuyBox
+                  buyBoxListing={buyBoxWinner}
+                  price={resolvedPrice}
+                  vendorName={resolvedVendor}
+                  vendorId={resolvedVendorId}
+                  totalSellers={totalSellers}
+                  product={product}
+                  selectedVariant={activeVariant}
+                  isLoadingInventory={isLoadingInventory || isLoadingVariants}
+                  inStock={true}
+                  onAddToCart={handleAddToCart}
+                />
+
+                {/* Multi-Vendor Comparison: Other Sellers on Amarzone */}
+                {totalSellers > 1 && (
+                  <ProductSellerOffers
+                    sellers={sellers as any}
+                    buyBoxWinnerId={(buyBoxWinner as any)?._id}
+                    product={product}
+                    selectedVariant={activeVariant}
+                  />
+                )}
+
+                {/* AI Product Assistant Advisor Card */}
+                <ProductAIAdvisor
+                  productTitle={resolvedTitle}
+                  categoryName={resolvedCategory}
+                />
+              </div>
+            </div>
           </div>
-        </div>
         </Suspense>
 
         {/* Middle Section: Product Details & Specifications */}
@@ -391,37 +387,6 @@ const ProductDetails = () => {
             productTitle={product?.title || resolvedTitle}
             selectedVariant={activeVariant}
           />
-        </div>
-      </div>
-
-      {/* Sticky Bottom Bar for Mobile Viewports */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-2.5 flex items-center justify-between gap-3 lg:hidden shadow-lg">
-        <div className="flex flex-col">
-          <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
-            Price
-          </span>
-          <span className="text-base font-extrabold text-slate-900">
-            {resolvedPrice > 0 ? `$${resolvedPrice.toFixed(2)}` : "Unavailable"}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 flex-1 justify-end max-w-xs">
-          <button
-            type="button"
-            onClick={handleMobileAddToCart}
-            className="flex-1 py-2 px-3 rounded-full bg-[#ffd814] active:bg-[#f0b800] text-slate-900 text-xs font-bold flex items-center justify-center gap-1 border border-[#fcd200] shadow-xs cursor-pointer"
-          >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            <span>Add to Cart</span>
-          </button>
-
-          <button
-            type="button"
-            className="flex-1 py-2 px-3 rounded-full bg-[#ffa41c] active:bg-[#ee7d00] text-slate-900 text-xs font-bold flex items-center justify-center gap-1 border border-[#ff8f00] shadow-xs cursor-pointer"
-          >
-            <Zap className="w-3.5 h-3.5 fill-slate-900" />
-            <span>Buy Now</span>
-          </button>
         </div>
       </div>
     </main>

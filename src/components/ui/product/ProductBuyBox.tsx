@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import Link from "next/link";
+import { useAppDispatch } from "@/redux/hooks";
+import { addToCart } from "@/redux/features/order/orderSlice";
 
 interface ProductBuyBoxProps {
   price?: number;
@@ -40,7 +42,10 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
   onAddToCart,
   onBuyNow,
   buyBoxListing,
+  product,
+  selectedVariant,
 }) => {
+  const dispatch = useAppDispatch();
   const effectivePrice = buyBoxListing?.seller?.price || buyBoxListing?.price || price || 0;
   const effectiveVendor =
     (typeof buyBoxListing?.seller?.vendor === "object"
@@ -88,18 +93,44 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
   const effectiveFulfillment =
     buyBoxListing?.seller?.fulfillmentBy || fulfillmentBy || "Amarzone";
 
-  const handleAddToCartClick = () => {
+  const handleAddToCart = () => {
     setIsAdding(true);
     setTimeout(() => {
       setIsAdding(false);
       if (onAddToCart) {
         onAddToCart(quantity);
-      } else {
-        toast.success(`Added ${quantity} item(s) to Cart!`, {
-          position: "bottom-right",
-          autoClose: 2000,
-        });
+        return;
       }
+
+      // Fallback: direct dispatch if onAddToCart prop not supplied
+      const canonicalId = product?.productId || product?._id || "";
+      const variantId = selectedVariant?._id || buyBoxListing?.variant?._id || "";
+      const vId = effectiveVendorId || "";
+      const img =
+        selectedVariant?.images?.[0] ||
+        selectedVariant?.thumbnail ||
+        product?.thumbnail ||
+        product?.image ||
+        "";
+
+      const cartItem = {
+        _id: canonicalId,
+        productId: canonicalId,
+        variantId,
+        vendorId: vId,
+        quantity,
+        title: product?.title || "Product",
+        thumbnail: img,
+        image: img,
+        price: effectivePrice,
+        vendor: effectiveVendor,
+        inStock: isItemInStock,
+      };
+
+      dispatch(addToCart(cartItem));
+      toast.success(`🛒 ${cartItem.title} in your cart!`, {
+        autoClose: 1000,
+      });
     }, 250);
   };
 
@@ -182,12 +213,12 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
         {/* Add to Cart */}
         <button
           type="button"
-          onClick={handleAddToCartClick}
+          onClick={handleAddToCart}
           disabled={!isItemInStock || isAdding}
           className="w-full bg-[#ffd814] hover:bg-[#f7ca00] active:bg-[#f0b800] text-[#0f1111] font-medium text-xs sm:text-sm py-2 sm:py-2.5 px-4 rounded-full flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ShoppingCart className="w-4 h-4 fill-slate-900/10 text-slate-900" />
-          <span>Add to Cart</span>
+          <span>{isAdding ? "Adding..." : "Add to Cart"}</span>
         </button>
 
         {/* Buy Now */}
@@ -232,7 +263,7 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
         <span className="text-slate-500">Payment</span>
         <span className="text-slate-700">Secure credit/debit</span>
       </div>
-    </div >
+    </div>
   );
 };
 

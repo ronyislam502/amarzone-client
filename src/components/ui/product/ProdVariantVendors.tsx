@@ -6,7 +6,8 @@ import { TInventory } from "@/types/inventory";
 import { TProduct, TVariant } from "@/types/product";
 import { Award, CheckCircle2, ChevronRight, Store, Truck, Clock, X } from "lucide-react";
 import { useAppDispatch } from "@/redux/hooks";
-
+import { toast } from "react-toastify";
+import { addToCart } from "@/redux/features/order/orderSlice";
 
 interface ProductSellerOffersProps {
     sellers: TInventory[];
@@ -53,59 +54,58 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
     const sellersCount = sellers.length;
 
     const handleAddSellerToCart = (listing: TInventory) => {
-        // try {
-        //     const variantObj = (selectedVariant || listing.variant) as any;
-        //     const variantId =
-        //         variantObj?._id ||
-        //         (typeof listing.variant === "string" ? listing.variant : "") ||
-        //         product.variants?.[0]?._id;
-        //     const vendorId = listing.seller.vendor?._id;
+        const seller = listing.seller;
+        if (!seller) return;
 
-        //     const cartItem: any = {
-        //         ...product,
-        //         _id: variantId || product._id,
-        //         variantId: variantId,
-        //         variant: variantObj,
-        //         productId: product._id,
-        //         title: product.title,
-        //         thumbnail:
-        //             variantObj?.thumbnail ||
-        //             variantObj?.images?.[0] ||
-        //             product.thumbnail,
-        //         image:
-        //             variantObj?.thumbnail ||
-        //             variantObj?.images?.[0] ||
-        //             product.thumbnail,
-        //         brand: product.brand,
-        //         category: (product.category as any)?.name || product.category || "General",
-        //         price: listing.seller.price,
-        //         originalPrice:
-        //             product.minPrice && product.minPrice > listing.seller.price
-        //                 ? product.minPrice
-        //                 : Number((listing.seller.price * 1.15).toFixed(2)),
-        //         quantity: 1,
-        //         maxQuantity: listing.seller.quantity || 10,
-        //         seller: listing.seller,
-        //         vendor: listing.seller.vendor,
-        //         vendorId: vendorId,
-        //         inStock: listing.seller.isStock,
-        //         shippingTime: listing.seller.shippingTime || 2,
-        //         attributes: variantObj?.attributes || [],
-        //         isSelected: true,
-        //     };
-        //     dispatch(addToCar(cartItem));
-        //     toast.success(
-        //         `Added 1x from "${listing.seller.vendor?.name || "Seller"}" to Cart!`,
-        //         {
-        //             position: "bottom-right",
-        //             autoClose: 2000,
-        //         }
-        //     );
-        //     // Optional: Close drawer on add to cart
-        //     // setIsDrawerOpen(false);
-        // } catch {
-        //     toast.info("Item added to your cart!");
-        // }
+        const variantObj = (selectedVariant || listing.variant) as any;
+        const canonicalId = product?._id || "";
+        const variantId =
+            variantObj?._id ||
+            (typeof listing.variant === "string" ? listing.variant : "") ||
+            product?.variants?.[0]?._id ||
+            "";
+
+        const vendorObj = typeof seller.vendor === "object" && seller.vendor !== null ? (seller.vendor as any) : null;
+        const vendorId =
+            vendorObj?._id ||
+            (typeof seller.vendor === "string" ? seller.vendor : "") ||
+            (seller as any)?.vendorId ||
+            "";
+        const vendorName =
+            vendorObj?.name ||
+            seller.fulfillmentBy ||
+            "Amarzone Seller";
+
+        const img =
+            variantObj?.thumbnail ||
+            variantObj?.images?.[0] ||
+            product?.thumbnail ||
+            "";
+
+        const price = seller.price ?? 0;
+
+        const cartItem = {
+            _id: canonicalId,
+            productId: canonicalId,
+            variantId,
+            vendorId,
+            quantity: 1,
+            title: product?.title || "Product",
+            name: product?.title || "Product",
+            thumbnail: img,
+            image: img,
+            brand: product?.brand || "",
+            price,
+            originalPrice: Number((price * 1.15).toFixed(2)),
+            vendor: vendorName,
+            seller,
+            inStock: Boolean(seller.isStock && (seller.quantity ?? 0) > 0),
+        };
+
+        dispatch(addToCart(cartItem));
+        toast.success(`🛒 ${cartItem.title} in your cart!`, {
+            autoClose: 1000,
+        });
     };
 
     return (
@@ -231,7 +231,7 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
                                                     </div>
                                                 </div>
 
-                                                {/* Ships from & Sold by layout matching Image 2 */}
+                                                {/* Ships from & Sold by layout */}
                                                 <table className="text-xs text-slate-700 w-full mb-1">
                                                     <tbody>
                                                         <tr>
@@ -263,7 +263,6 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
                                                 {/* Ratings snippet for seller */}
                                                 <div className="flex items-center gap-1 mt-1 text-slate-600">
                                                     <div className="flex text-amber-500">
-                                                        {/* Mock star rating UI since we don't have exact seller rating here, using a static UI just to match layout */}
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
@@ -307,7 +306,32 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
                                         <div className="text-left mt-1">
                                             <span className="text-[#b12704] font-bold text-xs">${((product as any)?.minPrice || 25.99).toFixed(2)}</span>
                                         </div>
-                                        <button className="w-full mt-2 py-1 bg-[#ffd814] hover:bg-[#f7ca00] text-slate-900 border border-[#fcd200] rounded-full text-[11px] font-semibold cursor-pointer shadow-xs">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                const canonicalId = product?._id || "";
+                                                const variantId = selectedVariant?._id || product?.variants?.[0]?._id || "";
+                                                const img = product?.thumbnail || "";
+                                                const price = Number((product as any)?.minPrice || 25.99);
+                                                const item = {
+                                                    _id: canonicalId,
+                                                    productId: canonicalId,
+                                                    variantId,
+                                                    vendorId: "",
+                                                    quantity: 1,
+                                                    title: product?.title || "Product",
+                                                    name: product?.title || "Product",
+                                                    thumbnail: img,
+                                                    image: img,
+                                                    price,
+                                                    vendor: "Amarzone",
+                                                    inStock: true,
+                                                };
+                                                dispatch(addToCart(item));
+                                                toast.success(`🛒 ${item.title} in your cart!`, { autoClose: 1000 });
+                                            }}
+                                            className="w-full mt-2 py-1 bg-[#ffd814] hover:bg-[#f7ca00] text-slate-900 border border-[#fcd200] rounded-full text-[11px] font-semibold cursor-pointer shadow-xs"
+                                        >
                                             Add to cart
                                         </button>
                                     </div>

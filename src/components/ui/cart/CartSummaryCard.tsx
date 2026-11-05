@@ -77,10 +77,10 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
       {/* Main Checkout Card */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs space-y-4">
         {/* Free Shipping Milestone */}
-        <div className="space-y-1.5 pb-2 border-b border-slate-100">
+        <div className="space-y-1.5">
           {qualifiesForFreeShipping ? (
             <div className="flex items-start gap-2 text-xs text-slate-700">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 text-[#007600] shrink-0 mt-0.5" />
               <div>
                 <span className="font-bold text-[#007600]">
                   Your order qualifies for FREE Shipping.
@@ -112,7 +112,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
 
         {/* Subtotal */}
         <div>
-          <div className="text-base sm:text-lg text-slate-800">
+          <div className="text-base sm:text-lg text-slate-900">
             <span>Subtotal ({selectedCount} {selectedCount === 1 ? "item" : "items"}): </span>
             <span className="font-extrabold text-slate-900 text-xl">
               ${subtotal.toFixed(2)}
@@ -120,12 +120,12 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
           </div>
 
           {/* Gift Option */}
-          <label className="flex items-center gap-2 mt-2 text-xs text-slate-600 cursor-pointer">
+          <label className="flex items-center gap-2 mt-2 text-xs text-slate-700 cursor-pointer">
             <input
               type="checkbox"
               checked={isGift}
               onChange={(e) => setIsGift(e.target.checked)}
-              className="checkbox checkbox-xs checkbox-warning rounded-sm"
+              className="w-4 h-4 rounded-sm border-slate-300 accent-amber-500 cursor-pointer"
             />
             <span>This order contains a gift</span>
           </label>
@@ -136,7 +136,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
           type="button"
           disabled={selectedCount === 0 || isCheckoutLoading}
           onClick={handleProceedToCheckout}
-          className={`w-full py-3 px-4 rounded-full text-xs sm:text-sm font-bold shadow-xs transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
+          className={`w-full py-2.5 sm:py-3 px-4 rounded-full text-xs sm:text-sm font-semibold shadow-xs transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
             selectedCount > 0 && !isCheckoutLoading
               ? "bg-[#ffd814] hover:bg-[#f7ca00] active:bg-[#f0b800] text-slate-900 border border-[#fcd200]"
               : "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
@@ -155,7 +155,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
         </button>
 
         {/* Promo Code Input Form */}
-        <div className="pt-2 border-t border-slate-100 space-y-2">
+        <div className="pt-1 space-y-2">
           {discountCode ? (
             <div className="flex items-center justify-between p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-xs">
               <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
@@ -181,7 +181,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
               />
               <button
                 type="submit"
-                className="btn btn-sm btn-outline border-slate-300 text-slate-700 hover:bg-slate-900 hover:text-white rounded-xl text-xs font-bold"
+                className="btn btn-sm btn-outline border-slate-300 text-slate-700 hover:bg-slate-900 hover:text-white rounded-xl text-xs font-semibold px-4"
               >
                 Apply
               </button>
@@ -190,7 +190,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
         </div>
 
         {/* Breakdown Details */}
-        <div className="border-t border-slate-100 pt-3 space-y-1.5 text-xs text-slate-600">
+        <div className="pt-2 space-y-2 text-xs text-slate-600">
           <div className="flex justify-between">
             <span>Items Subtotal</span>
             <span>${subtotal.toFixed(2)}</span>
@@ -215,7 +215,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
             <span>${estimatedTax.toFixed(2)}</span>
           </div>
 
-          <div className="flex justify-between font-extrabold text-slate-900 text-sm pt-2 border-t border-slate-200">
+          <div className="flex justify-between font-extrabold text-slate-900 text-sm pt-2.5 border-t border-slate-200">
             <span>Order Total</span>
             <span className="text-base text-slate-900">${finalGrandTotal.toFixed(2)}</span>
           </div>
@@ -225,7 +225,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
       {/* Security Assurance Box */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs text-xs text-slate-600 space-y-2">
         <div className="flex items-center gap-2 font-bold text-slate-800">
-          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <ShieldCheck className="w-4 h-4 text-[#007600]" />
           <span>100% Secure Checkout Guarantee</span>
         </div>
         <p className="text-[11px] text-slate-500 leading-relaxed">
