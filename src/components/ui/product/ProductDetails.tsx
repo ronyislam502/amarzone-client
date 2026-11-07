@@ -223,41 +223,41 @@ const ProductDetails = () => {
     }
   };
 
-  const handleAddToCart = (itemOrQty?: any) => {
-    const qty = typeof itemOrQty === "number" ? itemOrQty : itemOrQty?.quantity || 1;
-    const baseItem = typeof itemOrQty === "object" && itemOrQty !== null ? itemOrQty : {};
+  const handleAddToCart = (product: any) => {
+    const baseItem = typeof product === "object" && product !== null ? product : {};
+    const qty = typeof product === "number" ? product : baseItem.quantity || 1;
 
     const img =
       baseItem.thumbnail ||
       baseItem.image ||
       resolvedImages[0] ||
       activeVariant?.images?.[0] ||
-      product?.thumbnail ||
+      baseItem?.thumbnail ||
       "";
 
-    const productItem = {
+    const cartProduct = {
       ...baseItem,
-      _id: baseItem._id || productId || "",
-      productId: baseItem.productId || productId || "",
-      variantId: baseItem.variantId || activeVariant?._id || "",
-      vendorId: baseItem.vendorId || resolvedVendorId || "",
+      _id: baseItem._id || productId,
+      productId: baseItem.productId,
+      variantId: baseItem.variantId,
+      vendorId: baseItem.vendorId,
       quantity: qty,
-      title: baseItem.title || resolvedTitle || product?.title || "Product",
-      name: baseItem.name || baseItem.title || resolvedTitle || product?.title || "Product",
+      title: baseItem.title,
       thumbnail: img,
       image: img,
       price: baseItem.price !== undefined ? baseItem.price : resolvedPrice,
       originalPrice: baseItem.originalPrice !== undefined ? baseItem.originalPrice : resolvedOriginalPrice,
       vendor: baseItem.vendor || resolvedVendor,
       attributes: baseItem.attributes || activeVariant?.attributes,
-      inStock: true,
     };
 
-    dispatch(addToCart(productItem));
-    toast.success(`🛒 ${productItem?.title} in your cart!`, {
+    dispatch(addToCart(cartProduct));
+    toast.success(`🍽️ ${cartProduct?.title} in your collection!`, {
       autoClose: 1000,
     });
   };
+
+
 
   if ((isLoadingVariants || isLoadingProduct) && !product && variants.length === 0) {
     return (

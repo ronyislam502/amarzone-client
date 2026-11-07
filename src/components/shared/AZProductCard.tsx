@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useAppDispatch } from "@/redux/hooks";
-import { addToCart } from "@/redux/features/order/orderSlice";
+import { addToCart, addToCart as addToCartAction } from "@/redux/features/order/orderSlice";
 
 interface AZProductCardProps {
     product: any;
@@ -35,36 +35,11 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
         : `/products/${product?.productId || product?._id}`;
 
     const handleAddToCart = (product: any) => {
-
-        console.log("pro", product)
-        const canonicalId = product?.productId || product?._id || product?.id || "";
-        const variantId = product?.variantId || product?.variants?.[0]?._id || "";
-        const vendorId =
-            (typeof product?.vendor === "object" ? product?.vendor?._id : product?.vendor) ||
-            product?.vendorId ||
-            (typeof product?.seller?.vendor === "object" ? product?.seller?.vendor?._id : product?.seller?.vendor) ||
-            "";
-
-        const cartItem = {
-            ...product,
-            _id: canonicalId,
-            productId: canonicalId,
-            variantId,
-            vendorId,
-            quantity: 1,
-            title: product?.title,
-            image: product?.thumbnail,
-            price: currentPrice,
-            originalPrice,
-            vendor: product?.vendor,
-            inStock: true,
-        };
-
-        dispatch(addToCart(cartItem));
-        toast.success(`🛒 ${cartItem.title} in your cart!`, {
+        dispatch(addToCart(product));
+        toast.success(`🍽️ ${product?.title} in your collection!`, {
             autoClose: 1000,
         });
-    };
+    }
 
     return (
         <div className="card w-full bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col h-full justify-between">
@@ -77,7 +52,7 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
                     {/* Image */}
                     <figure className="relative aspect-square overflow-hidden">
                         <Image
-                            src={product?.thumbnail || ""}
+                            src={product?.thumbnail || product?.image || product?.images?.[0] || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='225' height='225' viewBox='0 0 225 225'%3E%3Crect width='225' height='225' fill='%23f1f5f9'/%3E%3C/svg%3E"}
                             alt={product?.title || "Product"}
                             width={225}
                             height={225}
@@ -99,6 +74,10 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
                         {/* Wishlist */}
                         <button
                             type="button"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }}
                             className="btn btn-circle btn-sm absolute right-3 top-3 bg-base-100/90 shadow-sm"
                         >
                             <Heart className="h-4 w-4 text-base-content/60" />

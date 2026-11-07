@@ -6,4 +6,5 @@ export type TPaginationProps = {
     onLimitChange?: (newLimit: number) => void;
     limitOptions?: number[];
     className?: string;
-}
+    theme?: "dark" | "light";
+};

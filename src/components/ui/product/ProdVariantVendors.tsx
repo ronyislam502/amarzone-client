@@ -91,15 +91,13 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
             vendorId,
             quantity: 1,
             title: product?.title || "Product",
-            name: product?.title || "Product",
             thumbnail: img,
             image: img,
-            brand: product?.brand || "",
+            brand: product?.brand,
             price,
             originalPrice: Number((price * 1.15).toFixed(2)),
             vendor: vendorName,
-            seller,
-            inStock: Boolean(seller.isStock && (seller.quantity ?? 0) > 0),
+            seller
         };
 
         dispatch(addToCart(cartItem));
@@ -184,11 +182,10 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
                                 return (
                                     <div
                                         key={listing._id}
-                                        className={`border-b p-4 transition-colors ${
-                                            isWinner
-                                                ? "bg-amber-50/50 border-amber-200"
-                                                : "bg-white border-slate-200"
-                                        }`}
+                                        className={`border-b p-4 transition-colors ${isWinner
+                                            ? "bg-amber-50/50 border-amber-200"
+                                            : "bg-white border-slate-200"
+                                            }`}
                                     >
                                         {/* Header: New, Winner Badge & Add to Cart button */}
                                         <div className="flex justify-between items-start mb-2">

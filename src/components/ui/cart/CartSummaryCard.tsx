@@ -3,6 +3,9 @@
 import React, { useState } from "react";
 import { CheckCircle2, Lock, ShieldCheck, Tag } from "lucide-react";
 import { toast } from "react-toastify";
+import { FieldValues } from "react-hook-form";
+import AZInput from "@/components/shared/form/AZInput";
+import AZForm from "@/components/shared/form/AZFrom";
 
 interface CartSummaryCardProps {
   subtotal: number;
@@ -37,14 +40,14 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
     Math.max(0, subtotal - discount + estimatedTax).toFixed(2)
   );
 
-  const handlePromoSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!promoInput.trim()) return;
+  const handlePromoSubmit = (data: FieldValues) => {
+    const promo = {
+      code: data.promoCode,
+    };
 
-    const code = promoInput.trim().toUpperCase();
-    if (code === "AMARZONE10" || code === "SAVE10") {
-      setDiscountCode(code);
-      toast.success(`Promo code "${code}" applied!`, {
+    if (promo.code === "AMARZONE10" || promo.code === "SAVE10") {
+      setDiscountCode(promo.code);
+      toast.success(`Promo code "${promo.code}" applied!`, {
         position: "bottom-right",
       });
       setPromoInput("");
@@ -136,11 +139,10 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
           type="button"
           disabled={selectedCount === 0 || isCheckoutLoading}
           onClick={handleProceedToCheckout}
-          className={`w-full py-2.5 sm:py-3 px-4 rounded-full text-xs sm:text-sm font-semibold shadow-xs transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${
-            selectedCount > 0 && !isCheckoutLoading
-              ? "bg-[#ffd814] hover:bg-[#f7ca00] active:bg-[#f0b800] text-slate-900 border border-[#fcd200]"
-              : "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
-          }`}
+          className={`w-full py-2.5 sm:py-3 px-4 rounded-full text-xs sm:text-sm font-semibold shadow-xs transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer ${selectedCount > 0 && !isCheckoutLoading
+            ? "bg-[#ffd814] hover:bg-[#f7ca00] active:bg-[#f0b800] text-slate-900 border border-[#fcd200]"
+            : "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
+            }`}
         >
           {isCheckoutLoading ? (
             <span className="loading loading-spinner loading-xs text-slate-900" />
@@ -171,21 +173,24 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
               </button>
             </div>
           ) : (
-            <form onSubmit={handlePromoSubmit} className="flex gap-2">
-              <input
-                type="text"
-                value={promoInput}
-                onChange={(e) => setPromoInput(e.target.value)}
-                placeholder="Enter promo code (e.g. AMARZONE10)"
-                className="input input-sm flex-1 text-xs rounded-xl bg-slate-50 border-slate-300 focus:border-amber-500 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="btn btn-sm btn-outline border-slate-300 text-slate-700 hover:bg-slate-900 hover:text-white rounded-xl text-xs font-semibold px-4"
-              >
-                Apply
-              </button>
-            </form>
+            <AZForm onSubmit={handlePromoSubmit}>
+              <div className="flex gap-2">
+                <AZInput
+                  name="promoCode"
+                  placeholder="Enter promo code (e.g. AMARZONE10)"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value)}
+                  clearable={Boolean(promoInput)}
+                  onClear={() => setPromoInput("")}
+                />
+                <button
+                  type="submit"
+                  className="btn btn-outline btn-warning"
+                >
+                  Apply
+                </button>
+              </div>
+            </AZForm>
           )}
         </div>
 
