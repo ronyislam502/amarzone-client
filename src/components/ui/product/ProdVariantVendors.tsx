@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { TInventory } from "@/types/inventory";
 import { TProduct, TVariant } from "@/types/product";
-import { Award, CheckCircle2, ChevronRight, Store, Truck, Clock, X } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import { useAppDispatch } from "@/redux/hooks";
 import { toast } from "react-toastify";
 import { addToCart } from "@/redux/features/order/orderSlice";
@@ -44,64 +44,69 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
         return null; // Only show if more than 1 seller
     }
 
-    // Find lowest price safely
-    const validPrices = sellers
+    // Exclude the Buy Box Winner — the drawer only shows other sellers
+    const otherSellers = sellers.filter((listing) => {
+        if (buyBoxWinnerId && listing._id === buyBoxWinnerId) return false;
+        if ((listing.seller as any)?.isBuyBoxWinner) return false;
+        return true;
+    });
+
+    if (otherSellers.length === 0) return null;
+
+    // Find lowest price among other sellers only
+    const validPrices = otherSellers
         .map((s) => s.seller?.price)
         .filter((p): p is number => typeof p === "number" && !isNaN(p));
     const lowestPrice = validPrices.length > 0 ? Math.min(...validPrices) : 0;
 
-    // Total sellers count
-    const sellersCount = sellers.length;
+    // Count of other sellers (excluding Buy Box Winner)
+    const sellersCount = otherSellers.length;
 
     const handleAddSellerToCart = (listing: TInventory) => {
         const seller = listing.seller;
         if (!seller) return;
 
         const variantObj = (selectedVariant || listing.variant) as any;
-        const canonicalId = product?._id || "";
-        const variantId =
+
+        // variant._id — prefer selectedVariant, fall back to listing's variant
+        const variantId: string =
             variantObj?._id ||
             (typeof listing.variant === "string" ? listing.variant : "") ||
-            product?.variants?.[0]?._id ||
             "";
 
-        const vendorObj = typeof seller.vendor === "object" && seller.vendor !== null ? (seller.vendor as any) : null;
-        const vendorId =
+        // vendor (vendorId string)
+        const vendorObj =
+            typeof seller.vendor === "object" && seller.vendor !== null
+                ? (seller.vendor as any)
+                : null;
+        const vendorId: string =
             vendorObj?._id ||
             (typeof seller.vendor === "string" ? seller.vendor : "") ||
             (seller as any)?.vendorId ||
             "";
-        const vendorName =
-            vendorObj?.name ||
-            seller.fulfillmentBy ||
-            "Amarzone Seller";
 
-        const img =
-            variantObj?.thumbnail ||
+        // image — variant image[0] only (no product thumbnail in cart)
+        const img: string =
             variantObj?.images?.[0] ||
-            product?.thumbnail ||
+            variantObj?.thumbnail ||
             "";
 
-        const price = seller.price ?? 0;
+        // price from this seller's listing
+        const resolvedPrice = seller.price ?? 0;
 
-        const cartItem = {
-            _id: canonicalId,
-            productId: canonicalId,
-            variantId,
-            vendorId,
+        const cartProduct = {
+            _id: variantId,
+            productId: product?._id || "",
+            variant: variantId,
+            vendor: vendorId,
             quantity: 1,
             title: product?.title || "Product",
-            thumbnail: img,
             image: img,
-            brand: product?.brand,
-            price,
-            originalPrice: Number((price * 1.15).toFixed(2)),
-            vendor: vendorName,
-            seller
+            price: resolvedPrice,
         };
 
-        dispatch(addToCart(cartItem));
-        toast.success(`🛒 ${cartItem.title} in your cart!`, {
+        dispatch(addToCart(cartProduct));
+        toast.success(`🛒 ${cartProduct.title} in your cart!`, {
             autoClose: 1000,
         });
     };
@@ -152,12 +157,9 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
 
                         {/* Seller List */}
                         <div className="flex-1 overflow-y-auto bg-slate-100/50">
-                            {sellers?.map((listing) => {
+                            {otherSellers.map((listing) => {
                                 const seller = listing.seller;
                                 if (!seller) return null;
-                                const isWinner =
-                                    (buyBoxWinnerId && listing._id === buyBoxWinnerId) ||
-                                    seller.isBuyBoxWinner;
                                 const vendorObj = typeof seller.vendor === "object" && seller.vendor !== null ? (seller.vendor as any) : null;
                                 const vendorName = vendorObj?.name || (typeof seller.vendor === "string" ? seller.vendor : "Amarzone Verified Seller");
                                 const vendorId =
@@ -182,21 +184,12 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
                                 return (
                                     <div
                                         key={listing._id}
-                                        className={`border-b p-4 transition-colors ${isWinner
-                                            ? "bg-amber-50/50 border-amber-200"
-                                            : "bg-white border-slate-200"
-                                            }`}
+                                        className="border-b bg-white border-slate-200 p-4 transition-colors"
                                     >
-                                        {/* Header: New, Winner Badge & Add to Cart button */}
+                                        {/* Header: New & Add to Cart button */}
                                         <div className="flex justify-between items-start mb-2">
                                             <div className="flex items-center gap-2">
                                                 <div className="font-bold text-slate-900 text-sm">New</div>
-                                                {isWinner && (
-                                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                                                        <Award className="w-3 h-3 text-amber-600" />
-                                                        Buy Box Winner
-                                                    </span>
-                                                )}
                                             </div>
                                             <button
                                                 disabled={!isStock}

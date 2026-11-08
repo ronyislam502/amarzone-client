@@ -46,21 +46,42 @@ const cartSlice = createSlice({
       }
       const item = action.payload;
 
-      const canonicalId = item._id || item.productId || item.id;
-      const variantId = item.variantId || item.variant?._id || "";
-      const compositeKey = `${canonicalId}__${variantId}`;
+      const variant =
+        (typeof item.variant === "string" ? item.variant : item.variant?._id) ||
+        item.variantId ||
+        item.variantid ||
+        item._id ||
+        "";
 
-      const existing = state.products.find(
-        (p) => `${p._id || p.productId || p.id}__${p.variantId || ""}` === compositeKey
-      );
+      const productId = item.productId || item._id || item.id || "";
+      const canonicalId = item._id || variant || productId;
+
+      const vendor =
+        (typeof item.vendor === "string" ? item.vendor : item.vendor?._id) ||
+        item.vendorId ||
+        item.vendorName ||
+        item.seller?.vendor?.name ||
+        item.sellerName ||
+        "";
 
       const title = item.title || item.name || "";
       const image = item.image || item.thumbnail || item.images?.[0] || "";
-      const thumbnail = item.thumbnail || item.image || item.images?.[0] || "";
       const price = item.price !== undefined ? Number(item.price) : 0;
-      const originalPrice = item.originalPrice !== undefined ? Number(item.originalPrice) : price;
-      const vendorId = item.vendorId || item.vendor?._id || item.seller?.vendor?._id || item.seller?.vendor || "";
-      const vendor = item.vendor || item.vendorName || item.seller?.vendor?.name || item.sellerName || "";
+
+      const compositeKey = `${variant || canonicalId}__${vendor}`;
+
+      const existing = state.products.find((p) => {
+        const pVariant =
+          (typeof p.variant === "string" ? p.variant : p.variant?._id) ||
+          p.variantId ||
+          p._id ||
+          "";
+        const pVendor =
+          (typeof p.vendor === "string" ? p.vendor : p.vendor?._id) ||
+          p.vendorId ||
+          "";
+        return `${pVariant}__${pVendor}` === compositeKey;
+      });
 
       if (existing) {
         // Increment quantity if already in cart
@@ -68,33 +89,23 @@ const cartSlice = createSlice({
 
         // Update title, image, thumbnail, and price if previously missing
         if (!existing.title && title) existing.title = title;
-        if (!existing.thumbnail && thumbnail) existing.thumbnail = thumbnail;
         if (!existing.image && image) existing.image = image;
+        if (!existing.thumbnail && image) existing.thumbnail = image;
         if ((!existing.price || existing.price === 0) && price > 0) existing.price = price;
-        if (!existing.originalPrice && originalPrice > 0) existing.originalPrice = originalPrice;
         if (!existing.vendor && vendor) existing.vendor = vendor;
-        if (!existing.vendorId && vendorId) existing.vendorId = vendorId;
       } else {
         state.products.push({
           ...item,
           _id: canonicalId,
-          productId: item.productId || canonicalId,
-          variantId,
-          vendorId,
+          productId,
+          variant,
+          vendor,
           quantity: item.quantity || 1,
           title,
-          thumbnail,
           image,
+          thumbnail: item.thumbnail || image,
           price,
-          originalPrice,
-          vendor,
-          brand: item.brand || "",
-          seller: item.seller || "",
-          inStock: item.inStock !== false,
-          attributes: item.attributes || item.variant?.attributes || [],
-          category: item.category || "",
         });
-
       }
 
       calculateTotals(state);
@@ -104,25 +115,26 @@ const cartSlice = createSlice({
       state,
       action: PayloadAction<{
         _id: string;
+        variant?: string;
         variantId?: string;
         title?: string;
         thumbnail?: string;
         image?: string;
         price?: number;
-        originalPrice?: number;
         vendor?: any;
-        vendorId?: string;
         [key: string]: any;
       }>
     ) => {
       if (!state.products) return;
-      const { _id, variantId, ...details } = action.payload;
+      const { _id, variant, variantId, ...details } = action.payload;
+      const targetVariant = variant || variantId;
 
       state.products = state.products.map((item) => {
         const matchId =
           (item._id || item.productId || item.id) === _id ||
-          item.variantId === _id;
-        const matchVariant = variantId ? item.variantId === variantId : true;
+          item.variant === _id ||
+          item.productId === _id;
+        const matchVariant = targetVariant ? item.variant === targetVariant : true;
 
         if (matchId && matchVariant) {
           const title = details.title || item.title || "";
@@ -146,17 +158,18 @@ const cartSlice = createSlice({
 
     updateQuantity: (
       state,
-      action: PayloadAction<{ type: "increment" | "decrement"; _id: string; variantId?: string }>
+      action: PayloadAction<{ type: "increment" | "decrement"; _id: string; variantId?: string; variant?: string }>
     ) => {
       if (!state.products) {
         state.products = [];
       }
+      const targetVariant = action.payload.variantId || action.payload.variant;
       state.products = state.products.map((item) => {
         const matchById =
           (item._id || item.productId || item.id) === action.payload._id ||
-          item.variantId === action.payload._id;
-        const matchByVariant = action.payload.variantId
-          ? item.variantId === action.payload.variantId
+          item.variant === action.payload._id;
+        const matchByVariant = targetVariant
+          ? item.variant === targetVariant
           : true;
 
         if (matchById && matchByVariant) {
@@ -175,17 +188,18 @@ const cartSlice = createSlice({
 
     removeFromCart: (
       state,
-      action: PayloadAction<{ _id: string; variantId?: string }>
+      action: PayloadAction<{ _id: string; variant?: string; variantId?: string }>
     ) => {
       if (!state.products) {
         state.products = [];
       }
+      const targetVariant = action.payload.variant || action.payload.variantId;
       state.products = state.products.filter((item) => {
         const matchById =
           (item._id || item.productId || item.id) === action.payload._id ||
-          item.variantId === action.payload._id;
-        const matchByVariant = action.payload.variantId
-          ? item.variantId === action.payload.variantId
+          item.variant === action.payload._id;
+        const matchByVariant = targetVariant
+          ? item.variant === targetVariant
           : true;
         return !(matchById && matchByVariant);
       });

@@ -13,6 +13,7 @@ import { TCartProduct } from "@/types/order";
 import CartItemList from "./CartItemList";
 import CartSummaryCard from "./CartSummaryCard";
 import CartEmptyState from "./CartEmptyState";
+import { FieldValues } from "react-hook-form";
 
 const CartData = () => {
     const router = useRouter();
@@ -37,7 +38,6 @@ const CartData = () => {
         });
     }, [cartProducts]);
 
-    console.log("cart", cartItems)
 
     const [selectedItems, setSelectedItems] = useState<TCartProduct[]>(cartItems);
     const [selectedCount, setSelectedCount] = useState<number>(
@@ -60,76 +60,7 @@ const CartData = () => {
         []
     );
 
-    const handleProceedToCheckout = async () => {
-        if (selectedItems.length === 0) {
-            toast.info("Please select at least 1 item to proceed to checkout.");
-            return;
-        }
-
-        if (!currentUser || !currentToken) {
-            toast.warning("Please sign in to proceed with checkout.");
-            router.push("/login?redirect=/cart");
-            return;
-        }
-
-        try {
-            // Group selected items by vendor to support multiple products per order
-            const vendorMap = new Map<string, TCartProduct[]>();
-
-            for (const item of selectedItems) {
-                const vendorId =
-                    item.vendorId ||
-                    item.seller?.vendor?._id ||
-                    item.seller?.vendor ||
-                    item.vendor?._id ||
-                    item.vendor ||
-                    item.author?._id ||
-                    item.author?.id ||
-                    item.author ||
-                    "default";
-
-                const vKey = typeof vendorId === "object" ? vendorId._id || vendorId.id : String(vendorId);
-
-                if (!vendorMap.has(vKey)) {
-                    vendorMap.set(vKey, []);
-                }
-                vendorMap.get(vKey)!.push(item);
-            }
-
-            // Create orders for each vendor group
-            for (const [vendorId, groupProducts] of vendorMap.entries()) {
-                const orderPayload = {
-                    vendor: vendorId,
-                    products: groupProducts.map((p) => ({
-                        variant: String(p.variantId || p._id || p.id || ""),
-                        quantity: p.quantity || 1,
-                    })),
-                };
-
-                const res = await createOrderMutation(orderPayload).unwrap();
-
-                // Remove successfully ordered items from Redux cart
-                groupProducts.forEach((p) => {
-                    const targetId = String(p._id || p.variantId || p.id || "");
-                    if (targetId) {
-                        dispatch(removeFromCart({ _id: targetId }));
-                    }
-                });
-
-                // If Stripe checkout redirect URL is returned, navigate to checkout session
-                const checkoutUrl = res?.data?.url || res?.url;
-                if (checkoutUrl) {
-                    window.location.href = checkoutUrl;
-                    return;
-                }
-            }
-
-            toast.success("Order created successfully!");
-            router.push("/customer/orders");
-        } catch (error: any) {
-            toast.error(error?.data?.message || "Failed to create order. Please try again.");
-        }
-    };
+    console.log("variant", selectedItems)
 
     return (
         <div className="bg-[#f0f2f2]/60 min-h-screen py-5 select-none">
@@ -164,7 +95,8 @@ const CartData = () => {
                             <CartSummaryCard
                                 subtotal={subtotal}
                                 selectedCount={selectedCount}
-                                onProceedToCheckout={handleProceedToCheckout}
+                                products={selectedItems}
+                                // onProceedToCheckout={handleProceedToCheckout}
                                 isCheckoutLoading={isCreatingOrder}
                             />
                         </div>

@@ -6,23 +6,30 @@ import { toast } from "react-toastify";
 import { FieldValues } from "react-hook-form";
 import AZInput from "@/components/shared/form/AZInput";
 import AZForm from "@/components/shared/form/AZFrom";
+import { useCreateOrderMutation } from "@/redux/features/order/orderApi";
+import { clearCart } from "@/redux/features/order/orderSlice";
+import { useDispatch } from "react-redux";
 
 interface CartSummaryCardProps {
   subtotal: number;
   selectedCount: number;
-  onProceedToCheckout?: () => void;
+  products: any
+  // onProceedToCheckout?: () => void;
   isCheckoutLoading?: boolean;
 }
 
 export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
   subtotal,
   selectedCount,
-  onProceedToCheckout,
+  products,
   isCheckoutLoading = false,
 }) => {
+  const dispatch = useDispatch();
   const [promoInput, setPromoInput] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [isGift, setIsGift] = useState(false);
+
+  const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
 
   const freeShippingThreshold = 35.0;
   const qualifiesForFreeShipping = subtotal >= freeShippingThreshold;
@@ -58,15 +65,28 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
     }
   };
 
-  const handleProceedToCheckout = () => {
-    if (selectedCount === 0) {
-      toast.info("Please select at least 1 item to checkout.");
-      return;
+  console.log("products", products)
+
+  const handleProceedToCheckout = async (data: FieldValues) => {
+
+    const orderData = {
+      vendor: products[0].vendor,
+      products: products?.map((prod: any) => ({
+        variant: prod._id,
+        quantity: prod.quantity,
+        price: prod.price
+      }))
     }
-    if (onProceedToCheckout) {
-      onProceedToCheckout();
-      return;
+
+    const orderRes = await createOrder(orderData).unwrap();
+    if (orderRes?.success) {
+      toast.success(orderRes?.message);
+      // window.location.href = orderRes?.data;
+      dispatch(clearCart());
     }
+
+    console.log("cart", orderData)
+
   };
 
   const handleRemoveDiscount = () => {
@@ -144,13 +164,13 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
             : "bg-slate-200 text-slate-400 cursor-not-allowed border-transparent"
             }`}
         >
-          {isCheckoutLoading ? (
+          {isCreatingOrder ? (
             <span className="loading loading-spinner loading-xs text-slate-900" />
           ) : (
             <Lock className="w-4 h-4 stroke-[2.2]" />
           )}
           <span>
-            {isCheckoutLoading
+            {isCreatingOrder
               ? "Preparing Checkout..."
               : "Proceed to checkout"}
           </span>

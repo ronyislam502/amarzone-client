@@ -9,7 +9,6 @@ import ProductsTable, { TProduct } from "./ProductsTable";
 import ProductsStats from "./ProductsStats";
 
 
-
 const LIMIT = 10;
 
 const ProductsData = () => {

@@ -35,7 +35,18 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
         : `/products/${product?.productId || product?._id}`;
 
     const handleAddToCart = (product: any) => {
-        dispatch(addToCart(product));
+        const cartProduct = {
+            _id: product?._id,
+            productId: product?.productId,
+            variant: product?.variantId,
+            vendor: product.vendorId,
+            quantity: 1,
+            title: product?.title,
+            image: product.thumbnail,
+            price: product.price,
+        };
+
+        dispatch(addToCart(cartProduct));
         toast.success(`🍽️ ${product?.title} in your collection!`, {
             autoClose: 1000,
         });

@@ -2,11 +2,9 @@
 
 import AZProductsPage from "@/components/shared/AZProductsPage";
 import { useAllProductsByDepartmentQuery } from "@/redux/features/product/productApi";
-import ProductFilterSidebar from "./productsFilter";
+// import ProductFilterSidebar from "./productsFilter";
 import { useParams, useSearchParams } from "next/navigation";
 import { useAllDepartmentsQuery } from "@/redux/features/department/departmentApi";
-
-
 
 const DepProductsPage = () => {
     const params = useParams();
@@ -55,8 +53,8 @@ const DepProductsPage = () => {
 
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-6">
-            <div className="col-span-1"><ProductFilterSidebar /></div>
-            <div className="col-span-3"><AZProductsPage products={products} /></div>
+            {/* <div className="col-span-1"><ProductFilterSidebar /></div> */}
+            <div className="col-span-3"><AZProductsPage products={products} showSidebar={false} /></div>
         </div>
     )
 }

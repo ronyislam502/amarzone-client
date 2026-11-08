@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Trash2, Bookmark, Share2 } from "lucide-react";
+import { Trash2, Bookmark, Share2, Minus, Plus } from "lucide-react";
 import { toast } from "react-toastify";
 import { TCartProduct } from "@/types/order";
 import { useAppDispatch } from "@/redux/hooks";
@@ -227,26 +227,29 @@ export const CartItemCard: React.FC<CartItemCardProps> = ({
 
           {/* Action Row: Quantity Stepper, Delete, Save for Later, Share */}
           <div className="flex items-center flex-wrap gap-2 sm:gap-3 pt-3">
-            {/* Quantity Selector */}
-            <div className="flex items-center bg-slate-100 rounded-lg border border-slate-300 px-2 py-0.5">
-              <label
-                htmlFor={`qty-${itemId}`}
-                className="text-xs font-semibold text-slate-600 mr-1.5"
+            {/* Quantity +/- Stepper */}
+            <div className="flex items-center bg-slate-100 rounded-lg border border-slate-300 overflow-hidden">
+              <button
+                type="button"
+                aria-label="Decrease quantity"
+                onClick={() => onUpdateQuantity(itemId, Math.max((item.quantity || 1) - 1, 1))}
+                disabled={(item.quantity || 1) <= 1}
+                className="px-2.5 py-1 text-slate-600 hover:bg-slate-200 active:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
-                Qty:
-              </label>
-              <select
-                id={`qty-${itemId}`}
-                value={item.quantity || 1}
-                onChange={(e) => onUpdateQuantity(itemId, Number(e.target.value))}
-                className="select select-ghost select-xs text-xs font-bold bg-transparent border-none focus:outline-none p-0 cursor-pointer"
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className="px-2.5 text-xs font-bold text-slate-800 select-none min-w-[24px] text-center">
+                {item.quantity || 1}
+              </span>
+              <button
+                type="button"
+                aria-label="Increase quantity"
+                onClick={() => onUpdateQuantity(itemId, Math.min((item.quantity || 1) + 1, maxQty))}
+                disabled={(item.quantity || 1) >= maxQty}
+                className="px-2.5 py-1 text-slate-600 hover:bg-slate-200 active:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
               >
-                {Array.from({ length: Math.min(maxQty, 20) }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
+                <Plus className="w-3 h-3" />
+              </button>
             </div>
 
             <span className="text-slate-300 hidden sm:inline">|</span>

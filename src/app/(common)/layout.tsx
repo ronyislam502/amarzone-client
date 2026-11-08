@@ -4,7 +4,7 @@ import AZNavbar from "@/components/shared/AZNavbar";
 
 const layout = ({ children }: { children: React.ReactNode }) => {
     return (
-        <div className="">
+        <div>
             <AZNavbar />
             {children}
             <AZFooter />

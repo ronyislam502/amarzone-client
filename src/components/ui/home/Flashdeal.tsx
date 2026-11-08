@@ -84,28 +84,50 @@ const Flashdeal = () => {
                 </Link>
             </div>
 
-            {/* Carousel */}
-            <Carousel
-                plugins={[plugin.current]}
-                opts={{
-                    align: "start",
-                    loop: true,
-                }}
-                className="w-full"
-                onMouseEnter={plugin.current.stop}
-                onMouseLeave={plugin.current.reset}
-            >
-                <CarouselContent className="-ml-3">
-                    {productsData?.data?.slice(0, 20).map((product) => (
-                        <CarouselItem
-                            key={product._id}
-                            className="pl-3 basis-1/2 sm:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+            {/* Carousel / Loading Skeleton */}
+            {isLoading || !productsData?.data ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <div
+                            key={i}
+                            className="bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col justify-between h-[360px] animate-pulse"
                         >
-                            <AZProductCard product={product} />
-                        </CarouselItem>
+                            <div>
+                                <div className="aspect-square w-full bg-slate-200 rounded-xl" />
+                                <div className="space-y-2 pt-3">
+                                    <div className="h-2.5 bg-slate-200 rounded-sm w-1/3" />
+                                    <div className="h-3.5 bg-slate-200 rounded-sm w-4/5" />
+                                    <div className="h-3 bg-slate-200 rounded-sm w-1/2" />
+                                    <div className="h-5 bg-slate-200 rounded-sm w-2/5 mt-1" />
+                                </div>
+                            </div>
+                            <div className="h-8 bg-slate-200 rounded-lg w-full mt-3" />
+                        </div>
                     ))}
-                </CarouselContent>
-            </Carousel>
+                </div>
+            ) : (
+                <Carousel
+                    plugins={[plugin.current]}
+                    opts={{
+                        align: "start",
+                        loop: true,
+                    }}
+                    className="w-full"
+                    onMouseEnter={plugin.current.stop}
+                    onMouseLeave={plugin.current.reset}
+                >
+                    <CarouselContent className="-ml-3">
+                        {productsData?.data?.slice(0, 20).map((product) => (
+                            <CarouselItem
+                                key={product._id}
+                                className="pl-3 basis-1/2 sm:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                            >
+                                <AZProductCard product={product} />
+                            </CarouselItem>
+                        ))}
+                    </CarouselContent>
+                </Carousel>
+            )}
         </section>
     );
 };

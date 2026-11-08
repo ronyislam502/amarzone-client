@@ -162,15 +162,25 @@ const ProductDetails = () => {
       ? (rawReviews as any).data
       : [];
 
-  // Variant images resolution directly from database
+  // Variant images resolution — product thumbnail first, then variant images (deduped)
   const resolvedImages = useMemo(() => {
+    const imgs: string[] = [];
+
+    // Always prepend the product thumbnail so it appears as the first/main image
+    if (product?.thumbnail && product.thumbnail.trim()) {
+      imgs.push(product.thumbnail.trim());
+    }
+
+    // Append variant images, skipping any that duplicate the thumbnail
     if (Array.isArray(activeVariant?.images) && activeVariant.images.length > 0) {
-      return activeVariant.images;
+      activeVariant.images.forEach((img: string) => {
+        if (img && img.trim() && !imgs.includes(img.trim())) {
+          imgs.push(img.trim());
+        }
+      });
     }
-    if (product?.thumbnail) {
-      return [product.thumbnail];
-    }
-    return [];
+
+    return imgs;
   }, [activeVariant, product]);
 
   // Resolved dynamic values strictly from database
@@ -223,36 +233,30 @@ const ProductDetails = () => {
     }
   };
 
-  const handleAddToCart = (product: any) => {
-    const baseItem = typeof product === "object" && product !== null ? product : {};
-    const qty = typeof product === "number" ? product : baseItem.quantity || 1;
+  const handleAddToCart = (qty?: any) => {
+    const quantity =
+      typeof qty === "number" && qty > 0
+        ? qty
+        : typeof qty === "object" && qty?.quantity
+          ? Number(qty.quantity)
+          : 1;
 
-    const img =
-      baseItem.thumbnail ||
-      baseItem.image ||
-      resolvedImages[0] ||
-      activeVariant?.images?.[0] ||
-      baseItem?.thumbnail ||
-      "";
+    // Use variant image[0] as the cart image (not the product thumbnail)
+    const img = activeVariant?.images?.[0] || product?.thumbnail || "";
 
     const cartProduct = {
-      ...baseItem,
-      _id: baseItem._id || productId,
-      productId: baseItem.productId,
-      variantId: baseItem.variantId,
-      vendorId: baseItem.vendorId,
-      quantity: qty,
-      title: baseItem.title,
-      thumbnail: img,
+      _id: activeVariant?._id || "",
+      productId: product?._id || "",
+      variant: activeVariant?._id || "",
+      vendor: resolvedVendorId || "",
+      quantity,
+      title: product?.title || resolvedTitle || "Product",
       image: img,
-      price: baseItem.price !== undefined ? baseItem.price : resolvedPrice,
-      originalPrice: baseItem.originalPrice !== undefined ? baseItem.originalPrice : resolvedOriginalPrice,
-      vendor: baseItem.vendor || resolvedVendor,
-      attributes: baseItem.attributes || activeVariant?.attributes,
+      price: resolvedPrice,
     };
 
     dispatch(addToCart(cartProduct));
-    toast.success(`🍽️ ${cartProduct?.title} in your collection!`, {
+    toast.success(`🍽️ ${cartProduct.title} in your collection!`, {
       autoClose: 1000,
     });
   };
@@ -298,7 +302,7 @@ const ProductDetails = () => {
               <ProductImageGallery
                 key={activeVariant?._id || "main-gallery"}
                 images={resolvedImages}
-                thumbnail={resolvedImages[0] || product?.thumbnail}
+                thumbnail={product?.thumbnail}
                 title={product?.title || resolvedTitle}
                 isBestSeller={product?.isBestSeller}
                 isPrivateLevel={activeVariant?.isPrivateLevel}

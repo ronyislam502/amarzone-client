@@ -27,9 +27,25 @@ const ProductThumbnail = ({ src, alt }: { src?: string; alt?: string }) => {
 };
 
 const DepartmentProducts = ({ department, departmentSlug }: any) => {
-    const { data: productsData } = useAllProductsByDepartmentQuery(department?._id);
+    const { data: productsData, isLoading } = useAllProductsByDepartmentQuery(department?._id);
 
     const products = productsData?.data?.slice(0, 4) || [];
+
+    if (isLoading) {
+        return (
+            <div className="my-3.5 grid grid-cols-2 gap-2.5 animate-pulse">
+                {Array.from({ length: 4 }).map((_, idx) => (
+                    <div
+                        key={idx}
+                        className="flex flex-col items-start rounded-xl bg-slate-50/60 p-2"
+                    >
+                        <div className="aspect-square w-full rounded-lg bg-slate-200 mb-1.5" />
+                        <div className="h-2.5 bg-slate-200 rounded-sm w-3/4" />
+                    </div>
+                ))}
+            </div>
+        );
+    }
 
     return (
         <div className="my-3.5 grid grid-cols-2 gap-2.5">
