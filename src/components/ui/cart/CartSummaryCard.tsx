@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Lock, ShieldCheck, Tag } from "lucide-react";
 import { toast } from "react-toastify";
 import { FieldValues } from "react-hook-form";
@@ -9,6 +10,7 @@ import AZForm from "@/components/shared/form/AZFrom";
 import { useCreateOrderMutation } from "@/redux/features/order/orderApi";
 import { clearCart } from "@/redux/features/order/orderSlice";
 import { useDispatch } from "react-redux";
+import Payment from "@/components/ui/payment/Payment";
 
 interface CartSummaryCardProps {
   subtotal: number;
@@ -25,9 +27,19 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
   isCheckoutLoading = false,
 }) => {
   const dispatch = useDispatch();
+  const router = useRouter();
   const [promoInput, setPromoInput] = useState("");
   const [discountCode, setDiscountCode] = useState("");
   const [isGift, setIsGift] = useState(false);
+
+  // Payment Modal state
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentData, setPaymentData] = useState<{
+    clientSecret: string;
+    orderId?: string;
+    orderNo?: string;
+    totalAmount?: number;
+  } | null>(null);
 
   const [createOrder, { isLoading: isCreatingOrder }] = useCreateOrderMutation()
 
@@ -67,26 +79,50 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
 
   console.log("products", products)
 
-  const handleProceedToCheckout = async (data: FieldValues) => {
+  const handleProceedToCheckout = async () => {
+    if (!products || products.length === 0) {
+      toast.warning("Your cart is empty.");
+      return;
+    }
+
+    const firstProduct = products[0];
+    const vendor =
+      typeof firstProduct.vendor === "object"
+        ? firstProduct.vendor?._id
+        : firstProduct.vendor;
 
     const orderData = {
-      vendor: products[0].vendor,
+      vendor,
       products: products?.map((prod: any) => ({
-        variant: prod._id,
+        variant: prod.variant || prod._id,
         quantity: prod.quantity,
-        price: prod.price
-      }))
+        price: prod.price,
+      })),
+    };
+
+    try {
+      const orderRes = await createOrder(orderData).unwrap();
+      if (orderRes?.success) {
+        toast.success(orderRes?.message || "Order initialized successfully!");
+        const clientSecret = orderRes?.data?.clientSecret;
+        const order = orderRes?.data?.order;
+
+        if (clientSecret) {
+          setPaymentData({
+            clientSecret,
+            orderId: order?._id,
+            orderNo: order?.orderNo,
+            totalAmount: order?.totalPrice || finalGrandTotal,
+          });
+          setIsPaymentModalOpen(true);
+        } else {
+          dispatch(clearCart());
+          router.push("/customer/orders");
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || err?.message || "Failed to proceed to checkout");
     }
-
-    const orderRes = await createOrder(orderData).unwrap();
-    if (orderRes?.success) {
-      toast.success(orderRes?.message);
-      // window.location.href = orderRes?.data;
-      dispatch(clearCart());
-    }
-
-    console.log("cart", orderData)
-
   };
 
   const handleRemoveDiscount = () => {
@@ -257,6 +293,18 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
           Your payment information is processed securely with 256-bit SSL encryption. We don&apos;t share your details with third parties.
         </p>
       </div>
+
+      {/* Payment Modal */}
+      {paymentData?.clientSecret && (
+        <Payment
+          isOpen={isPaymentModalOpen}
+          onClose={() => setIsPaymentModalOpen(false)}
+          clientSecret={paymentData.clientSecret}
+          orderId={paymentData.orderId}
+          orderNo={paymentData.orderNo}
+          totalAmount={paymentData.totalAmount}
+        />
+      )}
     </div>
   );
 };

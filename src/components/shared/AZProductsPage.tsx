@@ -42,7 +42,9 @@ const AZProductsPage: React.FC<AZProductsPageProps> = ({
 
 
     const handlePageChange = (newPage: number) => {
-
+        if (setPage) {
+            setPage(newPage);
+        }
     };
 
     const handleLimitChange = (newLimit: number) => {
@@ -97,12 +99,7 @@ const AZProductsPage: React.FC<AZProductsPageProps> = ({
                         </div>
 
                         {/* Product Cards 5-Column Grid */}
-                        <div
-                            className={
-                                gridClassName ||
-                                "grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5"
-                            }
-                        >
+                        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-5">
                             {products?.map((product: TProduct) => (
                                 <AZProductCard key={product?._id} product={product} />
                             ))}
@@ -111,14 +108,14 @@ const AZProductsPage: React.FC<AZProductsPageProps> = ({
                 )}
 
                 {/* Pagination Section handled directly inside AZProductsPage */}
-                {meta?.total > 0 && (
+                {(meta?.total ?? 0) > 0 && (
                     <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs">
                         <AZPagination
                             page={page}
                             limit={limit}
-                            total={meta?.total}
+                            total={meta?.total ?? 0}
                             theme="light"
-                            limitOptions={limitOptions}
+                            limitOptions={[15, 30, 45]}
                             onPageChange={handlePageChange}
                             onLimitChange={handleLimitChange}
                         />

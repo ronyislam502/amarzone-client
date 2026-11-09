@@ -39,7 +39,7 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
             _id: product?._id,
             productId: product?.productId,
             variant: product?.variantId,
-            vendor: product.vendorId,
+            vendor: product.vendorId || product?.seller?.vendor,
             quantity: 1,
             title: product?.title,
             image: product.thumbnail,

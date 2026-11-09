@@ -7,6 +7,7 @@ import {
     ArrowUpRight,
     Package,
     Clock,
+    Download,
     Store,
     CheckCircle2,
     Truck,
@@ -241,15 +242,30 @@ export const CustomerRecentOrders: React.FC<CustomerRecentOrdersProps> = ({
             {
                 header: "Action",
                 align: "right",
-                accessor: () => {
+                accessor: (order) => {
+                    const hasInvoice = Boolean(order.invoiceUrl && order.invoiceUrl.trim());
                     return (
-                        <Link
-                            href="/customer/orders"
-                            className="btn btn-xs gap-1 font-bold text-amber-400 hover:text-slate-950 bg-amber-400/10 hover:bg-amber-400 border border-amber-400/20 rounded-lg transition-all"
-                        >
-                            <span>Track</span>
-                            <ArrowUpRight className="w-3 h-3" />
-                        </Link>
+                        <div className="flex items-center justify-end gap-1.5">
+                            {hasInvoice ? (
+                                <a
+                                    href={order.invoiceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download
+                                    title="Download Invoice"
+                                    className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all duration-200 cursor-pointer"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                </a>
+                            ) : null}
+                            <Link
+                                href="/customer/orders"
+                                className="btn btn-xs gap-1 font-bold text-amber-400 hover:text-slate-950 bg-amber-400/10 hover:bg-amber-400 border border-amber-400/20 rounded-lg transition-all"
+                            >
+                                <span>Track</span>
+                                <ArrowUpRight className="w-3 h-3" />
+                            </Link>
+                        </div>
                     );
                 },
             },

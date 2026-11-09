@@ -6,6 +6,7 @@ import {
     CheckCircle2,
     Clock,
     DollarSign,
+    Download,
     Eye,
     Mail,
     MessageSquare,
@@ -305,6 +306,7 @@ const CustomerOrdersTable = ({
                 const vendorName =
                     typeof order.vendor === "object" ? order.vendor?.name || "Merchant" : "Merchant";
                 const isConnecting = connectingOrderId === order._id;
+                const hasInvoice = Boolean(order.invoiceUrl && order.invoiceUrl.trim());
 
                 return (
                     <div className="flex items-center gap-1.5">
@@ -316,6 +318,28 @@ const CustomerOrdersTable = ({
                         >
                             <Eye className="w-3.5 h-3.5" />
                         </button>
+
+                        {/* Download Invoice */}
+                        {hasInvoice ? (
+                            <a
+                                href={order.invoiceUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download
+                                title="Download Invoice"
+                                className="p-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-400/50 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 transition-all duration-200 cursor-pointer"
+                            >
+                                <Download className="w-3.5 h-3.5" />
+                            </a>
+                        ) : (
+                            <button
+                                disabled
+                                title="Invoice not available yet"
+                                className="p-1.5 rounded-lg bg-white/5 border border-white/5 text-slate-600 cursor-not-allowed opacity-40"
+                            >
+                                <Download className="w-3.5 h-3.5" />
+                            </button>
+                        )}
 
                         {/* Direct Connect / Message Vendor */}
                         <button
@@ -548,7 +572,21 @@ const CustomerOrdersTable = ({
                         </div>
 
                         {/* Footer */}
-                        <div className="flex justify-end pt-2 border-t border-white/10">
+                        <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                            {selectedOrder.invoiceUrl ? (
+                                <a
+                                    href={selectedOrder.invoiceUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    download
+                                    className="px-3 py-2 rounded-xl text-xs font-bold text-emerald-400 hover:text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 transition-all cursor-pointer flex items-center gap-1.5"
+                                >
+                                    <Download className="w-3.5 h-3.5" />
+                                    <span>Download Invoice</span>
+                                </a>
+                            ) : (
+                                <div />
+                            )}
                             <button
                                 type="button"
                                 onClick={() => setSelectedOrder(null)}

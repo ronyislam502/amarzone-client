@@ -41,22 +41,11 @@ const VendorDetails = () => {
 
   const rawVendor = vendorData?.data;
 
-  console.log("user", vendorData)
-
-  // Identify Vendor User ID and Vendor Document ID for relational queries
-  const vendorUserId =
-    (typeof rawVendor?.user === "object" ? rawVendor?.user?._id : rawVendor?.user) ||
-    rawVendor?._id ||
-    vendorParam;
-  const vendorId = rawVendor?._id || vendorParam;
-
   // Query actual vendor inventory listings from DB
   const { data: vendorInventoryData, isLoading: isInventoryLoading } =
     useVendorVariantProductsQuery(vendorParam, {
       skip: !vendorParam,
     });
-
-  console.log("ven-prod", vendorInventoryData)
 
   // Query actual service reviews for this vendor from DB
   const { data: serviceReviewsData, isLoading: isReviewsLoading } =
@@ -64,7 +53,8 @@ const VendorDetails = () => {
       skip: !vendorParam,
     });
 
-  console.log("ven-review", serviceReviewsData)
+
+
   const [activeTab, setActiveTab] = useState<"products" | "about" | "reviews">("products");
   const [searchQuery, setSearchQuery] = useState("");
   const [isFollowing, setIsFollowing] = useState(false);
@@ -186,6 +176,8 @@ const VendorDetails = () => {
         p.asin?.toLowerCase().includes(q)
     );
   }, [vendorCatalog, searchQuery]);
+
+  console.log("prod", filteredProducts)
 
   const handleShare = () => {
     if (typeof window !== "undefined") {
@@ -519,18 +511,7 @@ const VendorDetails = () => {
                 {filteredProducts.map((prod) => (
                   <div key={prod._id} className="h-full">
                     <AZProductCard
-                      product={{
-                        _id: prod._id,
-                        productId: prod.productId,
-                        variantId: prod.variantId,
-                        title: prod.title,
-                        thumbnail: prod.thumbnail,
-                        brand: prod.brand,
-                        price: prod.price,
-                        oldPrice: prod.oldPrice,
-                        discountPercentage: prod.discountPercentage,
-                        category: prod.category,
-                      }}
+                      product={prod}
                     />
                   </div>
                 ))}

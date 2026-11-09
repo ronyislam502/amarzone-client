@@ -60,8 +60,6 @@ const CartData = () => {
         []
     );
 
-    console.log("variant", selectedItems)
-
     return (
         <div className="bg-[#f0f2f2]/60 min-h-screen py-5 select-none">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">

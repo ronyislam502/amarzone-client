@@ -22,8 +22,6 @@ const ProductsPage = () => {
   const rawProducts = productsData?.data || [];
   const meta = productsData?.meta;
 
-
-
   return (
     <AZProductsPage
       products={rawProducts}

@@ -54,7 +54,7 @@ const DepProductsPage = () => {
     return (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-6">
             {/* <div className="col-span-1"><ProductFilterSidebar /></div> */}
-            <div className="col-span-3"><AZProductsPage products={products} showSidebar={false} /></div>
+            <div className="col-span-3"><AZProductsPage products={products} /></div>
         </div>
     )
 }
