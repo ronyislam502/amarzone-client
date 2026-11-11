@@ -55,7 +55,7 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
     return (
         <div className="card w-full bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg flex flex-col h-full justify-between">
             <Link
-                key={product?._id}
+                key={product?.variantId}
                 href={productHref}
                 className="flex h-full"
             >

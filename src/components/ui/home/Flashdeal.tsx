@@ -54,7 +54,6 @@ const Flashdeal = () => {
                             <span>Limited Time</span>
                         </span>
 
-                        {/* ঠিক করা অংশ: এখানে timeLeft চেক করে দেওয়া হয়েছে */}
                         {timeLeft && (
                             <div className="inline-flex items-center gap-1.5 rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-bold text-white shadow-xs">
                                 <span className="text-[10px] font-semibold uppercase text-slate-400">
