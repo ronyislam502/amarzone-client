@@ -30,8 +30,12 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "http",
-        hostname: "**",
+        hostname: "***",
       },
+      {
+        protocol: "https",
+        hostname: "m.media-amazon.com",
+      }
     ],
   },
 };

@@ -7,6 +7,17 @@ import AZPagination from "./AZPagination";
 import ProductGridSkeleton from "./skeleton/ProductGridSkeleton";
 import { TProduct } from "@/types/product";
 
+interface FilterState {
+    search: string;
+    department: string;
+    category: string;
+    brand: string;
+    minPrice: string;
+    maxPrice: string;
+    rating: number | null;
+    sort: string;
+}
+
 interface AZProductsPageProps {
     products: any;
     isLoading?: boolean;
@@ -22,10 +33,11 @@ interface AZProductsPageProps {
         totalPage?: number;
         [key: string]: any;
     };
+    filters?: FilterState;
     setPage?: (newPage: number) => void;
+    setLimit?: (newLimit: number) => void;
+    onFiltersChange?: (filters: FilterState) => void;
 }
-
-
 
 const AZProductsPage: React.FC<AZProductsPageProps> = ({
     products,
@@ -33,29 +45,44 @@ const AZProductsPage: React.FC<AZProductsPageProps> = ({
     isFetching = false,
     isError = false,
     refetch,
-    limit = 15,
-    page = 1,
+    limit,
+    page,
     meta,
+    filters = {
+        search: "",
+        department: "",
+        category: "",
+        brand: "",
+        minPrice: "",
+        maxPrice: "",
+        rating: null,
+        sort: "",
+    },
     setPage,
+    setLimit,
+    onFiltersChange,
 }) => {
-    // Ensure every page shows exactly up to 15 products
-
-
     const handlePageChange = (newPage: number) => {
-        if (setPage) {
-            setPage(newPage);
-        }
+        if (setPage) setPage(newPage);
+        window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
     const handleLimitChange = (newLimit: number) => {
+        if (setLimit) setLimit(newLimit);
+        if (setPage) setPage(1);
     };
 
+    const handleFiltersChange = (newFilters: FilterState) => {
+        if (onFiltersChange) onFiltersChange(newFilters);
+        // Reset to page 1 when filters change
+        if (setPage) setPage(1);
+    };
 
     return (
         <div className="flex flex-col lg:flex-row gap-6 px-4 sm:px-6 py-6 items-start">
-            {/* Left Sidebar: Filters - Fixed in its area */}
+            {/* Left Sidebar: Filters */}
             <aside className="w-full lg:w-64 xl:w-72 shrink-0 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
-                <AZProductFilter />
+                <AZProductFilter filters={filters} onChange={handleFiltersChange} />
             </aside>
 
             {/* Right Column: Main Content & Pagination */}
@@ -92,9 +119,13 @@ const AZProductsPage: React.FC<AZProductsPageProps> = ({
                 ) : (
                     <div>
                         {/* Top Products Count */}
-                        <div className="mb-4">
+                        <div className="mb-4 flex items-center justify-between flex-wrap gap-2">
                             <p className="text-xs text-slate-500">
-                                Showing <span className="font-bold text-slate-800">{products?.length}</span> products
+                                Showing{" "}
+                                <span className="font-bold text-slate-800">{products?.length}</span>{" "}
+                                of{" "}
+                                <span className="font-bold text-slate-800">{meta?.total ?? 0}</span>{" "}
+                                products
                             </p>
                         </div>
 
@@ -107,15 +138,15 @@ const AZProductsPage: React.FC<AZProductsPageProps> = ({
                     </div>
                 )}
 
-                {/* Pagination Section handled directly inside AZProductsPage */}
+                {/* Pagination */}
                 {(meta?.total ?? 0) > 0 && (
                     <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs">
                         <AZPagination
-                            page={page}
-                            limit={limit}
+                            page={page ?? 1}
+                            limit={limit ?? 15}
                             total={meta?.total ?? 0}
                             theme="light"
-                            limitOptions={[15, 30, 45]}
+                            limitOptions={[10, 15, 20, 30, 50]}
                             onPageChange={handlePageChange}
                             onLimitChange={handleLimitChange}
                         />
