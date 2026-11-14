@@ -2,20 +2,15 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useAllProductsByDepartmentQuery } from "@/redux/features/product/productApi";
-
-
+import { useAllVariantsProductsByDepartmentQuery } from "@/redux/features/variant/variantApi";
 
 
 const DepartmentProducts = ({ department }: any) => {
 
-    console.log("department", department)
-
-    const { data: productsData, isLoading } = useAllProductsByDepartmentQuery(department?._id);
+    const { data: departmentProductsVariants, isLoading } = useAllVariantsProductsByDepartmentQuery(department?._id);
 
 
-
-    const products = productsData?.data?.slice(0, 4) || [];
+    const products = departmentProductsVariants?.data?.slice(0, 4) || [];
 
     if (isLoading) {
         return (

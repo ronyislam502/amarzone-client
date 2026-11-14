@@ -45,14 +45,11 @@ const DepartmentsData = () => {
     const rawDepartments = departmentsData?.data as TDepartment[] || [];
     const meta = departmentsData?.meta;
 
-    console.log("departmentdata", rawDepartments)
-
 
     // Client-side fallback filtering and sorting
     const filteredDepartments = useMemo(() => {
         let result = [...rawDepartments];
 
-        console.log("result", result)
 
         // Search filter by department name
         const term = (filters.search || "").trim().toLowerCase();

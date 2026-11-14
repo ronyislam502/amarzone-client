@@ -20,7 +20,6 @@ type TDynamicSidebarProps = {
 
 export const DashSidebar = ({ children }: TDynamicSidebarProps) => {
     const user = useAppSelector(selectCurrentUser);
-    console.log("user", user)
     const pathname = usePathname();
     const dispatch = useDispatch();
     const router = useRouter();

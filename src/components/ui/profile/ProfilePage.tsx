@@ -24,9 +24,8 @@ import ProfileEditModal from './ProfileEditModal';
 import ProfileSkeleton from '@/components/shared/skeleton/ProfileSkeleton';
 
 export const ProfilePage = () => {
-    // শুধুমাত্র Redux ও API থেকে ডাটা নিচ্ছি
+
     const authUser = useAppSelector(selectCurrentUser);
-    console.log("auth", authUser)
     const { data: profileResponse, isLoading, isError, refetch, isFetching } = useMyProfileQuery({});
 
     const [activeTab, setActiveTab] = useState<TProfileTab>('overview');

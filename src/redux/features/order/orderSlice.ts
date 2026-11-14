@@ -98,7 +98,6 @@ const cartSlice = createSlice({
           ...item,
           _id: canonicalId,
           productId,
-          variant,
           vendor,
           quantity: item.quantity || 1,
           title,

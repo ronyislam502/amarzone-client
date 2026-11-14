@@ -4,8 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
-import { useAllProductsByDepartmentQuery } from "@/redux/features/product/productApi";
 import { PRODUCT_PLACEHOLDER } from "@/lib/constants";
+import { useAllVariantsProductsByDepartmentQuery } from "@/redux/features/variant/variantApi";
 
 interface HeroSlide {
     id: number;
@@ -188,7 +188,7 @@ const DeptProductGrid: React.FC<{ departmentId: string; departmentName?: string 
     departmentId,
     departmentName,
 }) => {
-    const { data, isLoading } = useAllProductsByDepartmentQuery(departmentId);
+    const { data, isLoading } = useAllVariantsProductsByDepartmentQuery(departmentId);
     const products = (data?.data || []).slice(0, 4);
 
     if (isLoading) {
@@ -286,9 +286,8 @@ const AmazonHero: React.FC = () => {
                     {HERO_SLIDES.map((slide, idx) => (
                         <div
                             key={slide.id}
-                            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                                idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-                            }`}
+                            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${idx === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+                                }`}
                         >
                             <Link href={slide.link} className="block w-full h-full relative">
                                 <Image

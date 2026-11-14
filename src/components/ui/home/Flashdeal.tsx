@@ -6,7 +6,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { ArrowRight, Zap } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/shared/carousel";
 import AZProductCard from "@/components/shared/AZProductCard";
-import { useAllVariantProductsQuery } from "@/redux/features/product/productApi";
+import { useAllVariantsProductsQuery } from "@/redux/features/variant/variantApi";
 
 const Flashdeal = () => {
     const {
@@ -16,7 +16,7 @@ const Flashdeal = () => {
         error,
         refetch,
         isFetching,
-    } = useAllVariantProductsQuery({});
+    } = useAllVariantsProductsQuery({});
 
     const [timeLeft, setTimeLeft] = useState({ hours: 7, minutes: 34, seconds: 22 });
 

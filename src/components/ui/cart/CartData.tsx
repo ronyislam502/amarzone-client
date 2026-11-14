@@ -32,7 +32,6 @@ const CartData = () => {
             return {
                 ...product,
                 _id: id,
-                id: id,
                 isSelected: true,
             };
         });
@@ -94,7 +93,6 @@ const CartData = () => {
                                 subtotal={subtotal}
                                 selectedCount={selectedCount}
                                 products={selectedItems}
-                                // onProceedToCheckout={handleProceedToCheckout}
                                 isCheckoutLoading={isCreatingOrder}
                             />
                         </div>

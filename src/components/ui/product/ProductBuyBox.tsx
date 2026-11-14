@@ -104,7 +104,6 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
 
       // Fallback: direct dispatch if onAddToCart prop not supplied
       const canonicalId = product?.productId || product?._id || "";
-      const variantId = selectedVariant?._id || buyBoxListing?.variant?._id || "";
       const vId = effectiveVendorId || "";
       const img =
         selectedVariant?.images?.[0] ||
@@ -115,12 +114,9 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
 
       const cartItem = {
         _id: canonicalId,
-        productId: canonicalId,
-        variantId,
         vendorId: vId,
         quantity,
         title: product?.title || "Product",
-        thumbnail: img,
         image: img,
         price: effectivePrice,
         vendor: effectiveVendor,
@@ -133,6 +129,8 @@ export const ProductBuyBox: React.FC<ProductBuyBoxProps> = ({
       });
     }, 250);
   };
+
+
 
   const handleBuyNowClick = () => {
     if (onBuyNow) {

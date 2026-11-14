@@ -41,7 +41,6 @@ const VendorsData = () => {
         limit: String(LIMIT),
         status: filters.status,
     });
-    console.log('vendors', vendorsData)
 
     const rawVendors = (vendorsData?.data as TVendor[]) || [];
     const meta = vendorsData?.meta;

@@ -16,7 +16,6 @@ interface CartSummaryCardProps {
   subtotal: number;
   selectedCount: number;
   products: any
-  // onProceedToCheckout?: () => void;
   isCheckoutLoading?: boolean;
 }
 
@@ -77,7 +76,6 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
     }
   };
 
-  console.log("products", products)
 
   const handleProceedToCheckout = async () => {
     if (!products || products.length === 0) {
@@ -94,7 +92,7 @@ export const CartSummaryCard: React.FC<CartSummaryCardProps> = ({
     const orderData = {
       vendor,
       products: products?.map((prod: any) => ({
-        variant: prod.variant || prod._id,
+        variant: prod._id,
         quantity: prod.quantity,
         price: prod.price,
       })),

@@ -78,7 +78,6 @@ const UpdateDepartment = ({
                 data: formData,
             }).unwrap();
 
-            console.log("res", res)
 
             toast.success(res?.message || "Department updated successfully!");
             handleClose();

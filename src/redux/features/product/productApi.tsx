@@ -41,52 +41,7 @@ const productApi = baseApi?.injectEndpoints({
                 };
             },
         }),
-        allVariantProducts: builder.query({
-            query: ({ search, sort, page, limit, department, category, brand, minPrice, maxPrice, rating }) => {
-                const params = new URLSearchParams();
 
-                if (search) {
-                    params.append("searchTerm", search);
-                }
-                if (sort) {
-                    params.append("sort", sort);
-                }
-                if (page) {
-                    params.append("page", String(page));
-                }
-                if (limit) {
-                    params.append("limit", String(limit));
-                }
-                if (department) {
-                    params.append("department", department);
-                }
-                if (category) {
-                    params.append("category", category);
-                }
-                if (brand) {
-                    params.append("brand", brand);
-                }
-                if (minPrice !== undefined && minPrice !== null && minPrice !== "") {
-                    params.append("minPrice", String(minPrice));
-                }
-                if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
-                    params.append("maxPrice", String(maxPrice));
-                }
-
-                return {
-                    url: "/products/all-variant-products",
-                    method: "GET",
-                    params: params,
-                };
-            },
-            providesTags: ["product"],
-            transformResponse: (response: TResponseRedux<any[]>) => {
-                return {
-                    data: response?.data,
-                    meta: response?.meta,
-                };
-            },
-        }),
         createProduct: builder.mutation({
             query: (data) => ({
                 url: "/products/create-product",
@@ -110,32 +65,7 @@ const productApi = baseApi?.injectEndpoints({
             }),
             invalidatesTags: ["product"],
         }),
-        allProductsByDepartment: builder.query({
-            query: (id) => ({
-                url: `/products/department/${id}`,
-                method: "GET",
-            }),
-            providesTags: ["product", "department"],
-            transformResponse: (response: TResponseRedux<any[]>) => {
-                return {
-                    data: response?.data,
-                    meta: response?.meta,
-                };
-            },
-        }),
-        allProductsByCategory: builder.query({
-            query: (id) => ({
-                url: `/products/category/${id}`,
-                method: "GET",
-            }),
-            providesTags: ["product", "category"],
-            transformResponse: (response: TResponseRedux<any[]>) => {
-                return {
-                    data: response?.data,
-                    meta: response?.meta,
-                };
-            },
-        }),
+
         singleProduct: builder.query({
             query: (id) => ({
                 url: `/products/${id}`,
@@ -153,12 +83,9 @@ const productApi = baseApi?.injectEndpoints({
 
 export const {
     useAllProductsQuery,
-    useAllVariantProductsQuery,
     useCreateProductMutation,
     useDeleteProductMutation,
     useUpdateProductMutation,
-    useAllProductsByDepartmentQuery,
-    useAllProductsByCategoryQuery,
     useSingleProductQuery,
 } = productApi;
 

@@ -7,8 +7,7 @@ import { useAllDepartmentsQuery } from "@/redux/features/department/departmentAp
 
 const Departments = () => {
     const { data: departmentsData } = useAllDepartmentsQuery({});
-    // const departments = departmentsData?.data;
-    // console.log("dept", departmentsData)
+
 
 
     return (

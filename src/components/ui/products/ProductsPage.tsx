@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import AZProductsPage from "@/components/shared/AZProductsPage";
-import { useAllVariantProductsQuery } from "@/redux/features/product/productApi";
+import { useAllVariantsProductsQuery } from "@/redux/features/variant/variantApi";
 
 interface FilterState {
     search: string;
@@ -31,21 +31,15 @@ const ProductsPage = () => {
     const [limit, setLimit] = useState(15);
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
-    // The API paginates at the Product level then flattens variants,
-    // so fetching `limit=15` products may return 30+ variants.
-    // We over-request by 4x to guarantee enough variant items,
-    // then slice client-side to show exactly `limit` cards per page.
-    const serverLimit = limit * 4;
-
     const {
         data: productsData,
         isLoading,
         isFetching,
         isError,
         refetch,
-    } = useAllVariantProductsQuery({
+    } = useAllVariantsProductsQuery({
         page,
-        limit: serverLimit,
+        limit,
         search: filters.search || undefined,
         sort: filters.sort || undefined,
         department: filters.department || undefined,
@@ -55,6 +49,8 @@ const ProductsPage = () => {
         maxPrice: filters.maxPrice || undefined,
     });
 
+
+
     // Slice to exactly `limit` so each page always shows the correct count
     const rawProducts = (productsData?.data || []).slice(0, limit);
 
@@ -62,10 +58,10 @@ const ProductsPage = () => {
     const apiMeta = productsData?.meta;
     const meta = apiMeta
         ? {
-              ...apiMeta,
-              limit,
-              totalPage: Math.ceil((apiMeta.total ?? 0) / limit),
-          }
+            ...apiMeta,
+            limit,
+            totalPage: Math.ceil((apiMeta.total ?? 0) / limit),
+        }
         : undefined;
 
     const handleFiltersChange = (newFilters: FilterState) => {

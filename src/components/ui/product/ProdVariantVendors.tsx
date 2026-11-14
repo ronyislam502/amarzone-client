@@ -96,8 +96,6 @@ const ProductSellerOffers: React.FC<ProductSellerOffersProps> = ({
 
         const cartProduct = {
             _id: variantId,
-            productId: product?._id || "",
-            variant: variantId,
             vendor: vendorId,
             quantity: 1,
             title: product?.title || "Product",

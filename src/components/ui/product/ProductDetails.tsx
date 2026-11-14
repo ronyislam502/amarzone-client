@@ -36,16 +36,14 @@ const ProductDetails = () => {
   const [selectedVariant, setSelectedVariant] = useState<TVariant | null>(null);
 
   // 1. Fetch single product details directly from database
-  const {
-    data: singleProductData,
-    isLoading: isLoadingProduct,
-  } = useSingleProductQuery(productId, { skip: !productId });
 
   // 2. Fetch all variants for this product from database
   const {
     data: productVariantsData,
     isLoading: isLoadingVariants,
   } = useAllVariantsByProductQuery(productId, { skip: !productId });
+
+  console.log("products", productVariantsData)
 
   const variants = (productVariantsData?.data as any[]) || [];
 
@@ -60,7 +58,7 @@ const ProductDetails = () => {
   }, [selectedVariant, variantIdFromQuery, variants]);
 
   // Real product data from activeVariant populated product or single product query
-  const product = (activeVariant as any)?.product || singleProductData?.data || null;
+  const product = (activeVariant as any)?.product || null;
 
   const variantId = activeVariant?._id;
   const variantAsin = activeVariant?.asin;
@@ -246,14 +244,14 @@ const ProductDetails = () => {
 
     const cartProduct = {
       _id: activeVariant?._id || "",
-      productId: product?._id || "",
-      variant: activeVariant?._id || "",
       vendor: resolvedVendorId || "",
       quantity,
       title: product?.title || resolvedTitle || "Product",
       image: img,
       price: resolvedPrice,
     };
+
+    console.log("cart-prod", cartProduct)
 
     dispatch(addToCart(cartProduct));
     toast.success(`🍽️ ${cartProduct.title} in your collection!`, {
@@ -263,7 +261,7 @@ const ProductDetails = () => {
 
 
 
-  if ((isLoadingVariants || isLoadingProduct) && !product && variants.length === 0) {
+  if (isLoadingVariants && variants.length === 0) {
     return (
       <div className="min-h-screen bg-white p-8">
         <ProductPageSkeleton />
@@ -271,7 +269,7 @@ const ProductDetails = () => {
     );
   }
 
-  if (!isLoadingVariants && !isLoadingProduct && !product && variants.length === 0) {
+  if (!isLoadingVariants && variants.length === 0) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center p-8">
         <div className="text-center space-y-3">

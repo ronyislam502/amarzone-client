@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useRef } from "react";
+import { Suspense, useRef } from "react";
 import Link from "next/link";
 import Autoplay from "embla-carousel-autoplay";
 import { ArrowRight, Tag } from "lucide-react";
@@ -45,6 +45,8 @@ const RollbackCardsSkeleton = () => (
 
 const Rollback = () => {
     const { data: departmentsData, isLoading } = useAllDepartmentsQuery({});
+
+    console.log("department", departmentsData?.data)
 
     const plugin = useRef(
         Autoplay({
