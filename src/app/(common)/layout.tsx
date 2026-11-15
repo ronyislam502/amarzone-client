@@ -1,5 +1,6 @@
 import AZFooter from "@/components/shared/AZFooter";
 import AZNavbar from "@/components/shared/AZNavbar";
+import AiShoppingAssistant from "@/components/ui/artificial/AiShoppingAssistant";
 
 
 const layout = ({ children }: { children: React.ReactNode }) => {
@@ -8,6 +9,7 @@ const layout = ({ children }: { children: React.ReactNode }) => {
             <AZNavbar />
             {children}
             <AZFooter />
+            <AiShoppingAssistant />
         </div>
     );
 };
