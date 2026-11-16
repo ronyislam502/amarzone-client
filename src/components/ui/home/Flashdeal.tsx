@@ -6,6 +6,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { ArrowRight, Zap } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/shared/carousel";
 import AZProductCard from "@/components/shared/AZProductCard";
+import ProductGridSkeleton from "@/components/shared/skeleton/ProductGridSkeleton";
 import { useAllVariantsProductsQuery } from "@/redux/features/variant/variantApi";
 
 const Flashdeal = () => {
@@ -85,25 +86,10 @@ const Flashdeal = () => {
 
             {/* Carousel / Loading Skeleton */}
             {isLoading || !productsData?.data ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                        <div
-                            key={i}
-                            className="bg-white rounded-2xl border border-slate-200/80 p-3 flex flex-col justify-between h-[360px] animate-pulse"
-                        >
-                            <div>
-                                <div className="aspect-square w-full bg-slate-200 rounded-xl" />
-                                <div className="space-y-2 pt-3">
-                                    <div className="h-2.5 bg-slate-200 rounded-sm w-1/3" />
-                                    <div className="h-3.5 bg-slate-200 rounded-sm w-4/5" />
-                                    <div className="h-3 bg-slate-200 rounded-sm w-1/2" />
-                                    <div className="h-5 bg-slate-200 rounded-sm w-2/5 mt-1" />
-                                </div>
-                            </div>
-                            <div className="h-8 bg-slate-200 rounded-lg w-full mt-3" />
-                        </div>
-                    ))}
-                </div>
+                <ProductGridSkeleton
+                    count={5}
+                    gridClassName="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"
+                />
             ) : (
                 <Carousel
                     plugins={[plugin.current]}

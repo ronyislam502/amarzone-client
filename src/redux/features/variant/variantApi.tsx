@@ -120,6 +120,28 @@ const variantApi = baseApi?.injectEndpoints({
                 };
             },
         }),
+        allVariantsProductsByCategory: builder.query({
+            query: (args) => {
+                const id = typeof args === "string" ? args : args?.id;
+                const params = new URLSearchParams();
+                if (typeof args === "object") {
+                    if (args?.limit) params.append("limit", String(args.limit));
+                    if (args?.page) params.append("page", String(args.page));
+                }
+                return {
+                    url: `/variants/all-variants-products-category/${id}`,
+                    method: "GET",
+                    params: params,
+                };
+            },
+            providesTags: ["variant"],
+            transformResponse: (response: TResponseRedux<any[]>) => {
+                return {
+                    data: response?.data,
+                    meta: response?.meta,
+                };
+            },
+        }),
     }),
 });
 
@@ -127,5 +149,6 @@ export const {
     useAllVariantsByProductQuery,
     useCreateVariantMutation,
     useAllVariantsProductsQuery,
-    useAllVariantsProductsByDepartmentQuery
+    useAllVariantsProductsByDepartmentQuery,
+    useAllVariantsProductsByCategoryQuery,
 } = variantApi;

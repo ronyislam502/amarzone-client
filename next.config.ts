@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     root: path.join(__dirname, ".."),
   },
   images: {
+    unoptimized: true,
     dangerouslyAllowSVG: true,
     remotePatterns: [
       {
@@ -30,7 +31,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "http",
-        hostname: "***",
+        hostname: "**",
       },
       {
         protocol: "https",

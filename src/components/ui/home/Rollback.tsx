@@ -46,7 +46,6 @@ const RollbackCardsSkeleton = () => (
 const Rollback = () => {
     const { data: departmentsData, isLoading } = useAllDepartmentsQuery({});
 
-    console.log("department", departmentsData?.data)
 
     const plugin = useRef(
         Autoplay({

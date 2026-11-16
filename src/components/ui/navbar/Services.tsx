@@ -19,9 +19,9 @@ const services = [
 const Services = () => {
     return (
         <div className="dropdown dropdown-end lg:dropdown-bottom">
-            <div tabIndex={0} role="button" className="btn btn-ghost text-black font-normal">
-                Services
-                <ChevronDown className="w-3 h-3" />
+            <div tabIndex={0} role="button" className="btn btn-sm sm:btn-md btn-ghost text-white hover:bg-white/10 font-medium rounded-full cursor-pointer flex items-center gap-1">
+                <span>Services</span>
+                <ChevronDown className="w-3.5 h-3.5 text-white/80" />
             </div>
             <ul
                 tabIndex={-1}

@@ -18,8 +18,8 @@ import ProductSellerOffers from "./ProdVariantVendors";
 import ProductAIAdvisor from "./ProductAIAdvisor";
 import ProductDetailsTable from "./ProductDetailsTable";
 import ProductDescriptionSection from "./ProductDescriptionSection";
+import CategoryProd from "./CategoryProd";
 import ProdVariantReviews from "./ProdVariantReviews";
-import { ShoppingCart, Zap } from "lucide-react";
 import { toast } from "react-toastify";
 import ProductPageSkeleton from "@/components/shared/skeleton/ProductPageSkeleton";
 import { useAppDispatch } from "@/redux/hooks";
@@ -35,15 +35,12 @@ const ProductDetails = () => {
 
   const [selectedVariant, setSelectedVariant] = useState<TVariant | null>(null);
 
-  // 1. Fetch single product details directly from database
-
   // 2. Fetch all variants for this product from database
   const {
     data: productVariantsData,
     isLoading: isLoadingVariants,
   } = useAllVariantsByProductQuery(productId, { skip: !productId });
 
-  console.log("products", productVariantsData)
 
   const variants = (productVariantsData?.data as any[]) || [];
 
@@ -251,7 +248,7 @@ const ProductDetails = () => {
       price: resolvedPrice,
     };
 
-    console.log("cart-prod", cartProduct)
+
 
     dispatch(addToCart(cartProduct));
     toast.success(`🍽️ ${cartProduct.title} in your collection!`, {
@@ -369,6 +366,21 @@ const ProductDetails = () => {
             </div>
           </div>
         </Suspense>
+        {/* Same Category Products */}
+        <CategoryProd
+          categoryId={
+            typeof product?.category === "object"
+              ? product?.category?._id
+              : product?.category
+          }
+          categoryName={
+            typeof product?.category === "object"
+              ? product?.category?.name
+              : resolvedCategory
+          }
+          currentProductId={productId || product?._id}
+          excludedVariantIds={variants.map((v: any) => v?._id).filter(Boolean)}
+        />
 
         {/* Middle Section: Product Details & Specifications */}
         <ProductDetailsTable
@@ -379,8 +391,10 @@ const ProductDetails = () => {
         {/* Product Editorial Description */}
         <ProductDescriptionSection product={product} />
 
+
+
         {/* Bottom Section: Customer Reviews & Rating Breakdown */}
-        <div id="customer-reviews">
+        <div>
           <ProdVariantReviews
             reviews={reviews}
             averageRating={resolvedRating}
