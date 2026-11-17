@@ -68,6 +68,12 @@ const categoryApi = baseApi?.injectEndpoints({
                 method: "GET",
             }),
             providesTags: ["category"],
+            transformResponse: (response: TResponseRedux<TCategory[]>) => {
+                return {
+                    data: response?.data,
+                    meta: response?.meta,
+                };
+            },
         }),
     }),
 });

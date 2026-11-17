@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import AZProductsPage from "@/components/shared/AZProductsPage";
 import { useAllVariantsProductsQuery } from "@/redux/features/variant/variantApi";
 
@@ -27,9 +28,27 @@ const DEFAULT_FILTERS: FilterState = {
 };
 
 const ProductsPage = () => {
+    const searchParams = useSearchParams();
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(15);
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
+
+    // Sync URL query params (e.g., from Departments dropdown navigation) into filters
+    useEffect(() => {
+        const deptParam = searchParams.get("department");
+        const catParam = searchParams.get("category");
+        const searchParam = searchParams.get("search") || searchParams.get("searchTerm");
+
+        if (deptParam || catParam || searchParam) {
+            setFilters((prev) => ({
+                ...prev,
+                ...(deptParam ? { department: deptParam } : {}),
+                ...(catParam ? { category: catParam } : {}),
+                ...(searchParam ? { search: searchParam } : {}),
+            }));
+            setPage(1);
+        }
+    }, [searchParams]);
 
     const {
         data: productsData,
