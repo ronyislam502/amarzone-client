@@ -20,6 +20,7 @@ export interface ModalProps {
   closeOnBackdropClick?: boolean;
   className?: string;
   contentClassName?: string;
+  theme?: "dark" | "light";
 }
 
 const AZModal = ({
@@ -35,6 +36,7 @@ const AZModal = ({
   closeOnBackdropClick = true,
   className = "",
   contentClassName = "",
+  theme = "dark",
 }: ModalProps) => {
   const [mounted, setMounted] = useState(false);
 
@@ -86,24 +88,35 @@ const AZModal = ({
     >
       {/* Dimmed Backdrop covering entire window above all headers */}
       <div
-        className="fixed inset-0 bg-[#060913]/92 backdrop-blur-md transition-opacity cursor-pointer"
+        className={`fixed inset-0 transition-opacity cursor-pointer ${
+          theme === "light" ? "bg-black/60 backdrop-blur-xs" : "bg-[#060913]/92 backdrop-blur-md"
+        }`}
         onClick={closeOnBackdropClick ? onClose : undefined}
       />
 
       {/* Modal Box */}
       <div
-        className={`relative z-10 w-full ${sizeClasses[size] || "max-w-lg"} max-h-[calc(100dvh-2.5rem)] sm:max-h-[calc(100dvh-3.5rem)] my-auto flex flex-col overflow-hidden bg-[#170d2f] border border-white/10 text-white shadow-[0_25px_80px_-15px_rgba(0,0,0,0.95)] rounded-2xl sm:rounded-3xl p-5 sm:p-6 ${className}`}
+        className={`relative z-10 w-full ${sizeClasses[size] || "max-w-lg"} max-h-[calc(100dvh-2.5rem)] sm:max-h-[calc(100dvh-3.5rem)] my-auto flex flex-col overflow-hidden ${
+          theme === "light"
+            ? "bg-white border border-gray-200 text-gray-900 shadow-2xl rounded-2xl"
+            : "bg-[#170d2f] border border-white/10 text-white shadow-[0_25px_80px_-15px_rgba(0,0,0,0.95)] rounded-2xl sm:rounded-3xl"
+        } ${className.includes("p-") ? "" : "p-5 sm:p-6"} ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Top Glowing Accent */}
-        <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-30" />
+        {/* Glow and accents only for dark theme */}
+        {theme !== "light" && (
+          <>
+            {/* Top Glowing Accent */}
+            <div className="absolute top-0 inset-x-0 h-[1.5px] bg-gradient-to-r from-transparent via-amber-400/60 to-transparent pointer-events-none z-30" />
 
-        {/* Ambient Background Glow */}
-        <div className="absolute -top-16 -left-16 w-48 h-48 bg-gradient-to-br from-amber-500/15 via-orange-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-gradient-to-tl from-indigo-600/20 via-purple-700/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+            {/* Ambient Background Glow */}
+            <div className="absolute -top-16 -left-16 w-48 h-48 bg-gradient-to-br from-amber-500/15 via-orange-600/10 to-transparent rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-gradient-to-tl from-indigo-600/20 via-purple-700/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-        {/* Dot Grid Overlay */}
-        <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)] pointer-events-none" />
+            {/* Dot Grid Overlay */}
+            <div className="absolute inset-0 bg-dot-grid opacity-20 [mask-image:radial-gradient(ellipse_70%_70%_at_50%_50%,black_30%,transparent_100%)] pointer-events-none" />
+          </>
+        )}
 
         {/* Close Button */}
         {showCloseButton && (
@@ -111,7 +124,11 @@ const AZModal = ({
             type="button"
             onClick={onClose}
             aria-label="Close modal"
-            className="btn btn-sm btn-circle btn-ghost absolute right-3.5 top-3.5 text-slate-400 hover:text-white hover:bg-white/10 z-40 transition-colors cursor-pointer"
+            className={`btn btn-sm btn-circle btn-ghost absolute right-3.5 top-3.5 z-40 transition-colors cursor-pointer ${
+              theme === "light"
+                ? "text-gray-400 hover:text-gray-700 hover:bg-gray-100"
+                : "text-slate-400 hover:text-white hover:bg-white/10"
+            }`}
           >
             <X className="w-4 h-4" />
           </button>
@@ -119,11 +136,21 @@ const AZModal = ({
 
         {/* Header */}
         {(icon || title || description) && (
-          <div className="relative z-20 border-b border-white/10 pb-3.5 pr-10 shrink-0">
+          <div
+            className={`relative z-20 pb-3.5 pr-10 shrink-0 ${
+              theme === "light" ? "border-b border-gray-100" : "border-b border-white/10"
+            }`}
+          >
             <div className="flex items-center gap-3">
               {/* Icon */}
               {icon && (
-                <div className="shrink-0 p-2 rounded-xl bg-amber-400/10 border border-amber-400/20 text-amber-400">
+                <div
+                  className={`shrink-0 p-2 rounded-xl ${
+                    theme === "light"
+                      ? "bg-gray-100 text-gray-800"
+                      : "bg-amber-400/10 border border-amber-400/20 text-amber-400"
+                  }`}
+                >
                   {icon}
                 </div>
               )}
@@ -131,13 +158,21 @@ const AZModal = ({
               {/* Title + Description */}
               <div className="min-w-0">
                 {title && (
-                  <h3 className="text-base sm:text-lg font-extrabold text-white tracking-tight">
+                  <h3
+                    className={`text-base sm:text-lg font-extrabold tracking-tight ${
+                      theme === "light" ? "text-gray-900" : "text-white"
+                    }`}
+                  >
                     {title}
                   </h3>
                 )}
 
                 {description && (
-                  <p className="text-[11px] sm:text-xs font-medium text-slate-400 mt-0.5 leading-relaxed">
+                  <p
+                    className={`text-[11px] sm:text-xs font-medium mt-0.5 leading-relaxed ${
+                      theme === "light" ? "text-gray-500" : "text-slate-400"
+                    }`}
+                  >
                     {description}
                   </p>
                 )}
@@ -153,7 +188,11 @@ const AZModal = ({
 
         {/* Footer */}
         {footer && (
-          <div className="pt-3.5 mt-3 border-t border-white/10 flex items-center justify-end gap-2.5 relative z-20 shrink-0">
+          <div
+            className={`pt-3.5 mt-3 flex items-center justify-end gap-2.5 relative z-20 shrink-0 ${
+              theme === "light" ? "border-t border-gray-100" : "border-t border-white/10"
+            }`}
+          >
             {footer}
           </div>
         )}

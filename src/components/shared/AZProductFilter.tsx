@@ -7,7 +7,6 @@ import {
     Star,
     Check,
     ChevronDown,
-    Search,
 } from "lucide-react";
 import { useAllDepartmentsQuery } from "@/redux/features/department/departmentApi";
 import { useAllCategoriesQuery } from "@/redux/features/category/categoryApi";
@@ -139,21 +138,6 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
                 )}
             </div>
 
-            {/* Search */}
-            <section className="mb-5">
-                <h4 className="mb-2 text-xs font-bold text-slate-800">Search</h4>
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 pointer-events-none" />
-                    <input
-                        type="text"
-                        value={filters.search}
-                        onChange={(e) => update({ search: e.target.value })}
-                        placeholder="Search products..."
-                        className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 pl-9 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-violet-400"
-                    />
-                </div>
-            </section>
-
             {/* Sort */}
             <section className="mb-5">
                 <h4 className="mb-2 text-xs font-bold text-slate-800">Sort By</h4>
@@ -246,11 +230,10 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
                                 key={range.label}
                                 type="button"
                                 onClick={() => applyPriceRange(range.min, range.max, range.label)}
-                                className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs transition-colors ${
-                                    isActive
-                                        ? "bg-violet-50 font-bold text-violet-700"
-                                        : "font-medium text-slate-600 hover:bg-slate-50"
-                                }`}
+                                className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-xs transition-colors ${isActive
+                                    ? "bg-violet-50 font-bold text-violet-700"
+                                    : "font-medium text-slate-600 hover:bg-slate-50"
+                                    }`}
                             >
                                 <span>{range.label}</span>
                                 {isActive && <Check className="h-3.5 w-3.5 text-violet-600" />}
@@ -301,31 +284,28 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
                                 key={rating}
                                 type="button"
                                 onClick={() => handleRating(rating)}
-                                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors ${
-                                    isActive
-                                        ? "border border-amber-100 bg-amber-50/70"
-                                        : "hover:bg-slate-50"
-                                }`}
+                                className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors ${isActive
+                                    ? "border border-amber-100 bg-amber-50/70"
+                                    : "hover:bg-slate-50"
+                                    }`}
                             >
                                 <div className="flex shrink-0 items-center gap-0.5">
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <Star
                                             key={star}
-                                            className={`h-3.5 w-3.5 ${
-                                                star <= rating
-                                                    ? "fill-amber-400 text-amber-400"
-                                                    : "fill-slate-100 text-slate-200"
-                                            }`}
+                                            className={`h-3.5 w-3.5 ${star <= rating
+                                                ? "fill-amber-400 text-amber-400"
+                                                : "fill-slate-100 text-slate-200"
+                                                }`}
                                         />
                                     ))}
                                 </div>
 
                                 <span
-                                    className={`text-xs ${
-                                        isActive
-                                            ? "font-bold text-slate-800"
-                                            : "font-medium text-slate-600"
-                                    }`}
+                                    className={`text-xs ${isActive
+                                        ? "font-bold text-slate-800"
+                                        : "font-medium text-slate-600"
+                                        }`}
                                 >
                                     {rating} & Up
                                 </span>

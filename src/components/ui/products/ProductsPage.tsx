@@ -34,9 +34,26 @@ const ProductsPage = () => {
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
     // Sync URL query params (e.g., from Departments dropdown navigation) into filters
+    // useEffect(() => {
+    //     const deptParam = searchParams.get("department");
+    //     const catParam = searchParams.get("category");
+    //     const searchParam = searchParams.get("search") || searchParams.get("searchTerm");
+
+    //     if (deptParam || catParam || searchParam) {
+    //         setFilters((prev) => ({
+    //             ...prev,
+    //             ...(deptParam ? { department: deptParam } : {}),
+    //             ...(catParam ? { category: catParam } : {}),
+    //             ...(searchParam ? { search: searchParam } : {}),
+    //         }));
+    //         setPage(1);
+    //     }
+    // }, [searchParams]);
+
     useEffect(() => {
         const deptParam = searchParams.get("department");
         const catParam = searchParams.get("category");
+        // 'search' অথবা 'searchTerm' দুটিই চেক করবে যেন কোনো মিসম্যাচ না হয়
         const searchParam = searchParams.get("search") || searchParams.get("searchTerm");
 
         if (deptParam || catParam || searchParam) {

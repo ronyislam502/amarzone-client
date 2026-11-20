@@ -19,6 +19,7 @@ export type TAZInputProps = Omit<Partial<TInput>, "label" | "size"> & {
   required?: boolean;
   className?: string;
   inputClassName?: string;
+  clearButtonClassName?: string;
 };
 
 const AZInput = ({
@@ -35,6 +36,7 @@ const AZInput = ({
   required = false,
   className = "",
   inputClassName = "",
+  clearButtonClassName = "",
 }: TAZInputProps) => {
   const {
     register,
@@ -83,7 +85,10 @@ const AZInput = ({
           <button
             type="button"
             onClick={onClear}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content cursor-pointer transition-colors"
+            aria-label="Clear input"
+            className={`absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer transition-colors ${
+              clearButtonClassName || "text-base-content/40 hover:text-base-content"
+            }`}
           >
             <X className="w-3.5 h-3.5" />
           </button>
