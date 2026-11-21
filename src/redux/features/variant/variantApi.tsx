@@ -58,6 +58,9 @@ const variantApi = baseApi?.injectEndpoints({
                 if (maxPrice !== undefined && maxPrice !== null && maxPrice !== "") {
                     params.append("maxPrice", String(maxPrice));
                 }
+                if (rating !== undefined && rating !== null && rating !== "") {
+                    params.append("rating", String(rating));
+                }
 
                 return {
                     url: "/variants/all-variants-products",

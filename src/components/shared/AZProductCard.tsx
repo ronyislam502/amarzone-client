@@ -24,11 +24,22 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
     const dispatch = useAppDispatch();
 
     const discountPercentage = product?.discountPercentage || 0;
-    const currentPrice = product?.price || 0;
-    const originalPrice = product?.oldPrice || (discountPercentage > 0 ? currentPrice / (1 - discountPercentage / 100) : currentPrice);
-    const savedAmount = originalPrice > currentPrice ? originalPrice - currentPrice : 0;
-    const totalReviews = Number(product?.totalReviews || product?.ratingsCount || product?.reviewCount || 0);
+    const rawPrice =
+        product?.price ??
+        product?.seller?.price ??
+        product?.inventoryPrice ??
+        product?.inventoryListings?.[0]?.seller?.price ??
+        null;
+    const currentPrice =
+        typeof rawPrice === "number" && !isNaN(rawPrice) && rawPrice > 0
+            ? rawPrice
+            : typeof rawPrice === "string" && !isNaN(parseFloat(rawPrice)) && parseFloat(rawPrice) > 0
+            ? parseFloat(rawPrice)
+            : 0;
+    const originalPrice = product?.oldPrice || (discountPercentage > 0 && currentPrice > 0 ? currentPrice / (1 - discountPercentage / 100) : currentPrice);
+    const savedAmount = originalPrice > currentPrice && currentPrice > 0 ? originalPrice - currentPrice : 0;
     const averageRating = Number(product?.rating || product?.averageRating || 0);
+    const totalReviews = Number(product?.totalReviews || product?.ratingsCount || product?.reviewCount || (averageRating > 0 ? 1 : 0));
 
     const productHref = product?.variantId
         ? `/products/${product?.productId || product?._id}?variant=${product?.variantId}`
@@ -108,46 +119,67 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
                         </h2>
 
                         {/* Rating */}
-                        {totalReviews > 0 ? (
+                        {averageRating > 0 || totalReviews > 0 ? (
                             <div className="flex items-center gap-1.5">
                                 <div className="flex items-center">
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <Star
                                             key={star}
-                                            className={`h-3.5 w-3.5 ${star <= Math.round(averageRating)
-                                                ? "fill-amber-400 text-amber-400"
-                                                : "text-slate-300"
-                                                }`}
+                                            className={`h-3.5 w-3.5 ${
+                                                star <= Math.round(averageRating)
+                                                    ? "fill-amber-400 text-amber-400"
+                                                    : "fill-slate-100 text-slate-200"
+                                            }`}
                                         />
                                     ))}
                                 </div>
 
-                                <span className="text-xs text-base-content/60">
-                                    {averageRating.toFixed(1)} ({totalReviews})
+                                <span className="text-xs font-semibold text-slate-700">
+                                    {averageRating.toFixed(1)}
+                                    {totalReviews > 0 && (
+                                        <span className="text-slate-400 font-normal ml-1">
+                                            ({totalReviews})
+                                        </span>
+                                    )}
                                 </span>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-1 text-xs text-base-content/50">
-                                <Star className="h-3.5 w-3.5 text-base-content/30" />
-                                <span>No ratings yet</span>
+                            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                                <div className="flex items-center">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <Star
+                                            key={star}
+                                            className="h-3.5 w-3.5 fill-slate-100 text-slate-200"
+                                        />
+                                    ))}
+                                </div>
+                                <span className="text-[11px] text-slate-400">No ratings yet</span>
                             </div>
                         )}
 
                         {/* Price & Old Price */}
                         <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-black">
-                                ${currentPrice.toFixed(2)}
-                            </span>
+                            {currentPrice > 0 ? (
+                                <>
+                                    <span className="text-2xl font-black">
+                                        ${currentPrice.toFixed(2)}
+                                    </span>
 
-                            {originalPrice > currentPrice && (
-                                <span className="text-xs text-base-content/40 line-through">
-                                    ${originalPrice.toFixed(2)}
+                                    {originalPrice > currentPrice && (
+                                        <span className="text-xs text-base-content/40 line-through">
+                                            ${originalPrice.toFixed(2)}
+                                        </span>
+                                    )}
+                                </>
+                            ) : (
+                                <span className="text-lg font-bold text-slate-400">
+                                    Unavailable
                                 </span>
                             )}
                         </div>
 
                         {/* Dynamic Savings */}
-                        {savedAmount > 0 && (
+                        {savedAmount > 0 && currentPrice > 0 && (
                             <span className="text-xs font-bold text-error">
                                 Save ${savedAmount.toFixed(2)}
                             </span>
@@ -170,11 +202,12 @@ const AZProductCard = ({ product, loading = "eager", priority }: AZProductCardPr
             <div className="card-actions p-4 pt-0 mt-auto">
                 <button
                     type="button"
+                    disabled={currentPrice <= 0}
                     onClick={() => handleAddToCart(product)}
-                    className="btn btn-warning btn-sm w-full cursor-pointer"
+                    className="btn btn-warning btn-sm w-full cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 >
                     <ShoppingCart className="h-4 w-4" />
-                    Add
+                    {currentPrice > 0 ? "Add" : "Out of Stock"}
                 </button>
             </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     RotateCcw,
     SlidersHorizontal,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useAllDepartmentsQuery } from "@/redux/features/department/departmentApi";
 import { useAllCategoriesQuery } from "@/redux/features/category/categoryApi";
+import { useAllVariantsProductsQuery } from "@/redux/features/variant/variantApi";
 
 interface FilterState {
     search: string;
@@ -58,8 +59,27 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
         department: filters.department || undefined,
     });
 
+    // Fetch products to extract all available brand names
+    const { data: brandsProductsData, isLoading: isLoadingBrands } = useAllVariantsProductsQuery({
+        limit: 200,
+        department: filters.department || undefined,
+        category: filters.category || undefined,
+    });
+
     const departments = departmentsData?.data || [];
     const categories = categoriesData?.data || [];
+
+    // Extract unique brand names from products
+    const availableBrands = useMemo(() => {
+        const brandSet = new Set<string>();
+        (brandsProductsData?.data || []).forEach((item: any) => {
+            const b = item.brand || item.product?.brand;
+            if (b && typeof b === "string" && b.trim()) {
+                brandSet.add(b.trim());
+            }
+        });
+        return Array.from(brandSet).sort((a, b) => a.localeCompare(b));
+    }, [brandsProductsData]);
 
     // Sync local price inputs when filters reset externally
     useEffect(() => {
@@ -72,8 +92,13 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
     };
 
     const handleDepartmentChange = (deptId: string) => {
-        // Reset category when department changes
-        update({ department: deptId, category: "" });
+        // Reset category and brand when department changes
+        update({ department: deptId, category: "", brand: "" });
+    };
+
+    const handleCategoryChange = (catId: string) => {
+        // Reset brand when category changes
+        update({ category: catId, brand: "" });
     };
 
     const applyPriceRange = (min: string, max: string, label: string) => {
@@ -184,7 +209,7 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
                     <div className="relative">
                         <select
                             value={filters.category}
-                            onChange={(e) => update({ category: e.target.value })}
+                            onChange={(e) => handleCategoryChange(e.target.value)}
                             className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 pr-9 text-xs text-slate-600 outline-none transition focus:border-violet-400"
                         >
                             <option value="">All Categories</option>
@@ -201,14 +226,62 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
 
             {/* Brand */}
             <section className="mb-5 border-t border-slate-100 pt-5">
-                <h4 className="mb-2 text-xs font-bold text-slate-800">Brand</h4>
-                <input
-                    type="text"
-                    value={filters.brand}
-                    onChange={(e) => update({ brand: e.target.value })}
-                    placeholder="e.g. Apple, Samsung..."
-                    className="h-10 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-violet-400"
-                />
+                <div className="mb-2 flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-slate-800">Brand</h4>
+                    {filters.brand && (
+                        <button
+                            type="button"
+                            onClick={() => update({ brand: "" })}
+                            className="text-[11px] font-medium text-rose-500 hover:text-rose-700 transition-colors"
+                        >
+                            Clear
+                        </button>
+                    )}
+                </div>
+
+                {isLoadingBrands ? (
+                    <div className="space-y-1.5 py-1">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="h-7 w-full animate-pulse rounded-xl bg-slate-100" />
+                        ))}
+                    </div>
+                ) : availableBrands.length > 0 ? (
+                    <div className="max-h-48 overflow-y-auto space-y-1 pr-1">
+                        <button
+                            type="button"
+                            onClick={() => update({ brand: "" })}
+                            className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors ${
+                                !filters.brand
+                                    ? "bg-violet-50 font-bold text-violet-700"
+                                    : "font-medium text-slate-600 hover:bg-slate-50"
+                            }`}
+                        >
+                            <span>All Brands</span>
+                            {!filters.brand && <Check className="h-3.5 w-3.5 text-violet-600 shrink-0" />}
+                        </button>
+
+                        {availableBrands.map((brandName) => {
+                            const isSelected = filters.brand.toLowerCase() === brandName.toLowerCase();
+                            return (
+                                <button
+                                    key={brandName}
+                                    type="button"
+                                    onClick={() => update({ brand: isSelected ? "" : brandName })}
+                                    className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs transition-colors ${
+                                        isSelected
+                                            ? "bg-violet-50 font-bold text-violet-700"
+                                            : "font-medium text-slate-600 hover:bg-slate-50"
+                                    }`}
+                                >
+                                    <span className="truncate">{brandName}</span>
+                                    {isSelected && <Check className="h-3.5 w-3.5 text-violet-600 shrink-0" />}
+                                </button>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <p className="text-xs text-slate-400 italic">No brands available</p>
+                )}
             </section>
 
             {/* Price Range */}
