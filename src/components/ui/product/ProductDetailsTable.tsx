@@ -2,15 +2,18 @@
 
 import React from "react";
 import { TProduct, TVariant } from "@/types/product";
+import { TVariantRanking } from "@/types/ranking";
 
 interface ProductDetailsTableProps {
   product?: TProduct;
   selectedVariant?: TVariant | null;
+  ranking?: TVariantRanking | null;
 }
 
 export const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
   product,
   selectedVariant,
+  ranking,
 }) => {
   const specs: { label: string; value: string }[] = [];
 
@@ -46,6 +49,26 @@ export const ProductDetailsTable: React.FC<ProductDetailsTableProps> = ({
 
   if (Array.isArray(product?.tags) && product.tags.length > 0) {
     specs.push({ label: "Tags", value: product.tags.join(", ") });
+  }
+
+  // Amazon-style Best Sellers Rank row for the selected variant
+  if (ranking && (ranking.categoryRank > 0 || ranking.departmentRank > 0 || ranking.globalRank > 0)) {
+    const rankList: string[] = [];
+    if (ranking.categoryRank > 0) {
+      rankList.push(`#${ranking.categoryRank} in ${ranking.categoryName}`);
+    }
+    if (ranking.departmentRank > 0) {
+      rankList.push(`#${ranking.departmentRank} in ${ranking.departmentName}`);
+    }
+    if (ranking.globalRank > 0) {
+      rankList.push(`#${ranking.globalRank} in Marketplace`);
+    }
+    if (rankList.length > 0) {
+      specs.push({
+        label: "Best Sellers Rank",
+        value: rankList.join(" | "),
+      });
+    }
   }
 
   if (specs.length === 0) {

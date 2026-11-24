@@ -95,6 +95,7 @@ export const baseApi = createApi({
     "health",
     "violation",
     "fraud",
+    "ranking",
   ],
   endpoints: () => ({}),
 });

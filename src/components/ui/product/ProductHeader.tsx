@@ -19,6 +19,7 @@ export const ProductHeader: React.FC<ProductHeaderInfoProps> = ({
   averageRating = 0,
   totalRatings = 0,
   categoryName = "",
+  isBestSeller = false,
 }) => {
   const numericRating =
     typeof averageRating === "string"
@@ -72,17 +73,28 @@ export const ProductHeader: React.FC<ProductHeaderInfoProps> = ({
         </a>
       </div>
 
-      {/* Amarzone's Choice Badge */}
-      <div className="pt-1">
-        <div className="inline-flex items-center gap-1.5 bg-[#0c1926] text-white text-xs px-2.5 py-1 rounded-sm font-medium">
-          <span className="text-[#f08804] font-bold">Amarzone&apos;s</span>
-          <span className="text-white font-normal">Choice</span>
-          {categoryName && (
-            <span className="text-slate-400 text-xs font-normal">
-              in {categoryName}
-            </span>
-          )}
-        </div>
+      {/* Badges Bar */}
+      <div className="pt-1 flex items-center flex-wrap gap-2">
+        {isBestSeller ? (
+          <div className="inline-flex items-center gap-1.5 bg-[#e77600] text-white text-xs px-2.5 py-1 rounded-sm font-bold shadow-xs">
+            <span>#1 Best Seller</span>
+            {categoryName && (
+              <span className="text-white/90 font-normal">
+                in {categoryName}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 bg-[#0c1926] text-white text-xs px-2.5 py-1 rounded-sm font-medium">
+            <span className="text-[#f08804] font-bold">Amarzone&apos;s</span>
+            <span className="text-white font-normal">Choice</span>
+            {categoryName && (
+              <span className="text-slate-400 text-xs font-normal">
+                in {categoryName}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

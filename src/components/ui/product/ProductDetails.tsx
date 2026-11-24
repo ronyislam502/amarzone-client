@@ -6,12 +6,14 @@ import { useSingleProductQuery } from "@/redux/features/product/productApi";
 import { useAllVariantsByProductQuery } from "@/redux/features/variant/variantApi";
 import { useAllReviewsByProductQuery } from "@/redux/features/review/reviewApi";
 import { useGetInventoryByVariantQuery } from "@/redux/features/inventory/inventoryApi";
+import { useGetVariantRankingQuery } from "@/redux/features/ranking/rankingApi";
 import { TVariant } from "@/types/product";
 import ProductBread from "./ProductBread";
 import ProductImageGallery from "./ProductImageGallery";
 import ProductHeader from "./ProductHeader";
 import ProductPriceBlock from "./ProductPrice";
 import ProductVariantSelector from "./ProductVariantSelector";
+import ProductVariantRank from "./ProductVariantRank";
 import ProductFeatures from "./ProductFeatures";
 import ProductBuyBox from "./ProductBuyBox";
 import ProductSellerOffers from "./ProdVariantVendors";
@@ -75,6 +77,16 @@ const ProductDetails = () => {
   } = useGetInventoryByVariantQuery(variantAsin, {
     skip: !variantAsin,
   });
+
+  // 5. Query variant-wise ranking from database
+  const {
+    data: variantRankingData,
+    isLoading: isLoadingRanking,
+  } = useGetVariantRankingQuery(variantId, {
+    skip: !variantId,
+  });
+
+  const variantRanking = variantRankingData?.data || null;
 
 
   // Database sellers list for the active variant
@@ -312,7 +324,7 @@ const ProductDetails = () => {
                 averageRating={resolvedRating}
                 totalRatings={resolvedReviewsCount}
                 categoryName={product?.category?.name || resolvedCategory}
-                isBestSeller={product?.isBestSeller}
+                isBestSeller={variantRanking?.isBestSeller ?? product?.isBestSeller}
               />
 
               <ProductPriceBlock
@@ -326,6 +338,11 @@ const ProductDetails = () => {
                 averageRating={resolvedRating}
                 totalRatings={resolvedReviewsCount}
                 onSelectVariant={handleVariantSelection}
+              />
+
+              <ProductVariantRank
+                ranking={variantRanking}
+                isLoading={isLoadingRanking}
               />
 
               <ProductFeatures features={product?.features} />
@@ -361,6 +378,19 @@ const ProductDetails = () => {
                 <ProductAIAdvisor
                   productTitle={resolvedTitle}
                   categoryName={resolvedCategory}
+                  departmentName={resolvedDepartment}
+                  brand={resolvedBrand}
+                  price={resolvedPrice}
+                  rating={resolvedRating}
+                  reviewsCount={resolvedReviewsCount}
+                  features={Array.isArray(product?.features) ? product.features : []}
+                  attributes={Array.isArray(activeVariant?.attributes) ? activeVariant.attributes : []}
+                  categoryId={
+                    typeof product?.category === "object"
+                      ? product?.category?._id
+                      : product?.category
+                  }
+                  productId={productId || product?._id}
                 />
               </div>
             </div>
@@ -386,6 +416,7 @@ const ProductDetails = () => {
         <ProductDetailsTable
           product={product}
           selectedVariant={activeVariant}
+          ranking={variantRanking}
         />
 
         {/* Product Editorial Description */}
