@@ -8,8 +8,6 @@ import {
     Check,
     ChevronDown,
 } from "lucide-react";
-import { useAllDepartmentsQuery } from "@/redux/features/department/departmentApi";
-import { useAllCategoriesQuery } from "@/redux/features/category/categoryApi";
 import { useAllVariantsProductsQuery } from "@/redux/features/variant/variantApi";
 
 interface FilterState {
@@ -52,22 +50,12 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
     const [localMax, setLocalMax] = useState(filters.maxPrice);
     const [activePriceRange, setActivePriceRange] = useState<string | null>(null);
 
-    // Fetch departments and categories from API
-    const { data: departmentsData } = useAllDepartmentsQuery({ limit: 100 });
-    const { data: categoriesData } = useAllCategoriesQuery({
-        limit: 200,
-        department: filters.department || undefined,
-    });
-
     // Fetch products to extract all available brand names
     const { data: brandsProductsData, isLoading: isLoadingBrands } = useAllVariantsProductsQuery({
         limit: 200,
         department: filters.department || undefined,
         category: filters.category || undefined,
     });
-
-    const departments = departmentsData?.data || [];
-    const categories = categoriesData?.data || [];
 
     // Extract unique brand names from products
     const availableBrands = useMemo(() => {
@@ -89,16 +77,6 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
 
     const update = (patch: Partial<FilterState>) => {
         onChange({ ...filters, ...patch });
-    };
-
-    const handleDepartmentChange = (deptId: string) => {
-        // Reset category and brand when department changes
-        update({ department: deptId, category: "", brand: "" });
-    };
-
-    const handleCategoryChange = (catId: string) => {
-        // Reset brand when category changes
-        update({ category: catId, brand: "" });
     };
 
     const applyPriceRange = (min: string, max: string, label: string) => {
@@ -181,48 +159,6 @@ const AZProductFilter: React.FC<AZProductFilterProps> = ({ filters, onChange }) 
                     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 </div>
             </section>
-
-            {/* Department */}
-            <section className="mb-5 border-t border-slate-100 pt-5">
-                <h4 className="mb-2 text-xs font-bold text-slate-800">Department</h4>
-                <div className="relative">
-                    <select
-                        value={filters.department}
-                        onChange={(e) => handleDepartmentChange(e.target.value)}
-                        className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 pr-9 text-xs text-slate-600 outline-none transition focus:border-violet-400"
-                    >
-                        <option value="">All Departments</option>
-                        {departments.map((dept: any) => (
-                            <option key={dept._id} value={dept._id}>
-                                {dept.name}
-                            </option>
-                        ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                </div>
-            </section>
-
-            {/* Category — shown only when a dept is selected */}
-            {filters.department && categories.length > 0 && (
-                <section className="mb-5">
-                    <h4 className="mb-2 text-xs font-bold text-slate-800">Category</h4>
-                    <div className="relative">
-                        <select
-                            value={filters.category}
-                            onChange={(e) => handleCategoryChange(e.target.value)}
-                            className="h-10 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 px-3 pr-9 text-xs text-slate-600 outline-none transition focus:border-violet-400"
-                        >
-                            <option value="">All Categories</option>
-                            {categories.map((cat: any) => (
-                                <option key={cat._id} value={cat._id}>
-                                    {cat.name}
-                                </option>
-                            ))}
-                        </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    </div>
-                </section>
-            )}
 
             {/* Brand */}
             <section className="mb-5 border-t border-slate-100 pt-5">

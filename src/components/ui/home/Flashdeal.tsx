@@ -41,7 +41,7 @@ const Flashdeal = () => {
     );
 
     return (
-        <section className="w-full bg-slate-200 p-10 rounded-lg my-6">
+        <div className="w-full bg-slate-200 p-10 rounded-lg my-6">
             {/* Header */}
             <div className="mb-4 flex items-center justify-between gap-4">
                 <div>
@@ -113,7 +113,7 @@ const Flashdeal = () => {
                     </CarouselContent>
                 </Carousel>
             )}
-        </section>
+        </div>
     );
 };
 

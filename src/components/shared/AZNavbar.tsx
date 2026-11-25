@@ -9,7 +9,7 @@ import Logo from "../ui/navbar/Logo";
 import NavAvatar from "../ui/navbar/NavAvatar";
 import { useAppSelector } from "@/redux/hooks";
 import { selectCartCount } from "@/redux/features/order/orderSlice";
-import Departments from "../ui/navbar/Departments";
+import AZSubNavbar from "../ui/navbar/AZSubNavbar";
 
 const AZNavbar = () => {
   const [mounted, setMounted] = useState(false);
@@ -30,7 +30,7 @@ const AZNavbar = () => {
 
           {/* Desktop Left Menu */}
           <div className="hidden lg:flex items-center gap-2 ml-4">
-            <Departments />
+
             <Services />
           </div>
         </div>
@@ -62,6 +62,9 @@ const AZNavbar = () => {
           </Link>
         </div>
       </div>
+
+      {/* Sub Navbar */}
+      <AZSubNavbar />
     </div>
   );
 };

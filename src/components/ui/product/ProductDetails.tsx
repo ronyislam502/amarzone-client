@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, Suspense } from "react";
+import React, { useState, useMemo, Suspense, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useSingleProductQuery } from "@/redux/features/product/productApi";
 import { useAllVariantsByProductQuery } from "@/redux/features/variant/variantApi";
@@ -26,6 +26,7 @@ import { toast } from "react-toastify";
 import ProductPageSkeleton from "@/components/shared/skeleton/ProductPageSkeleton";
 import { useAppDispatch } from "@/redux/hooks";
 import { addToCart } from "@/redux/features/order/orderSlice";
+import { recordProductView } from "@/lib/browsingHistory";
 
 const ProductDetails = () => {
   const params = useParams();
@@ -230,6 +231,60 @@ const ProductDetails = () => {
     const sum = reviews.reduce((acc: number, r: any) => acc + (Number(r?.rating) || 0), 0);
     return Math.round((sum / reviews.length) * 10) / 10;
   }, [reviews, activeVariant]);
+
+  // ── BROWSING HISTORY: record this variant view into localStorage ──
+  useEffect(() => {
+    if (!activeVariant?._id || !productId || !product?.title) return;
+    if (isLoadingInventory || isLoadingReviews) return;
+
+    const thumbnail =
+      product?.thumbnail ||
+      activeVariant?.images?.[0] ||
+      "";
+
+    recordProductView({
+      variantId: activeVariant._id,
+      productId: productId || product?._id || "",
+      vendorId: resolvedVendorId,
+      title: product.title,
+      brand: product?.brand,
+      thumbnail,
+      price: resolvedPrice,
+      originalPrice: resolvedOriginalPrice > resolvedPrice ? resolvedOriginalPrice : undefined,
+      rating: resolvedRating,
+      totalReviews: resolvedReviewsCount,
+      categoryId:
+        typeof product?.category === "object"
+          ? product?.category?._id
+          : product?.category,
+      categoryName:
+        typeof product?.category === "object"
+          ? product?.category?.name
+          : "",
+      departmentId:
+        typeof product?.department === "object"
+          ? product?.department?._id
+          : product?.department,
+      isBestSeller: !!(variantRanking?.isBestSeller ?? product?.isBestSeller),
+      asin: activeVariant?.asin,
+      attributes: Array.isArray(activeVariant?.attributes) ? activeVariant.attributes : [],
+    });
+
+    // Notify BrowsingHistoryView on the same page to refresh immediately
+    window.dispatchEvent(new CustomEvent("az:browsingHistoryUpdated"));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    activeVariant?._id,
+    productId,
+    product?.title,
+    resolvedPrice,
+    resolvedOriginalPrice,
+    resolvedRating,
+    resolvedReviewsCount,
+    resolvedVendorId,
+    isLoadingInventory,
+    isLoadingReviews,
+  ]);
 
   const handleVariantSelection = (newVariant: TVariant) => {
     setSelectedVariant(newVariant);
