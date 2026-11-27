@@ -26,9 +26,11 @@ const AZSubNavbar: React.FC = () => {
 
     // Queries
     const { data: categoriesData, isLoading: isLoadingCats } = useAllCategoriesQuery({
-        limit: 150,
+        limit: 200,
     });
-    const { data: departmentsData } = useAllDepartmentsQuery({});
+    const { data: departmentsData, isLoading: isLoadingDepts } = useAllDepartmentsQuery({
+        limit: 50,
+    });
     const { data: userData } = useMyProfileQuery({});
 
     const categories: TCategory[] = categoriesData?.data || [];
@@ -55,7 +57,7 @@ const AZSubNavbar: React.FC = () => {
         return () => {
             window.removeEventListener("resize", handleResize);
         };
-    }, [categories]);
+    }, [departments]);
 
     // Horizontal scroll action
     const scroll = (direction: "left" | "right") => {
@@ -74,14 +76,14 @@ const AZSubNavbar: React.FC = () => {
         setSelectedDepartment(null);
     };
 
-    // Group categories by department for drawer
+    // Group categories by department for drawer and hover dropdowns
     const categoriesByDept = useMemo(() => {
         const map = new Map<string, TCategory[]>();
         categories.forEach((cat) => {
             const deptId =
-                typeof cat?.department === "object"
-                    ? cat?.department?._id
-                    : (cat?.department as any);
+                typeof cat?.department === "object" && cat?.department !== null
+                    ? (cat?.department as any)?._id
+                    : cat?.department;
             if (deptId) {
                 const key = String(deptId);
                 const existing = map.get(key) || [];
@@ -97,7 +99,7 @@ const AZSubNavbar: React.FC = () => {
             {/* ═══════════════════════════════════════════════════════════
                  MAIN HORIZONTAL SUBNAVBAR (Amazon Clone)
             ═══════════════════════════════════════════════════════════ */}
-            <div className="w-full bg-[#170d2f] text-white border-t border-white/10 select-none shadow-xs">
+            <div className="w-full bg-[#170d2f] text-white border-t border-white/10 select-none shadow-xs relative z-30">
                 <div className="max-w-[1600px] mx-auto px-2 sm:px-6 flex items-center relative h-[38px] md:h-[39px]">
                     {/* 1. "All" Hamburger Menu Button */}
                     <button
@@ -113,11 +115,12 @@ const AZSubNavbar: React.FC = () => {
                         <span>All</span>
                     </button>
 
-                    {/* 2. Featured Lead Item: Black Friday (Matches uploaded design) */}
+                    {/* 2. Featured Lead Item: Black Friday Deals */}
                     <Link
                         href="/products?deal=black-friday"
-                        className="flex items-center gap-1 px-2.5 py-1 text-[13px] md:text-[14px] font-bold text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] transition-all shrink-0 mr-1"
+                        className="flex items-center gap-1 px-2.5 py-1 text-[13px] md:text-[14px] font-bold text-amber-300 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] transition-all shrink-0 mr-1"
                     >
+                        <Flame className="w-3.5 h-3.5 text-amber-400" />
                         <span>Black Friday</span>
                     </Link>
 
@@ -135,7 +138,7 @@ const AZSubNavbar: React.FC = () => {
                         </div>
                     )}
 
-                    {/* 4. Scrollable Container for All Categories */}
+                    {/* 4. Scrollable Container for All Departments */}
                     <div
                         ref={scrollContainerRef}
                         onScroll={updateScrollButtons}
@@ -147,58 +150,54 @@ const AZSubNavbar: React.FC = () => {
                         className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto scroll-smooth scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] py-1 flex-1"
                     >
                         {/* Loading Skeletons */}
-                        {isLoadingCats && categories.length === 0 ? (
+                        {isLoadingDepts && departments.length === 0 ? (
                             <div className="flex items-center gap-2">
-                                {Array.from({ length: 12 }).map((_, i) => (
+                                {Array.from({ length: 10 }).map((_, i) => (
                                     <div
                                         key={i}
-                                        className="h-5 w-20 bg-white/10 rounded animate-pulse shrink-0"
+                                        className="h-5 w-24 bg-white/10 rounded animate-pulse shrink-0"
                                     />
                                 ))}
                             </div>
                         ) : (
-                            /* All Categories from Database */
-                            categories.map((category) => (
+                            /* All Departments from Database */
+                            departments.map((dept) => (
                                 <Link
-                                    key={category._id}
-                                    href={`/products?category=${category._id}`}
-                                    className="flex items-center gap-1 px-2 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
-                                    title={category.name}
+                                    key={dept._id}
+                                    href={`/products?department=${dept._id}`}
+                                    className="flex items-center gap-1 px-2.5 py-1 text-[13px] md:text-[14px] font-medium text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
+                                    title={dept.name}
                                 >
-                                    <span>{category.name}</span>
+                                    <span>{dept.name}</span>
                                 </Link>
                             ))
                         )}
 
-                        {/* Additional Amazon standard shortcuts if DB has few categories */}
-                        {categories.length < 5 && !isLoadingCats && (
-                            <>
-                                <Link
-                                    href="/products?sort=-sales"
-                                    className="flex items-center gap-1 px-2 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
-                                >
-                                    <span>Best Sellers</span>
-                                </Link>
-                                <Link
-                                    href="/products"
-                                    className="flex items-center gap-1 px-2 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
-                                >
-                                    <span>New Releases</span>
-                                </Link>
-                                <Link
-                                    href="/support"
-                                    className="flex items-center gap-1 px-2 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
-                                >
-                                    <span>Customer Service</span>
-                                </Link>
-                                <Link
-                                    href="/sell-on-amarzone"
-                                    className="flex items-center gap-1 px-2 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
-                                >
-                                    <span>Sell</span>
-                                </Link>
-                            </>
-                        )}
+                        {/* Standard Amazon Shortcuts */}
+                        <Link
+                            href="/bestsellers"
+                            className="flex items-center gap-1 px-2.5 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
+                        >
+                            <span>Best Sellers</span>
+                        </Link>
+                        <Link
+                            href="/products?sort=-createdAt"
+                            className="flex items-center gap-1 px-2.5 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
+                        >
+                            <span>New Releases</span>
+                        </Link>
+                        <Link
+                            href="/support"
+                            className="flex items-center gap-1 px-2.5 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
+                        >
+                            <span>Customer Service</span>
+                        </Link>
+                        <Link
+                            href="/sell-on-amarzone"
+                            className="flex items-center gap-1 px-2.5 py-1 text-[13px] md:text-[14px] font-normal text-white/95 hover:text-white whitespace-nowrap border border-transparent hover:border-white rounded-[2px] shrink-0 transition-all cursor-pointer"
+                        >
+                            <span>Sell</span>
+                        </Link>
                     </div>
 
                     {/* 5. Right Scroll Indicator Arrow */}
@@ -316,7 +315,7 @@ const AZSubNavbar: React.FC = () => {
                                 </span>
                             </Link>
                             <Link
-                                href="/products?sort=-sales"
+                                href="/bestsellers"
                                 onClick={handleCloseDrawer}
                                 className="flex items-center justify-between px-6 py-2.5 text-gray-800 hover:bg-gray-100 transition-colors"
                             >

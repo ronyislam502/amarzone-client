@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import AZProductsPage from "@/components/shared/AZProductsPage";
-import { useAllVariantsProductsQuery } from "@/redux/features/variant/variantApi";
+import {
+    useAllVariantsProductsQuery,
+    useAllVariantsProductsByDepartmentQuery,
+    useAllVariantsProductsByCategoryQuery,
+} from "@/redux/features/variant/variantApi";
 
 interface FilterState {
     search: string;
@@ -33,27 +37,9 @@ const ProductsPage = () => {
     const [limit, setLimit] = useState(15);
     const [filters, setFilters] = useState<FilterState>(DEFAULT_FILTERS);
 
-    // Sync URL query params (e.g., from Departments dropdown navigation) into filters
-    // useEffect(() => {
-    //     const deptParam = searchParams.get("department");
-    //     const catParam = searchParams.get("category");
-    //     const searchParam = searchParams.get("search") || searchParams.get("searchTerm");
-
-    //     if (deptParam || catParam || searchParam) {
-    //         setFilters((prev) => ({
-    //             ...prev,
-    //             ...(deptParam ? { department: deptParam } : {}),
-    //             ...(catParam ? { category: catParam } : {}),
-    //             ...(searchParam ? { search: searchParam } : {}),
-    //         }));
-    //         setPage(1);
-    //     }
-    // }, [searchParams]);
-
     useEffect(() => {
         const deptParam = searchParams.get("department");
         const catParam = searchParams.get("category");
-        // 'search' অথবা 'searchTerm' দুটিই চেক করবে যেন কোনো মিসম্যাচ না হয়
         const searchParam = searchParams.get("search") || searchParams.get("searchTerm");
 
         if (deptParam || catParam || searchParam) {
@@ -67,25 +53,105 @@ const ProductsPage = () => {
         }
     }, [searchParams]);
 
+    const hasCategoryFilter = Boolean(filters.category);
+    const hasDepartmentFilter = Boolean(filters.department) && !hasCategoryFilter;
+    const hasAllFilter = !hasCategoryFilter && !hasDepartmentFilter;
+
+    // 1. Dedicated query for category-wise products
     const {
-        data: productsData,
-        isLoading,
-        isFetching,
-        isError,
-        refetch,
-    } = useAllVariantsProductsQuery({
-        page,
-        limit,
-        search: filters.search || undefined,
-        sort: filters.sort || undefined,
-        department: filters.department || undefined,
-        category: filters.category || undefined,
-        brand: filters.brand || undefined,
-        minPrice: filters.minPrice || undefined,
-        maxPrice: filters.maxPrice || undefined,
-    });
+        data: catProductsData,
+        isLoading: isCatLoading,
+        isFetching: isCatFetching,
+        isError: isCatError,
+        refetch: refetchCat,
+    } = useAllVariantsProductsByCategoryQuery(
+        {
+            id: filters.category,
+            page,
+            limit,
+            search: filters.search || undefined,
+            sort: filters.sort || undefined,
+            department: filters.department || undefined,
+            brand: filters.brand || undefined,
+            minPrice: filters.minPrice || undefined,
+            maxPrice: filters.maxPrice || undefined,
+            rating: filters.rating !== null ? filters.rating : undefined,
+        },
+        { skip: !hasCategoryFilter }
+    );
 
+    // 2. Dedicated query for department-wise products
+    const {
+        data: deptProductsData,
+        isLoading: isDeptLoading,
+        isFetching: isDeptFetching,
+        isError: isDeptError,
+        refetch: refetchDept,
+    } = useAllVariantsProductsByDepartmentQuery(
+        {
+            id: filters.department,
+            page,
+            limit,
+            search: filters.search || undefined,
+            sort: filters.sort || undefined,
+            brand: filters.brand || undefined,
+            minPrice: filters.minPrice || undefined,
+            maxPrice: filters.maxPrice || undefined,
+            rating: filters.rating !== null ? filters.rating : undefined,
+        },
+        { skip: !hasDepartmentFilter }
+    );
 
+    // 3. General query when neither category nor department filter is active
+    const {
+        data: allProductsData,
+        isLoading: isAllLoading,
+        isFetching: isAllFetching,
+        isError: isAllError,
+        refetch: refetchAll,
+    } = useAllVariantsProductsQuery(
+        {
+            page,
+            limit,
+            search: filters.search || undefined,
+            sort: filters.sort || undefined,
+            brand: filters.brand || undefined,
+            minPrice: filters.minPrice || undefined,
+            maxPrice: filters.maxPrice || undefined,
+            rating: filters.rating !== null ? filters.rating : undefined,
+        },
+        { skip: !hasAllFilter }
+    );
+
+    const productsData = hasCategoryFilter
+        ? catProductsData
+        : hasDepartmentFilter
+        ? deptProductsData
+        : allProductsData;
+
+    const isLoading = hasCategoryFilter
+        ? isCatLoading
+        : hasDepartmentFilter
+        ? isDeptLoading
+        : isAllLoading;
+
+    const isFetching = hasCategoryFilter
+        ? isCatFetching
+        : hasDepartmentFilter
+        ? isDeptFetching
+        : isAllFetching;
+
+    const isError = hasCategoryFilter
+        ? isCatError
+        : hasDepartmentFilter
+        ? isDeptError
+        : isAllError;
+
+    const refetch = hasCategoryFilter
+        ? refetchCat
+        : hasDepartmentFilter
+        ? refetchDept
+        : refetchAll;
 
     // Slice to exactly `limit` so each page always shows the correct count
     const rawProducts = (productsData?.data || []).slice(0, limit);

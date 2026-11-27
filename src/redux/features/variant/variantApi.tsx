@@ -77,8 +77,39 @@ const variantApi = baseApi?.injectEndpoints({
             },
         }),
         allVariantsProductsByDepartment: builder.query({
-            query: (id) => {
+            query: (args) => {
+                const id = typeof args === "string" ? args : args?.id;
                 const params = new URLSearchParams();
+
+                if (typeof args === "object" && args !== null) {
+                    if (args.search) {
+                        params.append("searchTerm", args.search);
+                    }
+                    if (args.sort) {
+                        params.append("sort", args.sort);
+                    }
+                    if (args.page) {
+                        params.append("page", String(args.page));
+                    }
+                    if (args.limit) {
+                        params.append("limit", String(args.limit));
+                    }
+                    if (args.category) {
+                        params.append("category", args.category);
+                    }
+                    if (args.brand) {
+                        params.append("brand", args.brand);
+                    }
+                    if (args.minPrice !== undefined && args.minPrice !== null && args.minPrice !== "") {
+                        params.append("minPrice", String(args.minPrice));
+                    }
+                    if (args.maxPrice !== undefined && args.maxPrice !== null && args.maxPrice !== "") {
+                        params.append("maxPrice", String(args.maxPrice));
+                    }
+                    if (args.rating !== undefined && args.rating !== null && args.rating !== "") {
+                        params.append("rating", String(args.rating));
+                    }
+                }
 
                 return {
                     url: `/variants/all-variants-products-department/${id}`,
@@ -98,10 +129,37 @@ const variantApi = baseApi?.injectEndpoints({
             query: (args) => {
                 const id = typeof args === "string" ? args : args?.id;
                 const params = new URLSearchParams();
-                if (typeof args === "object") {
-                    if (args?.limit) params.append("limit", String(args.limit));
-                    if (args?.page) params.append("page", String(args.page));
+
+                if (typeof args === "object" && args !== null) {
+                    if (args.search) {
+                        params.append("searchTerm", args.search);
+                    }
+                    if (args.sort) {
+                        params.append("sort", args.sort);
+                    }
+                    if (args.page) {
+                        params.append("page", String(args.page));
+                    }
+                    if (args.limit) {
+                        params.append("limit", String(args.limit));
+                    }
+                    if (args.department) {
+                        params.append("department", args.department);
+                    }
+                    if (args.brand) {
+                        params.append("brand", args.brand);
+                    }
+                    if (args.minPrice !== undefined && args.minPrice !== null && args.minPrice !== "") {
+                        params.append("minPrice", String(args.minPrice));
+                    }
+                    if (args.maxPrice !== undefined && args.maxPrice !== null && args.maxPrice !== "") {
+                        params.append("maxPrice", String(args.maxPrice));
+                    }
+                    if (args.rating !== undefined && args.rating !== null && args.rating !== "") {
+                        params.append("rating", String(args.rating));
+                    }
                 }
+
                 return {
                     url: `/variants/all-variants-products-category/${id}`,
                     method: "GET",
